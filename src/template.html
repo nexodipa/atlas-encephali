@@ -152,6 +152,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
           <label class="chk"><input type="checkbox" data-l="vent" checked>Ventrículos</label>
           <label class="chk"><input type="checkbox" data-l="cb" checked>Cerebelo</label>
           <label class="chk"><input type="checkbox" data-l="stem" checked>Tronco</label>
+          <label class="chk"><input type="checkbox" data-l="tracts">Tractos</label>
         </div>
       </div>
     </section>
@@ -169,7 +170,7 @@ const META = /*META*/null;
 /* ============ utilidades ============ */
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
-const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true},
+const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
   sel:null,hover:null,dis:'scz',stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
@@ -184,6 +185,9 @@ function hsl(h,s,l){const k=n=>(n+h*12)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.m
 const NEG=hexRGB('#4f7fd9'), POS=hexRGB('#e0604f'), NEU=hexRGB('#c9c4ba'), SIMBASE=hexRGB('#bdb6aa'), INF=hexRGB('#6e1f2b'), EDEMA=hexRGB('#d9c46a');
 function divColor(d){ if(d==null) return [0.42,0.44,0.46]; const t=Math.max(-1,Math.min(1,d/0.6)); return t<0?mix(NEU,NEG,-t):mix(NEU,POS,t); }
 const DEEPKEY = k => k.replace(/^[LR]/,'').replace(/^dent[LR]$/,'dent');
+const sideOfKey = k => k==='dentL'?'L':k==='dentR'?'R':(/^[LR][a-z]/.test(k)?k[0]:null);
+const trBase = n => n.replace(/_[LR]$/,'');
+const trSide = n => /_L$/.test(n)?'L':/_R$/.test(n)?'R':null;
 const SUBKEY = {thal:'thal',caud:'caud',put:'put',pal:'pal',hippo:'hippo',amyg:'amyg',accumb:'accumb',vent:'LatVent'};
 
 /* region colors per DK index */
@@ -211,18 +215,23 @@ function enigmaBlock(subkey,isCtx){
 }
 function renderIndex(){
   let h=`<p class="kicker">Sistema nervioso central</p><h2>Encéfalo</h2><p class="sub2">Encephalon</p>
-  <p class="lede">Superficie cortical real de un cerebro promedio (fsaverage, FreeSurfer) parcelada en 68 regiones de Desikan-Killiany o en las 360 áreas del atlas multimodal HCP-MMP1, con núcleos, ventrículos, tronco y cerebelo de atlas volumétricos MNI. Toca una región o elige una aquí.</p>`;
+  <p class="lede">Superficie cortical real de un cerebro promedio (fsaverage, FreeSurfer) parcelada en 68 regiones de Desikan-Killiany o en las 360 áreas del atlas multimodal HCP-MMP1, con núcleos y ventrículos (CerebrA, CIT168), tronco, cerebelo, 75 tractos de sustancia blanca (HCP-842) y los grandes sistemas de neurotransmisores. Toca una región o elige una aquí.</p>`;
   for(const lb of ['frontal','parietal','temporal','occipital','limbic','insula']){
     const regs=Object.keys(DK).filter(k=>DK[k].lobe===lb);
     h+=`<div class="grp"><h3><span class="sw" style="background:${LOBES[lb].color}"></span>${LOBES[lb].name}</h3><div class="list">${regs.map(k=>`<button data-go="dk:${DKN.indexOf('L_'+k)}">${DK[k].es}<small>${DK[k].ba}</small></button>`).join('')}</div></div>`;
   }
-  h+=`<div class="grp"><h3>Núcleos, ventrículos y tronco</h3><div class="list">${['thal','caud','put','pal','accumb','hippo','amyg','vent'].map(k=>`<button data-go="deep:L${k}">${DEEP[k].es}</button>`).join('')}${[0,1,2].map(i=>`<button data-go="stem:${i}">${DEEP['stem'+i].es}</button>`).join('')}</div></div>`;
+  h+=`<div class="grp"><h3>Ganglios basales y sistema límbico</h3><div class="list">${['caud','put','pal','accumb','stn','hippo','amyg','bf'].map(k=>`<button data-go="deep:L${k}">${DEEP[k].es}</button>`).join('')}</div></div>`;
+  h+=`<div class="grp"><h3>Diencéfalo y mesencéfalo</h3><div class="list">${['thal','hth','mam','hab','snc','snr','vta','rn'].map(k=>`<button data-go="deep:L${k}">${DEEP[k].es}</button>`).join('')}<button data-go="deep:chiasm">${DEEP.chiasm.es}</button></div></div>`;
+  h+=`<div class="grp"><h3>Tronco y ventrículos</h3><div class="list">${[0,1,2].map(i=>`<button data-go="stem:${i}">${DEEP['stem'+i].es}</button>`).join('')}<button data-go="deep:Lvent">${DEEP.vent.es}</button><button data-go="deep:v3">${DEEP.v3.es}</button><button data-go="deep:v4">${DEEP.v4.es}</button></div></div>`;
+  { const seen=new Set(), btn=[]; META.tracts.forEach((n,i)=>{ const b=trBase(n); if(seen.has(b)||!TRACT[b]) return; seen.add(b); const li=META.tracts.indexOf(b+'_L'); btn.push([TRACT[b].cls,`<button data-go="tr:${li>=0?li:i}">${TRACT[b].es}</button>`]); });
+    h+=`<div class="grp"><h3>Sustancia blanca · tractos</h3><div class="list">${btn.sort((a,b)=>Object.keys(TRCLS).indexOf(a[0])-Object.keys(TRCLS).indexOf(b[0])).map(x=>x[1]).join('')}</div></div>`; }
+  h+=`<div class="grp"><h3>Sistemas de neurotransmisores</h3><div class="list">${Object.keys(NT).map(k=>`<button data-go="nt:${k}">${NT[k].es}</button>`).join('')}</div></div>`;
   h+=`<div class="grp"><h3>Cerebelo</h3><div class="list">${Object.keys(CB).map(k=>`<button data-go="cb:${k}">${CB[k].es}</button>`).join('')}<button data-go="deep:dentL">Núcleo dentado</button></div></div>`;
   h+=sourcesNote();
   pin.innerHTML=h;
 }
 function sourcesNote(){
-  return `<p class="note">Fuentes: superficie fsaverage5 (FreeSurfer); parcelaciones Desikan-Killiany y HCP-MMP1 (Glasser y cols., 2016) y estadísticas de casos-controles del ENIGMA Toolbox (Larivière y cols., 2021); núcleos, tronco y ventrículos del atlas Harvard-Oxford subcortical; cerebelo del atlas de Diedrichsen y cols. (2009). Cerebro promedio, no de una persona concreta. La división del tronco en tres segmentos es aproximada.</p>`;
+  return `<p class="note">Fuentes: superficie fsaverage5 (FreeSurfer); parcelaciones Desikan-Killiany y HCP-MMP1 (Glasser y cols., 2016) y estadísticas de casos-controles del ENIGMA Toolbox (Larivière y cols., 2021); núcleos, ventrículos y tronco de CerebrA (Manera y cols., 2020); núcleos del mesencéfalo y diencéfalo de CIT168 (Pauli y cols., 2018); tractos del atlas HCP-842 (Yeh y cols., 2018); cerebelo de Diedrichsen y cols. (2009). Cerebro promedio, no de una persona concreta. La división del tronco en tres segmentos es aproximada.</p>`;
 }
 function renderDK(i){
   const b=dkBase(i), d=DK[b], lb=LOBES[d.lobe];
@@ -247,10 +256,10 @@ function renderGL(g){
   pin.innerHTML=h;
 }
 function renderDeep(key){
-  const base=DEEPKEY(key), d=DEEP[base], side=key[0]==='L'||key==='dentL'?'L':'R';
-  const sub=SUBKEY[base]?(side+SUBKEY[base]):null;
+  const base=DEEPKEY(key), d=DEEP[base], side=sideOfKey(key);
+  const sub=SUBKEY[base]&&side?(side+SUBKEY[base]):null;
   let h=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>${d.group}</span></div>
-  <p class="kicker"><span class="sw" style="background:${d.color}"></span>${d.group} · ${side==='L'?'izquierdo':'derecho'}</p><h2>${d.es}</h2><p class="sub2">&nbsp;</p>
+  <p class="kicker"><span class="sw" style="background:${d.color}"></span>${d.group}${side?' · '+(side==='L'?'izquierdo':'derecho'):''}</p><h2>${d.es}</h2><p class="sub2">${CITSET.has(base)?'Atlas CIT168 de núcleos subcorticales (Pauli y cols., 2018)':'&nbsp;'}</p>
   <h3>Función</h3><p>${d.fn}</p><h3>Clínica</h3><p>${d.clin}</p>`;
   if(sub) h+=enigmaBlock(sub,false);
   pin.innerHTML=h;
@@ -258,6 +267,31 @@ function renderDeep(key){
 function renderStem(i){const d=DEEP['stem'+i]; pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Tronco del encéfalo</span></div><p class="kicker"><span class="sw" style="background:${d.color}"></span>Tronco del encéfalo</p><h2>${d.es}</h2><p class="sub2">&nbsp;</p><h3>Función</h3><p>${d.fn}</p><h3>Clínica</h3><p>${d.clin}</p><p class="note">El tronco del atlas Harvard-Oxford es una sola estructura; aquí se divide por altura de forma aproximada.</p>`;}
 function renderCB(k){const d=CB[k]; pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Cerebelo</span></div><p class="kicker"><span class="sw" style="background:#6f9bd6"></span>Cerebelo · lóbulos de Larsell</p><h2>${d.es}</h2><p class="sub2">&nbsp;</p><h3>Función</h3><p>${d.fn}</p><h3>Clínica</h3><p>${d.clin}</p><p class="note">El cerebelo contiene alrededor de 69 000 de los ~86 000 millones de neuronas del encéfalo (Azevedo y cols., 2009). Las lesiones producen síntomas ipsilaterales por la doble decusación de sus vías.</p>`;}
 
+const CITSET=new Set(['snc','snr','vta','rn','stn','hth','hab','mam']);
+function renderTract(i){
+  const n=META.tracts[i], b=trBase(n), t=TRACT[b]||{es:b,cls:'assoc',fn:'',clin:''}, side=trSide(n), c=TRCLS[t.cls];
+  const twin=side?META.tracts.indexOf(b+(side==='L'?'_R':'_L')):-1;
+  let h=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Sustancia blanca</span></div>
+  <p class="kicker"><span class="sw" style="background:${c.color}"></span>Tracto de ${c.es.toLowerCase()}${side?' · '+(side==='L'?'izquierdo':'derecho'):''}</p><h2>${t.es}</h2>
+  <p class="sub2">Atlas poblacional de tractografía HCP-842 (Yeh y cols., 2018)</p>
+  <h3>Función</h3><p>${t.fn}</p>${t.clin?`<h3>Clínica</h3><p>${t.clin}</p>`:''}
+  <h3>Color de los tractos</h3><div class="seg" id="trcol"><button data-c="cls" class="${S.trColor==='cls'?'on':''}">Por tipo</button><button data-c="dti" class="${S.trColor==='dti'?'on':''}">Dirección (DTI)</button></div>
+  <p style="font-size:12.5px;color:var(--muted);margin-top:8px">En la convención de la imagen por tensor de difusión: rojo, izquierda-derecha; verde, anteroposterior; azul, superior-inferior.</p>
+  ${twin>=0?`<p style="margin-top:14px"><button class="lnk" data-go="tr:${twin}">Ver el tracto del hemisferio ${side==='L'?'derecho':'izquierdo'}</button></p>`:''}
+  <p class="note">Las superficies envuelven el volumen que ocupa cada haz en el promedio de 842 sujetos del Human Connectome Project; no son fibras individuales.</p>`;
+  pin.innerHTML=h;
+  pin.querySelectorAll('#trcol button').forEach(b=>b.onclick=()=>{S.trColor=b.dataset.c; recolor(); renderTract(i);});
+}
+function renderNT(k){
+  const n=NT[k];
+  pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Sistemas de neurotransmisores</span></div>
+  <p class="kicker"><span class="sw" style="background:${n.color}"></span>${n.nt}</p><h2>${n.es}</h2><p class="sub2">&nbsp;</p>
+  <h3>Función</h3><p>${n.fn}</p><h3>Clínica y farmacología</h3><p>${n.clin}</p>
+  <h3>Otros sistemas</h3><div class="chips">${Object.keys(NT).filter(x=>x!==k).map(x=>`<button class="chip" data-go="nt:${x}"><span class="sw" style="background:${NT[x].color}"></span>${NT[x].es}</button>`).join('')}</div>
+  <p class="note">Los núcleos de origen proceden del atlas CIT168 y del prosencéfalo basal de CerebrA; el locus coeruleus y los núcleos del rafe se sitúan en posiciones aproximadas. Las trayectorias son esquemáticas: indican qué estructuras conecta cada sistema, no el recorrido exacto de los axones.</p>`;
+}
+const NTVIEW={scz:{sys:['da_ml','da_mc'],mod:{da_ml:'hyper',da_mc:'hypo'},es:'Hipótesis dopaminérgica',txt:'Exceso de dopamina en la vía mesolímbica (partículas rápidas y densas), asociado a delirios y alucinaciones, y déficit en la mesocortical (partículas escasas), asociado a apatía y problemas cognitivos. Los antipsicóticos bloquean receptores D2 en todas las vías, lo que explica tanto su efecto como sus efectos adversos.'},
+  pd:{sys:['da_ns'],mod:{da_ns:'degen'},es:'Pérdida nigroestriatal',txt:'La degeneración de la sustancia negra compacta deja al estriado sin dopamina. La levodopa repone el precursor; la estimulación del núcleo subtalámico compensa el desequilibrio de los circuitos.'}};
 function renderPath(){
   const D=META.disorders[S.dis], I=DIS[S.dis];
   const ctxR=Object.entries(D.ctx).map(([k,v])=>({k,lab:DK[k.slice(2)].es+' '+(k[0]==='L'?'izq':'der'),d:v[0],p:v[1],go:'dk:'+DKN.indexOf(k)}));
@@ -271,13 +305,15 @@ function renderPath(){
   <select id="disSel" style="margin-top:6px">${Object.keys(META.disorders).map(k=>`<option value="${k}" ${k===S.dis?'selected':''}>${META.disorders[k].name}</option>`).join('')}</select>
   <div class="stat"><div><b>${n?n.toLocaleString('es'):'—'}</b><span>pacientes</span></div><div><b>${c?c.toLocaleString('es'):'—'}</b><span>controles</span></div><div><b>${maxd?fmtD(maxd.d):'—'}</b><span>efecto máximo</span></div></div>
   <p>${I.txt}</p><p style="font-size:12px;color:var(--faint)">${I.ref}. Corteza: grosor; estructuras profundas: volumen, ajustados por volumen intracraneal.</p>
+  ${NTVIEW[S.dis]?`<div class="warnbox" style="border-color:var(--accent)"><b>${NTVIEW[S.dis].es}.</b> ${NTVIEW[S.dis].txt}<br><button class="lnk" id="ntBtn" style="margin-top:6px">${S.nt&&S.nt.from===S.dis?'Ocultar en el modelo':'Ver en el modelo'}</button></div>`:''}
   <h3>Efectos más grandes</h3><div class="dbars">${top.map(r=>barRow(r.lab,r.d,r.go,r.p)).join('')}</div>
   <h3>Cómo leer el mapa</h3><p>Cada región se colorea con la d de Cohen: la diferencia entre medias de casos y controles expresada en desviaciones típicas. Un valor de −0,2 significa que las distribuciones se solapan casi por completo; −0,8 es un efecto grande. Ninguno de estos mapas sirve para diagnosticar a una persona: describen grupos de miles.</p>
   ${!Object.keys(D.ctx).length?'<div class="warnbox">Este conjunto solo incluye datos subcorticales; la corteza aparece en gris.</div>':''}
   ${!Object.keys(D.sub).length?'<div class="warnbox">Este conjunto solo incluye grosor cortical; las estructuras profundas aparecen en gris.</div>':''}
   <p class="note">Datos: grupos de trabajo del consorcio ENIGMA, distribuidos en el ENIGMA Toolbox (Larivière y cols., 2021). Cerebelo y tronco no forman parte de estos metaanálisis.</p>`;
   pin.innerHTML=h;
-  $('#disSel').addEventListener('change',e=>{S.dis=e.target.value; recolor(); renderPath();});
+  $('#disSel').addEventListener('change',e=>{S.dis=e.target.value; setNT(null); recolor(); renderPath();});
+  const nb=$('#ntBtn'); if(nb) nb.onclick=()=>{ if(S.nt&&S.nt.from===S.dis) setNT(null); else setNT({...NTVIEW[S.dis],from:S.dis}); renderPath(); };
 }
 function renderSim(){
   const st=S.stroke, tm=S.tumor, A=STROKE[st.art];
@@ -327,18 +363,20 @@ pin.addEventListener('click',e=>{
   if(t==='deep') return select({kind:'deep',key:v});
   if(t==='stem') return select({kind:'stem',id:+v});
   if(t==='cb') return select({kind:'cb',id:v});
+  if(t==='tr') return select({kind:'tr',id:+v});
+  if(t==='nt') return select({kind:'nt',id:v});
 });
 function showPanel(){
   if(S.mode==='path' && !S.sel) return renderPath();
   if(S.mode==='sim') return renderSim();
   const s=S.sel; if(!s) return renderIndex();
-  if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id);
+  if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id); else if(s.kind==='tr') renderTract(s.id); else if(s.kind==='nt') renderNT(s.id);
   if(S.mode==='path') pin.insertAdjacentHTML('afterbegin',`<p style="margin-bottom:14px"><button class="lnk" data-go="index">← Volver al mapa de ${META.disorders[S.dis].name}</button></p>`);
   panel.scrollTop=0;
 }
 
 /* stubs hasta que cargue el 3D */
-let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{};
+let setNT=()=>{}; let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{};
 const TUMLOC={
   lfront:{es:"Frontal izquierdo (prefrontal dorsolateral)",dk:"L_rostralmiddlefrontal",focal:"Cambios de personalidad, apatía y disfunción ejecutiva; si alcanza la región opercular, afasia no fluente.",uncal:false},
   ltemp:{es:"Temporal izquierdo",dk:"L_middletemporal",focal:"Afasia fluente, alteración de la memoria verbal, cuadrantanopsia superior derecha; crisis con aura.",uncal:true},
@@ -353,6 +391,8 @@ function setMode(m){
   S.mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   $('#legend').hidden = m!=='path';
   if(m!=='sim'){ if(S.tumor.R>0){S.tumor.R=0; applyTumor();} S.stroke.on=false; }
+  setNT(null);
+  if(m!=='anat'&&S.sel&&(S.sel.kind==='nt')){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m==='sim'){ S.sel=null; $('#clearBtn').hidden=true; }
   recolor(); showPanel();
 }
@@ -414,7 +454,7 @@ for(const key of META.deep){
   let vc=false; if(key==='stem'){ vc=true; g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(pos.length),3)); }
   const mesh=new THREE.Mesh(g,mkMat(key==='stem'?'#ffffff':DEEP[base].color,vc)); root.add(mesh);
   const side=key[0]==='L'||key==='dentL'?-1:key[0]==='R'||key==='dentR'?1:0;
-  const layer=key==='stem'?'stem':(/vent/.test(key)?'vent':(/dent/.test(key)?'cb':'deep'));
+  const layer=key==='stem'?'stem':(/vent|^v[34]$/.test(key)?'vent':(/dent/.test(key)?'cb':'deep'));
   const dir=layer==='stem'?new THREE.Vector3(0,-1,0):layer==='cb'?new THREE.Vector3(0,-0.5,-1).normalize():new THREE.Vector3(side,0,0);
   const mag=layer==='stem'?40:layer==='cb'?38:12;
   const o={mesh,kind:key==='stem'?'stem':'deep',key,base:new Float32Array(pos),off:new THREE.Vector3(),dir,mag,layer,op:1,side};
@@ -430,6 +470,22 @@ let CBO;{
   const grp=Array.from(lab,l=>l>0?cbGroup(META.cb_names[l-1]):'ant');
   CBO={mesh,kind:'cb',base:new Float32Array(pos),grp,off:new THREE.Vector3(),dir:new THREE.Vector3(0,-0.5,-1).normalize(),mag:38,layer:'cb',op:1};
   mesh.userData.o=CBO; objs.push(CBO);
+}
+/* tractos */
+let TRO;{
+  const pos=F('tr_pos'), idx=A('tr_idx'), tid=A('tr_id');
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3)); g.setIndex(new THREE.BufferAttribute(new Uint16Array(idx),1)); g.computeVertexNormals();
+  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(pos.length),3));
+  const mesh=new THREE.Mesh(g,mkMat('#ffffff',true)); mesh.material.roughness=0.45; root.add(mesh);
+  // dirección principal de cada tracto (PCA) para el color DTI
+  const n=META.tracts.length, dti=[];
+  for(let t=0;t<n;t++){ let mx=0,my=0,mz=0,c=0; for(let i=0;i<tid.length;i++) if(tid[i]===t){mx+=pos[i*3];my+=pos[i*3+1];mz+=pos[i*3+2];c++;} mx/=c;my/=c;mz/=c;
+    const C=[0,0,0,0,0,0]; for(let i=0;i<tid.length;i++) if(tid[i]===t){const x=pos[i*3]-mx,y=pos[i*3+1]-my,z=pos[i*3+2]-mz; C[0]+=x*x;C[1]+=x*y;C[2]+=x*z;C[3]+=y*y;C[4]+=y*z;C[5]+=z*z;}
+    let v=[1,1,1]; for(let it=0;it<30;it++){ const w=[C[0]*v[0]+C[1]*v[1]+C[2]*v[2],C[1]*v[0]+C[3]*v[1]+C[4]*v[2],C[2]*v[0]+C[4]*v[1]+C[5]*v[2]]; const l=Math.hypot(...w)||1; v=w.map(a=>a/l); }
+    dti.push([Math.abs(v[0]),Math.abs(v[2]),Math.abs(v[1])]); }
+  var trHL=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.4,side:THREE.DoubleSide,emissive:new THREE.Color(0x151515)})); trHL.visible=false; trHL.renderOrder=4; root.add(trHL);
+  TRO={mesh,kind:'tr',base:new Float32Array(pos),tid,dti,off:new THREE.Vector3(),dir:new THREE.Vector3(0,1,0),mag:0,layer:'tracts',op:1};
+  mesh.userData.o=TRO; objs.push(TRO);
 }
 /* centrar */
 const bb=new THREE.Box3(); for(const h in CTX){CTX[h].mesh.geometry.computeBoundingBox(); bb.union(CTX[h].mesh.geometry.boundingBox);}
@@ -474,7 +530,7 @@ function rebuildCtx(){
       if(S.tumor.R>0.5){ displace(x,y,z,tmpD,true); x+=tmpD[0];y+=tmpD[1];z+=tmpD[2]; }
       p[i]=x;p[i+1]=y;p[i+2]=z; }
     o.mesh.geometry.attributes.position.needsUpdate=true; o.mesh.geometry.computeVertexNormals(); o.mesh.geometry.computeBoundingSphere(); }
-  for(const o of [...Object.values(DEEPO),CBO]){ const p=o.mesh.geometry.attributes.position.array;
+  for(const o of [...Object.values(DEEPO),CBO,TRO]){ const p=o.mesh.geometry.attributes.position.array;
     if(S.tumor.R>0.5||o.dirty){ for(let i=0;i<p.length;i+=3){ displace(o.base[i],o.base[i+1],o.base[i+2],tmpD,false); p[i]=o.base[i]+tmpD[0];p[i+1]=o.base[i+1]+tmpD[1];p[i+2]=o.base[i+2]+tmpD[2]; }
       o.mesh.geometry.attributes.position.needsUpdate=true; o.mesh.geometry.computeVertexNormals(); o.mesh.geometry.computeBoundingSphere(); o.dirty=S.tumor.R>0.5; } }
   if(ovState.h) recolor();
@@ -516,6 +572,15 @@ recolor=()=>{
       if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5);
       if(S.sel&&S.sel.kind==='cb'&&S.sel.id!==CBO.grp[i]) col=mix(col,[0.3,0.32,0.34],0.55);
       c[i*3]=col[0]*ripple;c[i*3+1]=col[1]*ripple;c[i*3+2]=col[2]*ripple; } CBO.mesh.geometry.attributes.color.needsUpdate=true; }
+  { const c=TRO.mesh.geometry.attributes.color.array, sel=S.sel&&S.sel.kind==='tr'?S.sel.id:-1;
+    const pal=META.tracts.map((nm,t)=>{ const b=nm.replace(/_[LR]$/,''); const cls=(TRACT[b]||{cls:'assoc'}).cls; if(S.trColor==='dti'){ const d=TRO.dti[t]; return mix([d[0],d[1],d[2]],[1,1,1],0.15);} return hexRGB(TRCLS[cls].color); });
+    for(let i=0;i<TRO.tid.length;i++){ const t=TRO.tid[i]; let col=pal[t]; if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5); if(sel>=0&&t!==sel) col=mix(col,[0.25,0.27,0.29],0.75); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; }
+    TRO.mesh.geometry.attributes.color.needsUpdate=true;
+    if(sel>=0){ const g=TRO.mesh.geometry, idx=g.index.array, out=[]; for(let t=0;t<idx.length;t+=3) if(TRO.tid[idx[t]]===sel) out.push(idx[t],idx[t+1],idx[t+2]);
+      const hg=new THREE.BufferGeometry(); hg.setAttribute('position',g.attributes.position); hg.setAttribute('normal',g.attributes.normal);
+      const cc=new Float32Array(c.length); const pc=pal[sel]; for(let i=0;i<TRO.tid.length;i++){cc[i*3]=pc[0];cc[i*3+1]=pc[1];cc[i*3+2]=pc[2];}
+      hg.setAttribute('color',new THREE.BufferAttribute(cc,3)); hg.setIndex(out); trHL.geometry.dispose(); trHL.geometry=hg; trHL.visible=true; }
+    else trHL.visible=false; }
   if(ovState.h) buildOverlay();
 };
 function buildOverlay(){
@@ -552,15 +617,49 @@ select=function(sel){
     if(S.hemi!=='both'&&S.hemi!==h) setHemi('both');
     ovState.h=h; overlay.visible=true; ovState.target=7;
   }
+  setNT(sel&&sel.kind==='nt'?{sys:[sel.id],mod:{}}:null);
   recolor(); showPanel();
   if(!sel) return;
   if(sel.kind==='dk'||sel.kind==='gl'){ const o=CTX[ovState.h]; const c=centroidOf(o,sel.kind==='dk'?(i=>o.dk[i]===sel.id):(i=>o.gl[i]===sel.id)); if(c){ const d=c.clone().add(ovState.dir.clone().multiplyScalar(80)); aimAt(d);} }
-  else if(sel.kind==='deep'){ const o=DEEPO[sel.key]; if(S.ghost>0.5){ S.ghost=0.25; $('#ghost').value=25; } const c=centroidOf(o,()=>true); if(c){c.y+=60; c.x*=4; aimAt(c);} if(!S.layers[o.layer]) toggleLayer(o.layer,true); }
+  else if(sel.kind==='deep'){ const o=DEEPO[sel.key]; ghostDown(0.25); const c=centroidOf(o,()=>true); if(c){c.y+=60; c.x*=4; aimAt(c);} if(!S.layers[o.layer]) toggleLayer(o.layer,true); }
   else if(sel.kind==='stem'){ if(!S.layers.stem) toggleLayer('stem',true); camT.yaw=-1.5; camT.pitch=-0.15; }
   else if(sel.kind==='cb'){ if(!S.layers.cb) toggleLayer('cb',true); camT.yaw=-2.6; camT.pitch=-0.25; }
+  else if(sel.kind==='tr'){ if(!S.layers.tracts) toggleLayer('tracts',true); ghostDown(0.12); const c=centroidOf(TRO,i=>TRO.tid[i]===sel.id); if(c){ const sd=trSide(META.tracts[sel.id]); if(sd) c.x+=(sd==='L'?-80:80); else c.x-=60; c.y+=30; aimAt(c);} }
 };
 function selTargets(){ const s=S.sel; if(!s) return [];
-  if(s.kind==='deep') return [DEEPO[s.key]]; if(s.kind==='stem') return [DEEPO.stem]; if(s.kind==='cb') return [CBO]; return []; }
+  if(s.kind==='deep') return [DEEPO[s.key]]; if(s.kind==='stem') return [DEEPO.stem]; if(s.kind==='cb') return [CBO]; if(s.kind==='tr') return [TRO]; return []; }
+
+/* ============ sistemas de neurotransmisores ============ */
+const ntGroup=new THREE.Group(); root.add(ntGroup); let ntFlows=[];
+const mni2three=a=>new THREE.Vector3(a[0],a[2],a[1]);
+function cortexCentroid(name){ const gi=DKN.indexOf(name), o=CTX[name[0]==='L'?'lh':'rh']; const p=o.mesh.geometry.attributes.position.array, c=new THREE.Vector3(); let n=0; for(let i=0;i<o.dk.length;i++) if(o.dk[i]===gi){c.x+=p[i*3];c.y+=p[i*3+1];c.z+=p[i*3+2];n++;} c.multiplyScalar(1/n); return c.lerp(new THREE.Vector3(name[0]==='L'?-25:25,C0.y+20,C0.z),0.12); }
+function endpoints(spec){ // devuelve [{side, v}]
+  if(spec.startsWith('p:')){ const P=POINTS[spec.slice(2)]; return P.mni.map(m=>({side:m[0]<-1?'L':m[0]>1?'R':null,v:mni2three(m)})); }
+  if(spec.startsWith('c:')){ return ['L','R'].map(sd=>({side:sd,v:cortexCentroid(sd+'_'+spec.slice(2))})); }
+  const k=spec.startsWith('d:')?spec.slice(2):spec;
+  return ['L','R'].filter(sd=>DEEPO[sd+k]).map(sd=>{ const g=DEEPO[sd+k].mesh.geometry; if(!g.boundingSphere) g.computeBoundingSphere(); return {side:sd,v:g.boundingSphere.center.clone()}; });
+}
+const markGeo=new THREE.SphereGeometry(1,16,12);
+setNT=function(v){
+  S.nt=v; ntGroup.clear(); ntFlows=[];
+  if(!v) return;
+  ghostDown(0.18);
+  for(const k of v.sys){ const N=NT[k], mod=v.mod[k]||'norm', col=new THREE.Color(N.color);
+    const speed=mod==='hyper'?0.75:mod==='hypo'?0.16:mod==='degen'?0.2:0.38, dens=mod==='hyper'?26:mod==='hypo'?4:mod==='degen'?3:12, lineOp=mod==='degen'?0.2:mod==='hypo'?0.3:0.6;
+    const srcs=[].concat(...N.src.map(s=>endpoints(s.includes(':')?s:'d:'+s))); const dsts=[].concat(...N.dst.map(endpoints));
+    for(const s of srcs){ const m=new THREE.Mesh(markGeo,new THREE.MeshBasicMaterial({color:col})); m.scale.setScalar(N.src[0].startsWith('p:')?2.6:0.01); m.position.copy(s.v); ntGroup.add(m); }
+    for(const s of srcs) for(const d of dsts){ if(s.side&&d.side&&s.side!==d.side) continue;
+      const mid=s.v.clone().add(d.v).multiplyScalar(0.5); const up=new THREE.Vector3(0,1,0).multiplyScalar(s.v.distanceTo(d.v)*0.12); mid.add(up); mid.x*=0.85;
+      const curve=new THREE.CatmullRomCurve3([s.v.clone(),mid,d.v.clone()]);
+      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:lineOp,depthWrite:false,depthTest:false}));
+      line.renderOrder=7; ntGroup.add(line);
+      const pg=new THREE.BufferGeometry(); const pa=new Float32Array(dens*3); pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
+      const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:col,size:mod==='hyper'?6:4.5,sizeAttenuation:true,transparent:true,opacity:mod==='degen'||mod==='hypo'?0.55:0.95,depthWrite:false,depthTest:false}));
+      pts.renderOrder=8; ntGroup.add(pts);
+      ntFlows.push({curve,pts,pa,dens,speed,phase:Math.random()}); }
+  }
+};
+function tickNT(t){ for(const f of ntFlows){ for(let i=0;i<f.dens;i++){ const u=((t*f.speed/ (f.curve.getLength()/60))+i/f.dens+f.phase)%1; const p=f.curve.getPointAt(u); f.pa[i*3]=p.x;f.pa[i*3+1]=p.y;f.pa[i*3+2]=p.z; } f.pts.geometry.attributes.position.needsUpdate=true; } }
 
 /* ============ controles ============ */
 function markSeg(id,sel){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.matches(sel)));}
@@ -573,7 +672,8 @@ $('#infl').oninput=e=>{S.infl=e.target.value/100; rebuildCtx();};
 $('#explode').oninput=e=>{S.explode=e.target.value/100;};
 $('#ghost').oninput=e=>{S.ghost=e.target.value/100;};
 function toggleLayer(l,v){S.layers[l]=v; const i=document.querySelector(`[data-l="${l}"]`); if(i) i.checked=v;}
-$('#layers').onchange=e=>{const i=e.target; if(i.dataset.l) S.layers[i.dataset.l]=i.checked;};
+$('#layers').onchange=e=>{const i=e.target; if(i.dataset.l){ S.layers[i.dataset.l]=i.checked; if(i.dataset.l==='tracts'&&i.checked) ghostDown(0.12);} };
+function ghostDown(v){ if(S.ghost>v+0.05){ S.ghost=v; $('#ghost').value=Math.round(v*100);} }
 $('#clearBtn').onclick=()=>select(null);
 addEventListener('keydown',e=>{if(e.key==='Escape') select(null);});
 
@@ -591,11 +691,12 @@ function pick(cx,cy){
   if(o.kind==='deep') return {kind:'deep',key:o.key};
   if(o.kind==='stem') return {kind:'stem',id:o.lab[vi]};
   if(o.kind==='cb') return {kind:'cb',id:o.grp[vi]};
+  if(o.kind==='tr') return {kind:'tr',id:o.tid[vi]};
   return null;
 }
 function nameOf(h){ if(!h) return ''; if(h.kind==='dk') return DK[dkBase(h.id)].es+' · '+(dkSide(h.id)==='L'?'izq':'der')+(S.mode==='path'&&META.disorders[S.dis].ctx[DKN[h.id]]?'  d '+fmtD(META.disorders[S.dis].ctx[DKN[h.id]][0]):'');
   if(h.kind==='gl') return glCode(h.id)+' · '+(GLN[h.id-1][0]==='L'?'izq':'der'); if(h.kind==='deep'){const b=DEEPKEY(h.key); const sk=SUBKEY[b]; const v=S.mode==='path'&&sk?META.disorders[S.dis].sub[h.key[0]+sk]:null; return DEEP[b].es+(v?'  d '+fmtD(v[0]):'');}
-  if(h.kind==='stem') return DEEP['stem'+h.id].es; if(h.kind==='cb') return 'Cerebelo · '+CB[h.id].es; return ''; }
+  if(h.kind==='stem') return DEEP['stem'+h.id].es; if(h.kind==='cb') return 'Cerebelo · '+CB[h.id].es; if(h.kind==='tr'){ const n=META.tracts[h.id], b=trBase(n), sd=trSide(n); return ((TRACT[b]||{es:b}).es)+(sd?' · '+(sd==='L'?'izq':'der'):''); } if(h.kind==='nt') return NT[h.id].es; return ''; }
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); idle=false; moved=false; drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}; if(ptrs.size===2){const [a,b]=[...ptrs.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y);}});
 cv.addEventListener('pointermove',e=>{
   if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -637,11 +738,16 @@ function frame(){
     let op=o.layer==='ctx'?S.ghost:1;
     if(targets.length&&!targets.includes(o)) op=o.layer==='ctx'?Math.min(op,0.12):0.25;
     if(o.layer==='ctx'&&S.mode==='sim'&&S.tumor.R>0.5) op=Math.min(op,0.55);
+    if(o===TRO&&S.sel&&S.sel.kind==='tr') op=0.1;
+    if(o===TRO&&S.nt) op=0.15;
+    if(S.nt&&o.layer!=='ctx'&&o!==TRO) op=Math.min(op,0.4);
     o.op+=(op-o.op)*k; const m=o.mesh.material; m.opacity=o.op; m.depthWrite=o.layer==='ctx'?true:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
-    m.emissive.setRGB(0,0,0); if(targets.includes(o)) m.emissive.setRGB(0.12,0.12,0.12);
+    m.emissive.setRGB(0,0,0); if(targets.includes(o)&&o!==TRO) m.emissive.setRGB(0.12,0.12,0.12);
     if(S.hover&&!S.sel&&((S.hover.kind==='deep'&&o.key===S.hover.key))) m.emissive.setRGB(0.08,0.08,0.08);
   }
   if(ovState.h){ const o=CTX[ovState.h]; ovState.amt+=(ovState.target-ovState.amt)*k; overlay.position.copy(o.off).addScaledVector(ovState.dir,ovState.amt); overlay.visible=o.mesh.visible; }
+  trHL.visible=trHL.visible&&TRO.mesh.visible&&!!(S.sel&&S.sel.kind==='tr');
+  if(ntFlows.length) tickNT(clock.elapsedTime);
   renderer.render(scene,camera);
   // etiqueta
   if(S.sel){ let w=null; const s=S.sel;

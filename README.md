@@ -12,8 +12,11 @@ Toda la aplicación es un solo archivo, `index.html`, que funciona sin servidor.
   - lóbulos;
   - 68 regiones de Desikan-Killiany;
   - 360 áreas del atlas multimodal HCP-MMP1 (Glasser y cols., 2016).
-- Núcleos profundos: tálamo, caudado, putamen, pálido, accumbens, hipocampo y amígdala.
-- Ventrículos laterales, tronco del encéfalo y cerebelo por lóbulos de Larsell.
+- Núcleos profundos: tálamo, caudado, putamen, pálido, accumbens, hipocampo, amígdala y prosencéfalo basal.
+- Mesencéfalo y diencéfalo: sustancia negra (compacta y reticulada), área tegmental ventral, núcleo rojo, subtalámico, hipotálamo, habénula y cuerpos mamilares.
+- Sistema ventricular (laterales, III y IV), quiasma óptico, tronco del encéfalo y cerebelo por lóbulos de Larsell.
+- 75 tractos de sustancia blanca: asociación, proyección, comisurales, pedúnculos cerebelosos, vías del tronco y pares craneales. Se colorean por tipo o por dirección, como en la imagen por tensor de difusión.
+- Sistemas de neurotransmisores animados: dopamina (vías nigroestriatal, mesolímbica, mesocortical y tuberoinfundibular), serotonina, noradrenalina y acetilcolina.
 - Una región seleccionada se separa de la superficie. El control "Inflar" despliega los surcos, "Separar" aleja los bloques y "Corteza" la vuelve translúcida para ver las estructuras profundas.
 
 **Patología**
@@ -23,7 +26,7 @@ Mapas de la d de Cohen (casos − controles) de los metaanálisis del consorcio 
 - epilepsia temporal con esclerosis hipocampal;
 - Parkinson, anorexia nerviosa, síndrome de deleción 22q11.2.
 
-Cada ficha anatómica cruza su región con los diez trastornos.
+Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofrenia y Parkinson se muestra además la alteración dopaminérgica: exceso mesolímbico y déficit mesocortical en el primer caso, pérdida nigroestriatal en el segundo.
 
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
@@ -47,7 +50,8 @@ build/meta.json         índice del binario, nombres y estadísticas ENIGMA
 pip install -r pipeline/requirements.txt
 # datos de entrada (en el directorio de trabajo de process.py):
 git clone --depth 1 https://github.com/MICA-MNI/ENIGMA.git
-# + neuroparc (Harvard-Oxford subcortical 1 mm) en ./np
+# + frankyeh/data-atlas (human/CerebrA, human/HCP842_tractography) en ./data-atlas
+# + niivue/niivue-demo-images (CIT168) en ./niivue-demo-images
 # + DiedrichsenLab/cerebellar_atlases en ./ca
 python pipeline/process.py        # escribe out/atlas.bin.gz y out/meta.json -> copiar a build/
 python pipeline/build_page.py     # escribe index.html
@@ -61,10 +65,12 @@ Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSu
 |---|---|---|
 | Superficies corticales | fsaverage5, FreeSurfer (vía nilearn) | Licencia de FreeSurfer |
 | Parcelaciones y estadísticas | ENIGMA Toolbox (Larivière y cols., 2021, Nature Methods) | BSD-3; los datos HCP-MMP1 siguen los términos del Human Connectome Project |
-| Núcleos, tronco, ventrículos | Atlas Harvard-Oxford subcortical (FSL), vía neuroparc | **Licencia FSL: uso no comercial** |
-| Cerebelo | Diedrichsen y cols. (2009), DiedrichsenLab/cerebellar_atlases | Ver el repositorio original |
+| Núcleos, tronco, ventrículos | CerebrA (Manera y cols., 2020), plantilla MNI ICBM 2009c | Licencia MNI: uso, copia y distribución libres con aviso de copyright |
+| Núcleos del mesencéfalo y diencéfalo | CIT168 (Pauli y cols., 2018) | CC BY 4.0 |
+| Tractos | Atlas HCP-842 (Yeh y cols., 2018), vía frankyeh/data-atlas | Datos del Human Connectome Project; ver el repositorio original |
+| Cerebelo | Diedrichsen y cols. (2009) | **CC BY-NC 3.0: uso no comercial** |
 
-Antes de cualquier uso comercial hay que revisar estas licencias. La del atlas Harvard-Oxford no lo permite sin acuerdo.
+El proyecto es de acceso libre. La única pieza con licencia no comercial es el atlas de lóbulos del cerebelo; para un uso comercial habría que sustituirla, por ejemplo por las regiones cerebelosas de CerebrA.
 
 ## Advertencia
 

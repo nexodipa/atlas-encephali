@@ -103,29 +103,100 @@ def orient_out(xyz, faces):
     t = xyz[faces]; vol = np.einsum('ij,ij->i', t[:, 0], np.cross(t[:, 1], t[:, 2])).sum()
     return faces if vol > 0 else faces[:, [0, 2, 1]]
 
-ho = nib.load('np/atlases/label/Human/HarvardOxfordsub-maxprob-thr25_space-MNI152NLin6_res-1x1x1.nii.gz')
-hd = np.round(ho.get_fdata()).astype(int)
-# Orden FSL: 1-11 izquierda, 12-21 derecha (el CSV de neuroparc invierte los nombres)
-HO = {'Lvent': 3, 'Lthal': 4, 'Lcaud': 5, 'Lput': 6, 'Lpal': 7, 'stem': 8, 'Lhippo': 9, 'Lamyg': 10, 'Laccumb': 11,
-      'Rvent': 14, 'Rthal': 15, 'Rcaud': 16, 'Rput': 17, 'Rpal': 18, 'Rhippo': 19, 'Ramyg': 20, 'Raccumb': 21}
+# ---- CerebrA (licencia permisiva MNI) para núcleos, ventrículos y tronco ----
+cer = nib.load('data-atlas/human/CerebrA.nii.gz')
+cd0 = np.asarray(cer.dataobj).astype(int)
+cnames = {}
+for line in open('data-atlas/human/CerebrA.txt'):
+    p = line.split()
+    if len(p) >= 2: cnames[p[1]] = int(p[0])
+def cl(*names): return [cnames[n] for n in names]
+GROUPS = {
+  'Lthal': cl('Left_Thalamus'), 'Rthal': cl('Right_Thalamus'),
+  'Lcaud': cl('Left_Caudate'), 'Rcaud': cl('Right_Caudate'),
+  'Lput': cl('Left_Putamen'), 'Rput': cl('Right_Putamen'),
+  'Lpal': cl('Left_Pallidum'), 'Rpal': cl('Right_Pallidum'),
+  'Laccumb': cl('Left_Accumbens_Area'), 'Raccumb': cl('Right_Accumbens_Area'),
+  'Lhippo': cl('Left_Hippocampus'), 'Rhippo': cl('Right_Hippocampus'),
+  'Lamyg': cl('Left_Amygdala'), 'Ramyg': cl('Right_Amygdala'),
+  'Lvent': cl('Left_Lateral_Ventricle', 'Left_Inferior_Lateral_Ventricle'),
+  'Rvent': cl('Right_Lateral_Ventricle', 'Right_Inferior_Lateral_Ventricle'),
+  'v3': cl('Left_Third_Ventricle', 'Right_Third_Ventricle'),
+  'v4': cl('Left_Fourth_Ventricle', 'Right_Fourth_Ventricle'),
+  'stem': cl('Left_Brainstem', 'Right_Brainstem'),
+  'Lbf': cl('Left_Basal_Forebrain'), 'Rbf': cl('Right_Basal_Forebrain'),
+  'chiasm': cl('Left_Optic_Chiasm', 'Right_Optic_Chiasm'),
+}
+# corrige lateralidad por centroide (los nombres izquierda/derecha pueden venir invertidos)
+for k in list(GROUPS):
+    if k[0] in 'LR' and k[1:] and (('R'+k[1:]) in GROUPS):
+        pass
+fixed = {}
+for k, labs in GROUPS.items():
+    if k[0] in 'LR' and ('L' + k[1:]) in GROUPS and ('R' + k[1:]) in GROUPS:
+        c = nib.affines.apply_affine(cer.affine, np.argwhere(np.isin(cd0, labs))).mean(0)
+        side = 'L' if c[0] < 0 else 'R'
+        fixed[side + k[1:]] = labs
+    else:
+        fixed[k] = labs
+GROUPS = fixed
 deep = []
-for key, lab in HO.items():
-    target = 2600 if key != 'stem' else 5000
-    xyz, faces, _ = mesh_from_mask(hd == lab, ho.affine, 0.9, target)
-    c = xyz.mean(0)
-    if key.startswith('L'): assert c[0] < 0, key
-    if key.startswith('R'): assert c[0] > 0, key
-    lab_v = None
-    if key == 'stem':  # mesencéfalo / protuberancia / bulbo por altura (aprox. MNI)
-        z = xyz[:, 2]
-        lab_v = np.where(z > -14, 0, np.where(z > -38, 1, 2)).astype(np.uint8)
+def emit(key, mask, affine, target, sigma=0.9, labfn=None, upsample=1):
+    if upsample > 1:
+        mask = ndimage.zoom(mask.astype(np.float32), upsample, order=1) > 0.5
+        affine = affine.copy(); affine[:3, :3] = affine[:3, :3] / upsample
+    xyz, faces, _ = mesh_from_mask(mask, affine, sigma * upsample, target)
     faces = orient_out(xyz, faces)
-    th = ras2three(xyz); faces = faces[:, [0, 2, 1]]
-    add(f'deep_{key}_pos', qverts(th)); add(f'deep_{key}_idx', faces.astype(np.uint16))
-    if lab_v is not None: add(f'deep_{key}_lab', lab_v)
+    add(f'deep_{key}_pos', qverts(ras2three(xyz))); add(f'deep_{key}_idx', faces[:, [0, 2, 1]].astype(np.uint16))
+    if labfn is not None: add(f'deep_{key}_lab', labfn(xyz))
     deep.append(key)
-    print(key, len(xyz), len(faces), c.round(1))
+    print(key, len(xyz), len(faces), xyz.mean(0).round(1))
+for key, labs in GROUPS.items():
+    tgt = 5000 if key == 'stem' else (1600 if key in ('v3', 'v4', 'chiasm') or key[1:] in ('bf', 'accumb') else 2600)
+    lf = None
+    if key == 'stem':
+        lf = lambda xyz: np.where(xyz[:, 2] > -14, 0, np.where(xyz[:, 2] > -38, 1, 2)).astype(np.uint8)
+    emit(key, np.isin(cd0, labs), cer.affine, tgt, 0.8 if key in ('v3', 'v4', 'chiasm') else 0.9, lf)
+
+# ---- CIT168 (CC BY 4.0): núcleos del mesencéfalo y diencéfalo ----
+cit = nib.load('niivue-demo-images/CIT168/CIT168.nii.gz')
+cdat = np.asarray(cit.dataobj)
+CIT = {'snc': 13, 'snr': 17, 'vta': 21, 'rn': 15, 'stn': 31, 'hth': 27, 'hab': 25, 'mam': 29}
+for k, li in CIT.items():
+    for side, off in (('L', 0), ('R', 1)):
+        lab = li + off
+        prob = np.where(cdat['R'] == lab, cdat['B'], 0).astype(np.float32) + np.where(cdat['G'] == lab, cdat['A'], 0)
+        m = prob >= 70
+        if m.sum() < 3: m = prob >= 30
+        c = nib.affines.apply_affine(cit.affine, np.argwhere(m)).mean(0)
+        sd = 'L' if c[0] < 0 else 'R'
+        emit(sd + k, m, cit.affine, 900, 0.6, upsample=2)
 meta['deep'] = deep
+
+# ---- Tractos de sustancia blanca (atlas HCP842, Yeh y cols., 2018) ----
+tr = nib.load('data-atlas/human/HCP842_tractography.nii.gz')
+tnames = [l.split('\t')[1].strip() for l in open('data-atlas/human/HCP842_tractography.txt') if '\t' in l]
+SKIP = {'U_Fiber_L', 'U_Fiber_R', 'Cerebellum_L', 'Cerebellum_R', 'Vermis'}
+allv = []; allf = []; allt = []; tract_meta = []; voff = 0
+for ti, nm in enumerate(tnames):
+    if nm in SKIP: continue
+    m = np.asarray(tr.dataobj[..., ti]) > 0
+    if nm == 'Corpus_Callosum':
+        m = m | m[::-1]
+        xs = nib.affines.apply_affine(tr.affine, np.stack(np.meshgrid(np.arange(m.shape[0]), [0], [0], indexing='ij'), -1).reshape(-1, 3))[:, 0]
+        m = m & (np.abs(xs) <= 7)[:, None, None]
+        zs = np.arange(m.shape[2]) * tr.affine[2, 2] + tr.affine[2, 3]
+        m = m & (zs <= 33)[None, None, :]
+        lab_, n_ = ndimage.label(m); m = lab_ == (np.bincount(lab_.ravel())[1:].argmax() + 1)
+    if m.sum() < 20: continue
+    xyz, faces, _ = mesh_from_mask(m, tr.affine, 0.7, 1400 if nm != 'Corpus_Callosum' else 3000)
+    faces = orient_out(xyz, faces)
+    allv.append(xyz); allf.append(faces + voff); allt.append(np.full(len(xyz), len(tract_meta), np.uint8))
+    tract_meta.append(nm); voff += len(xyz)
+V = np.concatenate(allv); Fc = np.concatenate(allf); Tt = np.concatenate(allt)
+print('tracts', len(tract_meta), len(V), len(Fc))
+add('tr_pos', qverts(ras2three(V))); add('tr_idx', Fc[:, [0, 2, 1]].astype(np.uint16)); add('tr_id', Tt)
+meta['tracts'] = tract_meta
 
 # Cerebelo
 cb = nib.load('ca/Diedrichsen_2009/atl-Anatom_space-MNI_dseg.nii')
@@ -139,7 +210,7 @@ for key, labs in (('dentL', [29]), ('dentR', [30])):
     xyz, faces, _ = mesh_from_mask(np.isin(cd, labs), cb.affine, 0.7, 800)
     faces = orient_out(xyz, faces)
     add(f'deep_{key}_pos', qverts(ras2three(xyz))); add(f'deep_{key}_idx', faces[:, [0, 2, 1]].astype(np.uint16))
-    meta['deep'].append(key)
+    deep.append(key)
 meta['cb_names'] = [r[1] for r in csv.reader(open('ca/Diedrichsen_2009/atl-Anatom.tsv'), delimiter='\t')][1:]
 
 # ---------------- Estadísticas ENIGMA ----------------

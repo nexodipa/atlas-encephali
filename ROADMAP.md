@@ -6,13 +6,20 @@
 - [x] Mapas de patología ENIGMA (10 trastornos), cruzados en cada ficha
 - [x] Simulaciones: ictus por territorio arterial; glioblastoma con efecto de masa
 
+## Hecho (v3)
+- [x] 75 tractos de sustancia blanca (HCP-842), con color por tipo o por dirección
+- [x] Sistemas de neurotransmisores animados (dopamina, serotonina, noradrenalina, acetilcolina)
+- [x] Ventrículos III y IV, quiasma, prosencéfalo basal
+- [x] Núcleos del mesencéfalo y diencéfalo (CIT168)
+- [x] Sustitución de Harvard-Oxford (no comercial) por CerebrA (licencia permisiva)
+- [x] Esquizofrenia y Parkinson como alteración dopaminérgica en el modo Patología
+
 ## Pendiente para completar el mapeo
-- [ ] Tractos de sustancia blanca: fascículo arqueado, corticoespinal, uncinado, fórnix, cuerpo calloso por segmentos
-- [ ] Sistemas de neurotransmisores: vías dopaminérgicas (nigroestriatal, mesolímbica, mesocortical), serotoninérgica, noradrenérgica y colinérgica
-- [ ] Tercer y cuarto ventrículo; sistema ventricular completo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
+- [ ] Núcleos del tálamo (atlas THOMAS)
+- [ ] Locus coeruleus y núcleos del rafe desde un atlas, en vez de posiciones aproximadas
+- [ ] Cerebelo con licencia abierta
 - [ ] Vascularización: polígono de Willis y territorios arteriales a nivel de vértice
-- [ ] Hipotálamo, sustancia negra, núcleo subtalámico y núcleo rojo como estructuras propias
 - [ ] Descripciones para más áreas HCP-MMP1
 
 ## Simulaciones siguientes
