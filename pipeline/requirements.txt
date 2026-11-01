@@ -1,0 +1,6 @@
+nilearn
+nibabel
+numpy
+scipy
+scikit-image
+fast-simplification
