@@ -44,6 +44,8 @@ glas = np.loadtxt(E + 'parcellations/glasser_360_fsa5.csv', dtype=int)
 a_idx = list(range(1, 4)) + list(range(5, 39)) + list(range(40, 71))
 lab2dk = {lab: i for i, lab in enumerate(a_idx)}  # label aparc -> índice en dk_names (0..67)
 
+SURF = {}
+SURF_F = {}
 for hemi, nlname in (('lh', 'left'), ('rh', 'right')):
     sl = slice(0, 10242) if hemi == 'lh' else slice(10242, 20484)
     pial = nib.load(NL + f'pial_{nlname}.gii.gz')
@@ -51,6 +53,9 @@ for hemi, nlname in (('lh', 'left'), ('rh', 'right')):
     infl = nib.load(NL + f'infl_{nlname}.gii.gz').darrays[0].data.astype(np.float64)
     sulc = nib.load(NL + f'sulc_{nlname}.gii.gz').darrays[0].data
     v = to152(v)
+    white152 = to152(nib.load(NL + f'white_{nlname}.gii.gz').darrays[0].data.astype(np.float64))
+    SURF[hemi] = (v.copy(), white152, aparc[sl].copy())
+    SURF_F[hemi] = f.copy()
     # inflada: centrada sobre el centroide pial y escalada al tamaño pial
     infl = infl - infl.mean(0); s = (v.std(0) / infl.std(0)).mean() * 0.95
     infl = infl * s + v.mean(0)
@@ -141,7 +146,9 @@ for k, labs in GROUPS.items():
         fixed[k] = labs
 GROUPS = fixed
 deep = []
+MASKXYZ = {}
 def emit(key, mask, affine, target, sigma=0.9, labfn=None, upsample=1):
+    MASKXYZ[key] = nib.affines.apply_affine(affine, np.argwhere(mask))
     if upsample > 1:
         mask = ndimage.zoom(mask.astype(np.float32), upsample, order=1) > 0.5
         affine = affine.copy(); affine[:3, :3] = affine[:3, :3] / upsample
@@ -212,6 +219,49 @@ for key, labs in (('dentL', [29]), ('dentR', [30])):
     add(f'deep_{key}_pos', qverts(ras2three(xyz))); add(f'deep_{key}_idx', faces[:, [0, 2, 1]].astype(np.uint16))
     deep.append(key)
 meta['cb_names'] = [r[1] for r in csv.reader(open('ca/Diedrichsen_2009/atl-Anatom.tsv'), delimiter='\t')][1:]
+
+
+# ---- Mapas PET de receptores (Hansen y cols., 2022; CC BY-NC-SA 4.0) ----
+from scipy.ndimage import map_coordinates
+RECS = [('D1','D1_SCH23390_hc13_kaller.nii'),('D2','D2_fallypride_hc49_jaworska.nii'),('DAT','DAT_fpcit_hc174_dukart_spect.nii'),('FDOPA','FDOPA_fluorodopa_hc12_gomez.nii'),
+ ('5HT1a','5HT1a_way_hc36_savli.nii'),('5HT1b','5HT1b_p943_hc65_gallezot.nii.gz'),('5HT2a','5HT2a_cimbi_hc29_beliveau.nii'),('5HT4','5HT4_sb20_hc59_beliveau.nii'),('5HT6','5HT6_gsk_hc30_radhakrishnan.nii.gz'),('SERT','5HTT_dasb_hc100_beliveau.nii'),
+ ('NET','NAT_MRB_hc77_ding.nii.gz'),('A4B2','A4B2_flubatine_hc30_hillmer.nii.gz'),('M1','M1_lsn_hc24_naganawa.nii.gz'),('VAChT','VAChT_feobv_hc18_aghourian_sum.nii'),
+ ('GABAa','GABAa-bz_flumazenil_hc16_norgaard.nii'),('NMDA','NMDA_ge179_hc29_galovic.nii.gz'),('mGluR5','mGluR5_abp_hc73_smart.nii'),('MOR','MU_carfentanil_hc204_kantonen.nii'),('CB1','CB1_omar_hc77_normandin.nii.gz'),('H3','H3_cban_hc8_gallezot.nii.gz')]
+rec_meta = {}
+def samp(img, dat, xyz):
+    ijk = nib.affines.apply_affine(np.linalg.inv(img.affine), xyz).T
+    return map_coordinates(dat, ijk, order=1, mode='nearest')
+for key, fn in RECS:
+    img = nib.load('hr/data/PET_nifti_images/' + fn)
+    dat = np.nan_to_num(np.asarray(img.dataobj, dtype=np.float32).squeeze())
+    if dat.ndim == 4: dat = dat[..., 0]
+    vals = {}
+    for hemi in ('lh', 'rh'):
+        p, w, a = SURF[hemi]
+        acc = np.zeros(len(p))
+        for t in (0.3, 0.5, 0.7): acc += samp(img, dat, w + (p - w) * t)
+        vals[hemi] = acc / 3
+        # suavizado en la malla (promedio con vecinos) para reducir ruido de muestreo
+        import scipy.sparse as sp
+        fcs = SURF_F[hemi]; n = len(p)
+        Adj = sp.coo_matrix((np.ones(fcs.size * 2), (np.r_[fcs[:, 0], fcs[:, 1], fcs[:, 2], fcs[:, 1], fcs[:, 2], fcs[:, 0]], np.r_[fcs[:, 1], fcs[:, 2], fcs[:, 0], fcs[:, 0], fcs[:, 1], fcs[:, 2]])), shape=(n, n)).tocsr()
+        Adj.data[:] = 1; deg = np.asarray(Adj.sum(1)).ravel()
+        for _ in range(4): vals[hemi] = 0.5 * vals[hemi] + 0.5 * (Adj @ vals[hemi]) / deg
+    allc = np.concatenate([vals['lh'][SURF['lh'][2] > 0], vals['rh'][SURF['rh'][2] > 0]])
+    lo, hi = np.percentile(allc, [2, 98])
+    for hemi in ('lh', 'rh'):
+        q = np.clip((vals[hemi] - lo) / (hi - lo + 1e-9), 0, 1)
+        add(f'rec_{key}_{hemi}', np.round(q * 255).astype(np.uint8))
+    deepv = {}
+    for k, xyz in MASKXYZ.items():
+        if 'vent' in k or k in ('v3', 'v4', 'chiasm'): continue
+        sub = xyz[::max(1, len(xyz) // 400)]
+        deepv[k] = float(np.mean(samp(img, dat, sub)))
+    cmed = float(np.median(allc))
+    dmax = max(deepv.values())
+    rec_meta[key] = {'file': fn, 'deep': {k: round(v / dmax, 3) for k, v in deepv.items()}, 'deep_vs_ctx': round(dmax / (cmed + 1e-9), 2)}
+    print(key, 'deep max/cortex median', rec_meta[key]['deep_vs_ctx'])
+meta['receptors'] = rec_meta
 
 # ---------------- Estadísticas ENIGMA ----------------
 SS = E + 'summary_statistics/'

@@ -124,7 +124,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
   <header class="top">
     <div class="brand"><b>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
     <nav class="modes" id="modes" aria-label="Modo">
-      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button>
+      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button>
     </nav>
   </header>
   <main>
@@ -132,7 +132,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
       <div id="stage" aria-label="Modelo 3D del encéfalo">
         <div class="loading" id="loading">Cargando superficies corticales y núcleos…</div>
         <div class="hud"><div class="view">Vista <em id="viewName">lateral izquierda</em></div><div>Arrastra para rotar · rueda o pellizco para acercar · toca una región</div></div>
-        <div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar"></div><div class="ticks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
+        <div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
         <button class="clear" id="clearBtn" hidden>Quitar selección</button>
         <div class="tip" id="tip" hidden></div>
         <div class="tag" id="tag" hidden></div>
@@ -171,7 +171,7 @@ const META = /*META*/null;
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
-  sel:null,hover:null,dis:'scz',stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0}};
+  sel:null,hover:null,dis:'scz',pathTab:'enigma',disease:'ad',stage:0,rare:'wilson',drug:'haloperidol',rec:'D2',stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -198,6 +198,8 @@ const dkColor=[];
 const glColor=g=>{ const host=META.gl_host[g]; const base=host!=null?hexRGB(LOBES[lobeOfDK(host)].color):[0.5,0.5,0.5]; const t=(((g%180)+1)*0.618034)%1; const c=t<0.5?mix(base,[1,1,1],(0.5-t)*0.85):mix(base,[0.12,0.13,0.16],(t-0.5)*0.95); return mix(c,hsl(t,0.5,0.55),0.18); };
 
 /* ============ panel ============ */
+const isSurf = s => s && (s.kind==='dk'||s.kind==='gl'||s.kind==='lobe');
+function selTest(o,s){ if(s.kind==='dk') return i=>o.dk[i]===s.id; if(s.kind==='gl') return i=>o.gl[i]===s.id; if(s.kind==='lobe') return i=>o.h===s.h&&o.dk[i]!==255&&lobeOfDK(o.dk[i])===s.id; return ()=>false; }
 function lobeOfDK(i){const d=DK[dkBase(i)]; return d?d.lobe:'frontal';}
 function enigmaRows(subkey, isCtx){
   const rows=[];
@@ -218,7 +220,7 @@ function renderIndex(){
   <p class="lede">Superficie cortical real de un cerebro promedio (fsaverage, FreeSurfer) parcelada en 68 regiones de Desikan-Killiany o en las 360 áreas del atlas multimodal HCP-MMP1, con núcleos y ventrículos (CerebrA, CIT168), tronco, cerebelo, 75 tractos de sustancia blanca (HCP-842) y los grandes sistemas de neurotransmisores. Toca una región o elige una aquí.</p>`;
   for(const lb of ['frontal','parietal','temporal','occipital','limbic','insula']){
     const regs=Object.keys(DK).filter(k=>DK[k].lobe===lb);
-    h+=`<div class="grp"><h3><span class="sw" style="background:${LOBES[lb].color}"></span>${LOBES[lb].name}</h3><div class="list">${regs.map(k=>`<button data-go="dk:${DKN.indexOf('L_'+k)}">${DK[k].es}<small>${DK[k].ba}</small></button>`).join('')}</div></div>`;
+    h+=`<div class="grp"><h3><span class="sw" style="background:${LOBES[lb].color}"></span><button class="lnk" style="font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit" data-go="lobe:${lb}:lh">${LOBES[lb].name}</button></h3><div class="list">${regs.map(k=>`<button data-go="dk:${DKN.indexOf('L_'+k)}">${DK[k].es}<small>${DK[k].ba}</small></button>`).join('')}</div></div>`;
   }
   h+=`<div class="grp"><h3>Ganglios basales y sistema límbico</h3><div class="list">${['caud','put','pal','accumb','stn','hippo','amyg','bf'].map(k=>`<button data-go="deep:L${k}">${DEEP[k].es}</button>`).join('')}</div></div>`;
   h+=`<div class="grp"><h3>Diencéfalo y mesencéfalo</h3><div class="list">${['thal','hth','mam','hab','snc','snr','vta','rn'].map(k=>`<button data-go="deep:L${k}">${DEEP[k].es}</button>`).join('')}<button data-go="deep:chiasm">${DEEP.chiasm.es}</button></div></div>`;
@@ -232,6 +234,18 @@ function renderIndex(){
 }
 function sourcesNote(){
   return `<p class="note">Fuentes: superficie fsaverage5 (FreeSurfer); parcelaciones Desikan-Killiany y HCP-MMP1 (Glasser y cols., 2016) y estadísticas de casos-controles del ENIGMA Toolbox (Larivière y cols., 2021); núcleos, ventrículos y tronco de CerebrA (Manera y cols., 2020); núcleos del mesencéfalo y diencéfalo de CIT168 (Pauli y cols., 2018); tractos del atlas HCP-842 (Yeh y cols., 2018); cerebelo de Diedrichsen y cols. (2009). Cerebro promedio, no de una persona concreta. La división del tronco en tres segmentos es aproximada.</p>`;
+}
+function renderLobe(id,h){
+  const L=LOBES[id], I=LOBEINFO[id], side=h==='lh'?'L':'R';
+  const regs=Object.keys(DK).filter(k=>DK[k].lobe===id);
+  pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>${L.name}</span></div>
+  <p class="kicker"><span class="sw" style="background:${L.color}"></span>Lóbulo · hemisferio ${sideEs(side)}</p><h2>${L.name}</h2><p class="sub2">${I.latin}</p>
+  <p class="lede">${I.lede}</p>
+  <h3>Regiones que lo forman</h3><div class="chips">${regs.map(k=>`<button class="chip" data-go="dk:${DKN.indexOf(side+'_'+k)}">${DK[k].es}<code>${DK[k].ba}</code></button>`).join('')}</div>
+  <h3>Funciones</h3><ul>${I.func.map(x=>`<li>${x}</li>`).join('')}</ul>
+  <h3>Clínica</h3><ul>${I.clin.map(x=>`<li>${x}</li>`).join('')}</ul>
+  <h3>Conexiones</h3><p>${I.conn}</p>
+  <p style="margin-top:14px"><button class="lnk" data-go="lobe:${id}:${h==='lh'?'rh':'lh'}">Ver el lóbulo del hemisferio ${h==='lh'?'derecho':'izquierdo'}</button></p>`;
 }
 function renderDK(i){
   const b=dkBase(i), d=DK[b], lb=LOBES[d.lobe];
@@ -292,7 +306,48 @@ function renderNT(k){
 }
 const NTVIEW={scz:{sys:['da_ml','da_mc'],mod:{da_ml:'hyper',da_mc:'hypo'},es:'Hipótesis dopaminérgica',txt:'Exceso de dopamina en la vía mesolímbica (partículas rápidas y densas), asociado a delirios y alucinaciones, y déficit en la mesocortical (partículas escasas), asociado a apatía y problemas cognitivos. Los antipsicóticos bloquean receptores D2 en todas las vías, lo que explica tanto su efecto como sus efectos adversos.'},
   pd:{sys:['da_ns'],mod:{da_ns:'degen'},es:'Pérdida nigroestriatal',txt:'La degeneración de la sustancia negra compacta deja al estriado sin dopamina. La levodopa repone el precursor; la estimulación del núcleo subtalámico compensa el desequilibrio de los circuitos.'}};
+function pathTabs(){ return `<div class="seg" id="ptabs" style="margin-bottom:18px">${[['enigma','Datos ENIGMA'],['dis','Enfermedades'],['rare','Raras']].map(([k,l])=>`<button data-ptab="${k}" class="${S.pathTab===k?'on':''}">${l}</button>`).join('')}</div>`; }
 function renderPath(){
+  if(S.pathTab==='dis') renderDisease(); else if(S.pathTab==='rare') renderRare(); else renderEnigma();
+  pin.insertAdjacentHTML('afterbegin',pathTabs());
+}
+function renderDisease(){
+  const D=DISEASE[S.disease], st=Math.min(S.stage,D.stages.length-1), cur=D.stages[st];
+  pin.innerHTML=`<p class="kicker">Enfermedades · progresión</p><h2>${D.es}</h2><p class="sub2">${D.kind}</p>
+  <select id="dsSel" style="margin-bottom:14px">${Object.keys(DISEASE).map(k=>`<option value="${k}" ${k===S.disease?'selected':''}>${DISEASE[k].es}</option>`).join('')}</select>
+  <p class="lede">${D.lede}</p>
+  ${D.stages.length>1?`<div class="rngrow"><span class="lab">Estadio</span><input id="stR" type="range" min="0" max="${D.stages.length-1}" step="1" value="${st}"><output>${st+1} / ${D.stages.length}</output></div>`:''}
+  <div class="warnbox" style="border-color:${D.color}"><b>${cur.es}.</b> ${cur.txt}</div>
+  ${D.stages.length>1?`<h3>Secuencia</h3><ul>${D.stages.map((x,i)=>`<li style="${i>st?'color:var(--faint)':''}">${x.es}</li>`).join('')}</ul>`:''}
+  <h3>Tratamiento y contexto</h3><p>${D.note}</p>
+  <p class="note">Las regiones coloreadas indican dónde se concentra la patología en cada fase según las secuencias publicadas; los colores más intensos corresponden a las zonas afectadas antes. Es un esquema de grupo: cada paciente tiene su propio ritmo y patrón.</p>`;
+  $('#dsSel').onchange=e=>{S.disease=e.target.value; S.stage=0; diseaseView(); renderPath();};
+  const r=$('#stR'); if(r){ r.oninput=e=>{S.stage=+e.target.value; recolor(); renderPath();}; }
+}
+function renderRare(){
+  const D=RARE[S.rare];
+  pin.innerHTML=`<p class="kicker">Enfermedades raras</p><h2>${D.es}</h2><p class="sub2">${D.gene}</p>
+  <div class="chips" style="margin-bottom:16px">${Object.keys(RARE).map(k=>`<button class="chip ${k===S.rare?'on':''}" data-rare="${k}">${RARE[k].es}</button>`).join('')}</div>
+  <h3>Qué ocurre en el cerebro</h3><p>${D.txt}</p><h3>Tratamiento</h3><p>${D.tx}</p>
+  <p class="note">Una enfermedad se considera rara cuando afecta a menos de 1 de cada 2000 personas (criterio europeo). Las estructuras coloreadas son las más afectadas de forma característica; la distribución exacta varía entre pacientes.</p>`;
+  pin.querySelectorAll('[data-rare]').forEach(b=>b.onclick=()=>{S.rare=b.dataset.rare; diseaseView(); renderPath();});
+}
+function renderDrug(){
+  const D=DRUGS[S.drug], R0=META.receptors[S.rec]||{};
+  const classes=[...new Set(Object.values(DRUGS).map(d=>d.cls))];
+  pin.innerHTML=`<p class="kicker">Fármacos · dianas en el cerebro</p><h2>${D.es}</h2><p class="sub2">${D.cls}</p>
+  <select id="drSel" style="margin-bottom:14px">${classes.map(c=>`<optgroup label="${c}">${Object.keys(DRUGS).filter(k=>DRUGS[k].cls===c).map(k=>`<option value="${k}" ${k===S.drug?'selected':''}>${DRUGS[k].es}</option>`).join('')}</optgroup>`).join('')}</select>
+  <p class="lede">${D.mech}</p>
+  <h3>Dónde actúa</h3><p style="font-size:13px;color:var(--muted)">Densidad de su diana medida con PET en personas sanas. Elige la diana que quieres ver en el modelo.</p>
+  <div class="chips">${D.rec.map(r=>`<button class="chip ${r===S.rec?'on':''}" data-rec="${r}">${RECINFO[r]}</button>`).join('')}</div>
+  <p style="margin-top:10px;font-size:13px">${R0.deep_vs_ctx?`En los núcleos profundos, el valor máximo de esta diana es unas ${String(R0.deep_vs_ctx).replace('.',',')} veces la mediana de la corteza; corteza y núcleos usan escalas separadas.`:''}</p>
+  ${Object.keys(D.nt).length?`<h3>Efecto sobre los sistemas</h3><ul>${Object.entries(D.nt).map(([k,m])=>`<li><span class="sw" style="background:${NT[k].color};margin-right:6px"></span>${NT[k].es}: ${m==='block'?'bloqueo (partículas lentas y tenues)':'aumento (partículas rápidas y densas)'}</li>`).join('')}</ul>`:''}
+  <h3>Efecto buscado</h3><p>${D.good}</p><h3>Efectos adversos</h3><p>${D.bad}</p>
+  <p class="note">Mapas de receptores: atlas PET de Hansen y cols. (2022, Nature Neuroscience), más de 1200 personas sanas en 19 dianas, CC BY-NC-SA 4.0. Que una región tenga muchos receptores no significa que el fármaco solo actúe allí ni predice la respuesta de un paciente. Información educativa, no indicación médica.</p>`;
+  $('#drSel').onchange=e=>{S.drug=e.target.value; S.rec=DRUGS[S.drug].rec[0]; drugView(); renderDrug();};
+  pin.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>{S.rec=b.dataset.rec; recolor(); renderDrug();});
+}
+function renderEnigma(){
   const D=META.disorders[S.dis], I=DIS[S.dis];
   const ctxR=Object.entries(D.ctx).map(([k,v])=>({k,lab:DK[k.slice(2)].es+' '+(k[0]==='L'?'izq':'der'),d:v[0],p:v[1],go:'dk:'+DKN.indexOf(k)}));
   const subR=Object.entries(D.sub).filter(([k])=>!/LatVent/.test(k)||true).map(([k,v])=>{const base=k.slice(1); const map={thal:'thal',caud:'caud',put:'put',pal:'pal',hippo:'hippo',amyg:'amyg',accumb:'accumb',LatVent:'vent'}; const b=map[base]; return {k,lab:(DEEP[b]?DEEP[b].es:base)+' '+(k[0]==='L'?'izq':'der'),d:v[0],p:v[1],go:'deep:'+k[0]+b};});
@@ -354,10 +409,12 @@ function tumorText(shift){
 }
 
 pin.addEventListener('click',e=>{
+  const pt=e.target.closest('[data-ptab]'); if(pt){ S.pathTab=pt.dataset.ptab; setNT(null); diseaseView(); renderPath(); return; }
   const b=e.target.closest('[data-go]'); if(!b) return;
   const [t,v]=b.dataset.go.split(':');
   if(t==='index') return select(null);
   if(t==='dis'){ setMode('path'); S.dis=v; recolor(); renderPath(); return; }
+  if(t==='lobe') return select({kind:'lobe',id:v,h:b.dataset.go.split(':')[2]||'lh'});
   if(t==='dk') return select({kind:'dk',id:+v});
   if(t==='gl') return select({kind:'gl',id:+v});
   if(t==='deep') return select({kind:'deep',key:v});
@@ -369,14 +426,15 @@ pin.addEventListener('click',e=>{
 function showPanel(){
   if(S.mode==='path' && !S.sel) return renderPath();
   if(S.mode==='sim') return renderSim();
+  if(S.mode==='drug') return renderDrug();
   const s=S.sel; if(!s) return renderIndex();
-  if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id); else if(s.kind==='tr') renderTract(s.id); else if(s.kind==='nt') renderNT(s.id);
+  if(s.kind==='lobe') renderLobe(s.id,s.h); else if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id); else if(s.kind==='tr') renderTract(s.id); else if(s.kind==='nt') renderNT(s.id);
   if(S.mode==='path') pin.insertAdjacentHTML('afterbegin',`<p style="margin-bottom:14px"><button class="lnk" data-go="index">← Volver al mapa de ${META.disorders[S.dis].name}</button></p>`);
   panel.scrollTop=0;
 }
 
 /* stubs hasta que cargue el 3D */
-let setNT=()=>{}; let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{};
+let setNT=()=>{}; let diseaseView=()=>{}; let drugView=()=>{}; let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{};
 const TUMLOC={
   lfront:{es:"Frontal izquierdo (prefrontal dorsolateral)",dk:"L_rostralmiddlefrontal",focal:"Cambios de personalidad, apatía y disfunción ejecutiva; si alcanza la región opercular, afasia no fluente.",uncal:false},
   ltemp:{es:"Temporal izquierdo",dk:"L_middletemporal",focal:"Afasia fluente, alteración de la memoria verbal, cuadrantanopsia superior derecha; crisis con aura.",uncal:true},
@@ -389,9 +447,12 @@ const TUMLOC={
 /* ============ modos y controles ============ */
 function setMode(m){
   S.mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
-  $('#legend').hidden = m!=='path';
+  $('#legend').hidden = !(m==='path'&&S.pathTab==='enigma' || m==='drug');
+  if(m==='drug'){ $('#legendTitle').textContent='Densidad relativa de la diana (PET)'; $('#legendBar').style.background='linear-gradient(90deg,#0d1b2a,#1f4e79,#2a9d8f,#e9c46a,#f7f3e3)'; $('#legendTicks').innerHTML='<span>baja</span><span></span><span>alta</span>'; }
+  else { $('#legendTitle').textContent='d de Cohen (casos − controles)'; $('#legendBar').style.background=''; $('#legendTicks').innerHTML='<span>−0,6</span><span>0</span><span>+0,6</span>'; }
   if(m!=='sim'){ if(S.tumor.R>0){S.tumor.R=0; applyTumor();} S.stroke.on=false; }
   setNT(null);
+  if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0);
   if(m!=='anat'&&S.sel&&(S.sel.kind==='nt')){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m==='sim'){ S.sel=null; $('#clearBtn').hidden=true; }
   recolor(); showPanel();
@@ -443,6 +504,7 @@ for(const h of ['lh','rh']){
   g.setIndex(new THREE.BufferAttribute(new Uint16Array(idx),1)); g.computeVertexNormals();
   const mesh=new THREE.Mesh(g,mkMat('#ffffff',true)); root.add(mesh);
   const o={mesh,kind:'ctx',h,pial,infl,cur:new Float32Array(pial),dk:A(`ctx_${h}_dk`),gl:A(`ctx_${h}_gl`),sulc:A(`ctx_${h}_sulc`),off:new THREE.Vector3(),dir:new THREE.Vector3(h==='lh'?-1:1,0,0),mag:38,layer:'ctx',op:1};
+  o.rec={}; for(const r in META.receptors) o.rec[r]=A(`rec_${r}_${h}`);
   mesh.userData.o=o; CTX[h]=o; objs.push(o);
 }
 /* profundas */
@@ -459,6 +521,7 @@ for(const key of META.deep){
   const mag=layer==='stem'?40:layer==='cb'?38:12;
   const o={mesh,kind:key==='stem'?'stem':'deep',key,base:new Float32Array(pos),off:new THREE.Vector3(),dir,mag,layer,op:1,side};
   if(key==='stem') o.lab=A('deep_stem_lab');
+  { const c=new THREE.Vector3(); for(let i=0;i<pos.length;i+=3){c.x+=pos[i];c.y+=pos[i+1];c.z+=pos[i+2];} o.cen=c.multiplyScalar(3/pos.length); o.sc=1; }
   mesh.userData.o=o; DEEPO[key]=o; objs.push(o);
 }
 /* cerebelo */
@@ -543,38 +606,58 @@ applyTumor=()=>{
 
 /* ============ color ============ */
 function shadeOf(s){ const t=Math.max(0,Math.min(1,(s+12)/36)); return 1.02-0.42*t; }
-function regionSelectedV(o,i){ const s=S.sel; if(!s) return false; if(s.kind==='dk') return o.dk[i]===s.id; if(s.kind==='gl') return o.gl[i]===s.id; return false; }
+function regionSelectedV(o,i){ const s=S.sel; if(!s) return false; return selTest(o,s)(i); }
+const SEQ=['#0d1b2a','#1f4e79','#2a9d8f','#e9c46a','#f7f3e3'].map(hexRGB);
+function seqColor(t){ if(t==null) return [0.3,0.32,0.34]; t=Math.max(0,Math.min(1,t))*(SEQ.length-1); const i=Math.min(SEQ.length-2,Math.floor(t)); return mix(SEQ[i],SEQ[i+1],t-i); }
+function condition(){
+  if(S.mode!=='path'||S.pathTab==='enigma') return null;
+  const c={ctx:{},deep:{},tr:{},color:null,shrink:{},vent:1};
+  const addDeep=(k,v)=>{ const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]); for(const x of set) c.deep[x]=Math.max(c.deep[x]||0,v); };
+  const addCtx=(n,v)=>{ for(const nm of (/^[LR]_/.test(n)?[n]:['L_'+n,'R_'+n])) c.ctx[nm]=Math.max(c.ctx[nm]||0,v); };
+  const addTr=(b,v)=>{ META.tracts.forEach((n,i)=>{ if(trBase(n)===b) c.tr[i]=Math.max(c.tr[i]||0,v); }); };
+  if(S.pathTab==='dis'){ const D=DISEASE[S.disease]; c.color=hexRGB(D.color); const st=Math.min(S.stage,D.stages.length-1);
+    for(let i=0;i<=st;i++){ const x=D.stages[i], v=1-0.16*(st-i); (x.ctx||[]).forEach(n=>addCtx(n,v)); (x.deep||[]).forEach(k=>addDeep(k,v)); (x.tr||[]).forEach(b=>addTr(b,v)); }
+    const cur=D.stages[st]; c.shrink=cur.shrink||{}; c.vent=cur.vent||1; }
+  else { const D=RARE[S.rare]; c.color=hexRGB(D.color); (D.ctx||[]).forEach(n=>addCtx(n,1)); (D.deep||[]).forEach(k=>addDeep(k,1)); (D.tr||[]).forEach(b=>addTr(b,1)); }
+  return c;
+}
+let COND=null;
 recolor=()=>{
+  COND=condition(); const cond=COND, GREY=[0.5,0.5,0.49];
   const mode=S.mode, D=META.disorders[S.dis], st=S.stroke;
   let strokeSet=null; if(mode==='sim'&&st.on){ strokeSet=new Set(); for(const t of STROKE[st.art].ctx) for(const r of TERR[t]) strokeSet.add(st.side+'_'+r); }
   for(const h in CTX){ const o=CTX[h], c=o.mesh.geometry.attributes.color.array, p=o.mesh.geometry.attributes.position.array;
     for(let i=0;i<o.dk.length;i++){
       const g=o.dk[i], sh=shadeOf(o.sulc[i]); let col;
       if(g===255){ col=[0.32,0.33,0.34]; }
+      else if(mode==='path'&&cond){ const v=cond.ctx[DKN[g]]; col=v?mix(GREY,cond.color,0.45+0.55*v):GREY; }
       else if(mode==='path'){ const v=D.ctx[DKN[g]]; col=divColor(v?v[0]:(Object.keys(D.ctx).length?0:null)); }
+      else if(mode==='drug'){ col=seqColor(o.rec[S.rec][i]/255); }
       else if(mode==='sim'){ col=SIMBASE; if(strokeSet&&strokeSet.has(DKN[g])) col=INF;
         if(S.tumor.R>0.5){ const dx=p[i*3]-TC.x,dy=p[i*3+1]-TC.y,dz=p[i*3+2]-TC.z, r=Math.hypot(dx,dy,dz), E=S.tumor.R*2.2; if(r<E){ col=mix(col,EDEMA,0.75*(1-r/E)); } } }
       else if(S.parc==='lobe') col=hexRGB(LOBES[lobeOfDK(g)].color);
       else if(S.parc==='gl') col=o.gl[i]?glColor(o.gl[i]):[0.32,0.33,0.34];
       else col=dkColor[g];
-      if(mode!=='sim'&&S.sel&&(S.sel.kind==='dk'||S.sel.kind==='gl')&&!regionSelectedV(o,i)) col=mix(col,[0.3,0.32,0.34],0.45);
-      c[i*3]=col[0]*sh;c[i*3+1]=col[1]*sh;c[i*3+2]=col[2]*sh;
+      if(mode!=='sim'&&isSurf(S.sel)&&!regionSelectedV(o,i)) col=mix(col,[0.3,0.32,0.34],0.45);
+      const shd=mode==='drug'?0.82+0.18*sh:sh; c[i*3]=col[0]*shd;c[i*3+1]=col[1]*shd;c[i*3+2]=col[2]*shd;
     }
     o.mesh.geometry.attributes.color.needsUpdate=true; }
   // profundas
   for(const k in DEEPO){ const o=DEEPO[k]; if(k==='stem') continue; const base=DEEPKEY(k); let col=hexRGB(DEEP[base].color);
-    if(mode==='path'){ const sk=SUBKEY[base]; const v=sk?D.sub[k[0]+sk]:null; col=divColor(v?v[0]:(sk&&Object.keys(D.sub).length?0:null)); }
+    if(mode==='path'&&cond){ const v=cond.deep[k]; col=v?mix(GREY,cond.color,0.45+0.55*v):mix(col,GREY,0.75); }
+    else if(mode==='path'){ const sk=SUBKEY[base]; const v=sk?D.sub[k[0]+sk]:null; col=divColor(v?v[0]:(sk&&Object.keys(D.sub).length?0:null)); }
+    else if(mode==='drug'){ const v=(META.receptors[S.rec].deep||{})[k]; col=seqColor(v); }
     else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(st.on&&STROKE[st.art].deep.includes(base)&&(k[0]===st.side)) col=INF; }
     o.mesh.material.color.setRGB(col[0],col[1],col[2]); }
-  { const o=DEEPO.stem, c=o.mesh.geometry.attributes.color.array; for(let i=0;i<o.lab.length;i++){ let col=hexRGB(DEEP['stem'+o.lab[i]].color); if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5); if(S.sel&&S.sel.kind==='stem'&&S.sel.id!==o.lab[i]) col=mix(col,[0.3,0.32,0.34],0.5); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; } o.mesh.geometry.attributes.color.needsUpdate=true; }
+  { const o=DEEPO.stem, c=o.mesh.geometry.attributes.color.array; for(let i=0;i<o.lab.length;i++){ let col=hexRGB(DEEP['stem'+o.lab[i]].color); if(mode==='path'&&cond){ const v=cond.deep['stem'+o.lab[i]]; col=v?mix(GREY,cond.color,0.45+0.55*v):GREY; } else if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='drug') col=seqColor((META.receptors[S.rec].deep||{}).stem); else if(mode==='sim') col=mix(col,SIMBASE,0.5); if(S.sel&&S.sel.kind==='stem'&&S.sel.id!==o.lab[i]) col=mix(col,[0.3,0.32,0.34],0.5); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; } o.mesh.geometry.attributes.color.needsUpdate=true; }
   { const c=CBO.mesh.geometry.attributes.color.array, cols={ant:'#7fa8de',vi:'#6a95cf',crus:'#5683c2',viib:'#7398cc',viii:'#8bb1e0',ix:'#5d86bd',x:'#a1c2ea',vermis:'#4b6fa6'};
     const p=CBO.base; for(let i=0;i<CBO.grp.length;i++){ let col=hexRGB(cols[CBO.grp[i]]); const ripple=0.86+0.14*Math.sin(p[i*3+1]*1.3+p[i*3+2]*0.9);
-      if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5);
+      if(mode==='path'||mode==='drug') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5);
       if(S.sel&&S.sel.kind==='cb'&&S.sel.id!==CBO.grp[i]) col=mix(col,[0.3,0.32,0.34],0.55);
       c[i*3]=col[0]*ripple;c[i*3+1]=col[1]*ripple;c[i*3+2]=col[2]*ripple; } CBO.mesh.geometry.attributes.color.needsUpdate=true; }
   { const c=TRO.mesh.geometry.attributes.color.array, sel=S.sel&&S.sel.kind==='tr'?S.sel.id:-1;
     const pal=META.tracts.map((nm,t)=>{ const b=nm.replace(/_[LR]$/,''); const cls=(TRACT[b]||{cls:'assoc'}).cls; if(S.trColor==='dti'){ const d=TRO.dti[t]; return mix([d[0],d[1],d[2]],[1,1,1],0.15);} return hexRGB(TRCLS[cls].color); });
-    for(let i=0;i<TRO.tid.length;i++){ const t=TRO.tid[i]; let col=pal[t]; if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5); if(sel>=0&&t!==sel) col=mix(col,[0.25,0.27,0.29],0.75); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; }
+    for(let i=0;i<TRO.tid.length;i++){ const t=TRO.tid[i]; let col=pal[t]; if(mode==='path'&&cond){ const v=cond.tr[t]; col=v?mix(GREY,cond.color,0.5+0.5*v):[0.36,0.38,0.4]; } else if(mode==='path'||mode==='drug') col=[0.42,0.44,0.46]; else if(mode==='sim') col=mix(col,SIMBASE,0.5); if(sel>=0&&t!==sel) col=mix(col,[0.25,0.27,0.29],0.75); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; }
     TRO.mesh.geometry.attributes.color.needsUpdate=true;
     if(sel>=0){ const g=TRO.mesh.geometry, idx=g.index.array, out=[]; for(let t=0;t<idx.length;t+=3) if(TRO.tid[idx[t]]===sel) out.push(idx[t],idx[t+1],idx[t+2]);
       const hg=new THREE.BufferGeometry(); hg.setAttribute('position',g.attributes.position); hg.setAttribute('normal',g.attributes.normal);
@@ -584,9 +667,9 @@ recolor=()=>{
   if(ovState.h) buildOverlay();
 };
 function buildOverlay(){
-  if(!S.sel||(S.sel.kind!=='dk'&&S.sel.kind!=='gl')){ ovState.h=null; overlay.visible=false; return; }
+  if(!isSurf(S.sel)){ ovState.h=null; overlay.visible=false; return; }
   const s=S.sel, o=CTX[ovState.h], g=o.mesh.geometry, idx=g.index.array, out=[];
-  const test=s.kind==='dk'?(i=>o.dk[i]===s.id):(i=>o.gl[i]===s.id);
+  const test=selTest(o,s);
   for(let t=0;t<idx.length;t+=3) if(test(idx[t])&&test(idx[t+1])&&test(idx[t+2])) out.push(idx[t],idx[t+1],idx[t+2]);
   const og=new THREE.BufferGeometry(); og.setAttribute('position',g.attributes.position); og.setAttribute('normal',g.attributes.normal);
   // colores propios (brillantes)
@@ -609,18 +692,19 @@ aimTumor=()=>{ const c=TC.clone().sub(C0); c.x*=1.6; aimAt(c); idle=false; };
 select=function(sel){
   S.sel=sel; idle=false; $('#clearBtn').hidden=!sel;
   ovState.h=null; overlay.visible=false; ovState.amt=0;
-  if(sel&&(sel.kind==='dk'||sel.kind==='gl')){
-    if(S.mode==='sim') setMode('anat');
+  if(isSurf(sel)){
+    if(S.mode==='sim'||S.mode==='drug') setMode('anat');
+    if(sel.kind==='lobe'&&S.parc!=='lobe'){ S.parc='lobe'; markSeg('parc','[data-p="lobe"]'); }
     if(sel.kind==='gl'&&S.parc!=='gl'){ S.parc='gl'; markSeg('parc','[data-p="gl"]'); }
-    if(sel.kind==='dk'&&S.parc==='gl'){ S.parc='dk'; markSeg('parc','[data-p="dk"]'); }
-    const h=sel.kind==='dk'?(dkSide(sel.id)==='L'?'lh':'rh'):(GLN[sel.id-1][0]==='L'?'lh':'rh');
+    if(sel.kind==='dk'&&S.parc!=='dk'){ S.parc='dk'; markSeg('parc','[data-p="dk"]'); }
+    const h=sel.kind==='lobe'?sel.h:sel.kind==='dk'?(dkSide(sel.id)==='L'?'lh':'rh'):(GLN[sel.id-1][0]==='L'?'lh':'rh');
     if(S.hemi!=='both'&&S.hemi!==h) setHemi('both');
-    ovState.h=h; overlay.visible=true; ovState.target=7;
+    ovState.h=h; overlay.visible=true; ovState.target=sel.kind==='lobe'?12:7;
   }
   setNT(sel&&sel.kind==='nt'?{sys:[sel.id],mod:{}}:null);
   recolor(); showPanel();
   if(!sel) return;
-  if(sel.kind==='dk'||sel.kind==='gl'){ const o=CTX[ovState.h]; const c=centroidOf(o,sel.kind==='dk'?(i=>o.dk[i]===sel.id):(i=>o.gl[i]===sel.id)); if(c){ const d=c.clone().add(ovState.dir.clone().multiplyScalar(80)); aimAt(d);} }
+  if(isSurf(sel)){ const o=CTX[ovState.h]; const c=centroidOf(o,selTest(o,sel)); if(c){ const d=c.clone().add(ovState.dir.clone().multiplyScalar(80)); aimAt(d);} }
   else if(sel.kind==='deep'){ const o=DEEPO[sel.key]; ghostDown(0.25); const c=centroidOf(o,()=>true); if(c){c.y+=60; c.x*=4; aimAt(c);} if(!S.layers[o.layer]) toggleLayer(o.layer,true); }
   else if(sel.kind==='stem'){ if(!S.layers.stem) toggleLayer('stem',true); camT.yaw=-1.5; camT.pitch=-0.15; }
   else if(sel.kind==='cb'){ if(!S.layers.cb) toggleLayer('cb',true); camT.yaw=-2.6; camT.pitch=-0.25; }
@@ -643,9 +727,10 @@ const markGeo=new THREE.SphereGeometry(1,16,12);
 setNT=function(v){
   S.nt=v; ntGroup.clear(); ntFlows=[];
   if(!v) return;
-  ghostDown(0.18);
+  if(S.mode!=='drug') ghostDown(0.18);
   for(const k of v.sys){ const N=NT[k], mod=v.mod[k]||'norm', col=new THREE.Color(N.color);
-    const speed=mod==='hyper'?0.75:mod==='hypo'?0.16:mod==='degen'?0.2:0.38, dens=mod==='hyper'?26:mod==='hypo'?4:mod==='degen'?3:12, lineOp=mod==='degen'?0.2:mod==='hypo'?0.3:0.6;
+    if(mod==='blocked') col.lerp(new THREE.Color('#e2685a'),0.55);
+    const speed=mod==='hyper'?0.75:mod==='hypo'?0.16:mod==='degen'?0.2:mod==='blocked'?0.08:0.38, dens=mod==='hyper'?16:mod==='hypo'?4:mod==='degen'?3:mod==='blocked'?4:12, lineOp=mod==='degen'?0.2:mod==='hypo'?0.3:mod==='blocked'?0.35:0.6;
     const srcs=[].concat(...N.src.map(s=>endpoints(s.includes(':')?s:'d:'+s))); const dsts=[].concat(...N.dst.map(endpoints));
     for(const s of srcs){ const m=new THREE.Mesh(markGeo,new THREE.MeshBasicMaterial({color:col})); m.scale.setScalar(N.src[0].startsWith('p:')?2.6:0.01); m.position.copy(s.v); ntGroup.add(m); }
     for(const s of srcs) for(const d of dsts){ if(s.side&&d.side&&s.side!==d.side) continue;
@@ -654,10 +739,24 @@ setNT=function(v){
       const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:lineOp,depthWrite:false,depthTest:false}));
       line.renderOrder=7; ntGroup.add(line);
       const pg=new THREE.BufferGeometry(); const pa=new Float32Array(dens*3); pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
-      const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:col,size:mod==='hyper'?6:4.5,sizeAttenuation:true,transparent:true,opacity:mod==='degen'||mod==='hypo'?0.55:0.95,depthWrite:false,depthTest:false}));
+      const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:col,size:mod==='hyper'?6:4.5,sizeAttenuation:true,transparent:true,opacity:mod==='degen'||mod==='hypo'||mod==='blocked'?0.55:0.95,depthWrite:false,depthTest:false}));
       pts.renderOrder=8; ntGroup.add(pts);
       ntFlows.push({curve,pts,pa,dens,speed,phase:Math.random()}); }
   }
+};
+diseaseView=function(){
+  $('#legend').hidden=!(S.mode==='path'&&S.pathTab==='enigma');
+  if(S.mode==='path'&&S.pathTab!=='enigma'){ const c=condition(); const hasCtx=Object.keys(c.ctx).length, hasTr=Object.keys(c.tr).length;
+    if(!hasCtx) ghostDown(0.2); else { S.ghost=1; $('#ghost').value=100; }
+    toggleLayer('tracts',!!hasTr); if(hasTr) ghostDown(0.2); toggleLayer('deep',true); toggleLayer('stem',true); toggleLayer('vent',true); }
+  recolor();
+};
+drugView=function(){
+  if(S.mode!=='drug') return;
+  if(S.sel){ S.sel=null; ovState.h=null; overlay.visible=false; $('#clearBtn').hidden=true; }
+  const D=DRUGS[S.drug]; S.ghost=1; $('#ghost').value=100; toggleLayer('tracts',false);
+  setNT(Object.keys(D.nt).length?{sys:Object.keys(D.nt),mod:Object.fromEntries(Object.entries(D.nt).map(([k,m])=>[k,m==='block'?'blocked':'hyper']))}:null);
+  recolor();
 };
 function tickNT(t){ for(const f of ntFlows){ for(let i=0;i<f.dens;i++){ const u=((t*f.speed/ (f.curve.getLength()/60))+i/f.dens+f.phase)%1; const p=f.curve.getPointAt(u); f.pa[i*3]=p.x;f.pa[i*3+1]=p.y;f.pa[i*3+2]=p.z; } f.pts.geometry.attributes.position.needsUpdate=true; } }
 
@@ -667,7 +766,7 @@ const VIEWS={latL:[-Math.PI/2,0.1],latR:[Math.PI/2,0.1],ant:[0,0.12],post:[Math.
 $('#views').onclick=e=>{const b=e.target.closest('button'); if(!b) return; const v=VIEWS[b.dataset.v]; camT.yaw=v[0]; camT.pitch=v[1]; idle=false; markSeg('views',`[data-v="${b.dataset.v}"]`);};
 function setHemi(h){S.hemi=h; markSeg('hemi',`[data-h="${h}"]`);}
 $('#hemi').onclick=e=>{const b=e.target.closest('button'); if(b) setHemi(b.dataset.h);};
-$('#parc').onclick=e=>{const b=e.target.closest('button'); if(!b) return; S.parc=b.dataset.p; markSeg('parc',`[data-p="${S.parc}"]`); if(S.sel&&(S.sel.kind==='gl'&&S.parc!=='gl' || S.sel.kind==='dk'&&S.parc==='gl')) select(null); else recolor(); if(S.mode!=='anat') setMode('anat');};
+$('#parc').onclick=e=>{const b=e.target.closest('button'); if(!b) return; S.parc=b.dataset.p; markSeg('parc',`[data-p="${S.parc}"]`); if(S.sel&&(S.sel.kind==='gl'&&S.parc!=='gl' || S.sel.kind==='dk'&&S.parc==='gl' || S.sel.kind==='lobe'&&S.parc!=='lobe')) select(null); else recolor(); if(S.mode!=='anat') setMode('anat');};
 $('#infl').oninput=e=>{S.infl=e.target.value/100; rebuildCtx();};
 $('#explode').oninput=e=>{S.explode=e.target.value/100;};
 $('#ghost').oninput=e=>{S.ghost=e.target.value/100;};
@@ -687,7 +786,8 @@ function pick(cx,cy){
   if(!hits.length) hits=ray.intersectObjects(objs.filter(o=>o.mesh.visible).map(o=>o.mesh),false);
   if(!hits.length) return null;
   const hit=hits[0], o=hit.object===overlay?CTX[ovState.h]:hit.object.userData.o, vi=hit.face.a;
-  if(o.kind==='ctx'){ if(S.parc==='gl'&&S.mode==='anat'){ const g=o.gl[vi]; return g?{kind:'gl',id:g}:null; } const g=o.dk[vi]; return g===255?null:{kind:'dk',id:g}; }
+  if(o.kind==='ctx'){ if(S.parc==='gl'&&S.mode==='anat'){ const g=o.gl[vi]; return g?{kind:'gl',id:g}:null; }
+    if(S.parc==='lobe'&&S.mode==='anat'){ const g=o.dk[vi]; return g===255?null:{kind:'lobe',id:lobeOfDK(g),h:o.h}; } const g=o.dk[vi]; return g===255?null:{kind:'dk',id:g}; }
   if(o.kind==='deep') return {kind:'deep',key:o.key};
   if(o.kind==='stem') return {kind:'stem',id:o.lab[vi]};
   if(o.kind==='cb') return {kind:'cb',id:o.grp[vi]};
@@ -695,6 +795,7 @@ function pick(cx,cy){
   return null;
 }
 function nameOf(h){ if(!h) return ''; if(h.kind==='dk') return DK[dkBase(h.id)].es+' · '+(dkSide(h.id)==='L'?'izq':'der')+(S.mode==='path'&&META.disorders[S.dis].ctx[DKN[h.id]]?'  d '+fmtD(META.disorders[S.dis].ctx[DKN[h.id]][0]):'');
+  if(h.kind==='lobe') return LOBES[h.id].name+' · '+(h.h==='lh'?'izq':'der');
   if(h.kind==='gl') return glCode(h.id)+' · '+(GLN[h.id-1][0]==='L'?'izq':'der'); if(h.kind==='deep'){const b=DEEPKEY(h.key); const sk=SUBKEY[b]; const v=S.mode==='path'&&sk?META.disorders[S.dis].sub[h.key[0]+sk]:null; return DEEP[b].es+(v?'  d '+fmtD(v[0]):'');}
   if(h.kind==='stem') return DEEP['stem'+h.id].es; if(h.kind==='cb') return 'Cerebelo · '+CB[h.id].es; if(h.kind==='tr'){ const n=META.tracts[h.id], b=trBase(n), sd=trSide(n); return ((TRACT[b]||{es:b}).es)+(sd?' · '+(sd==='L'?'izq':'der'):''); } if(h.kind==='nt') return NT[h.id].es; return ''; }
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); idle=false; moved=false; drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}; if(ptrs.size===2){const [a,b]=[...ptrs.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y);}});
@@ -733,15 +834,17 @@ function frame(){
     let vis=o.layer==='ctx'?(S.hemi==='both'||S.hemi===o.h):S.layers[o.layer];
     if(o.layer==='deep'||o.layer==='vent'){ if(S.hemi!=='both'&&o.side&&((o.side<0)!==(S.hemi==='lh'))) vis=false; }
     o.mesh.visible=vis;
+    if(o.cen){ let tsc=1; if(COND&&S.mode==='path'){ const b=o.key.replace(/^[LR]/,''); if(COND.shrink[b]) tsc=COND.shrink[b]; if(o.layer==='vent') tsc=COND.vent; } o.sc+=(tsc-o.sc)*k; o.mesh.scale.setScalar(o.sc); }
     const pop=targets.includes(o)&&o.kind==='deep'?6:0;
-    tmp.copy(o.dir).multiplyScalar(o.mag*S.explode+pop); o.off.lerp(tmp,k); o.mesh.position.copy(o.off);
+    tmp.copy(o.dir).multiplyScalar(o.mag*S.explode+pop); o.off.lerp(tmp,k); o.mesh.position.copy(o.off); if(o.cen&&o.sc!==1) o.mesh.position.addScaledVector(o.cen,1-o.sc);
     let op=o.layer==='ctx'?S.ghost:1;
     if(targets.length&&!targets.includes(o)) op=o.layer==='ctx'?Math.min(op,0.12):0.25;
     if(o.layer==='ctx'&&S.mode==='sim'&&S.tumor.R>0.5) op=Math.min(op,0.55);
     if(o===TRO&&S.sel&&S.sel.kind==='tr') op=0.1;
     if(o===TRO&&S.nt) op=0.15;
     if(S.nt&&o.layer!=='ctx'&&o!==TRO) op=Math.min(op,0.4);
-    o.op+=(op-o.op)*k; const m=o.mesh.material; m.opacity=o.op; m.depthWrite=o.layer==='ctx'?true:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
+    o.op+=(op-o.op)*k; const m=o.mesh.material;
+    if(o.layer==='ctx'){ const sd=o.op<0.97?THREE.FrontSide:THREE.DoubleSide; if(m.side!==sd){ m.side=sd; m.needsUpdate=true; } } m.opacity=o.op; m.depthWrite=o.layer==='ctx'?true:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
     m.emissive.setRGB(0,0,0); if(targets.includes(o)&&o!==TRO) m.emissive.setRGB(0.12,0.12,0.12);
     if(S.hover&&!S.sel&&((S.hover.kind==='deep'&&o.key===S.hover.key))) m.emissive.setRGB(0.08,0.08,0.08);
   }
@@ -751,7 +854,7 @@ function frame(){
   renderer.render(scene,camera);
   // etiqueta
   if(S.sel){ let w=null; const s=S.sel;
-    if(s.kind==='dk'||s.kind==='gl'){ const o=CTX[ovState.h]; const p=o.mesh.geometry.attributes.position.array; let bi=-1,bd=-1e9; const test=s.kind==='dk'?(i=>o.dk[i]===s.id):(i=>o.gl[i]===s.id);
+    if(isSurf(s)){ const o=CTX[ovState.h]; const p=o.mesh.geometry.attributes.position.array; let bi=-1,bd=-1e9; const test=selTest(o,s);
       for(let i=0;i<o.dk.length;i+=3) if(test(i)){ tmp.set(p[i*3],p[i*3+1],p[i*3+2]); const d=tmp.dot(ovState.dir); if(d>bd){bd=d;bi=i;} }
       if(bi>=0){ w=new THREE.Vector3(p[bi*3],p[bi*3+1],p[bi*3+2]).add(overlay.position); } }
     else { const o=targets[0]; if(o&&o.mesh.visible){ o.mesh.geometry.computeBoundingSphere(); w=o.mesh.geometry.boundingSphere.center.clone().add(o.mesh.position); } }

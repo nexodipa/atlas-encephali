@@ -14,6 +14,12 @@
 - [x] Sustitución de Harvard-Oxford (no comercial) por CerebrA (licencia permisiva)
 - [x] Esquizofrenia y Parkinson como alteración dopaminérgica en el modo Patología
 
+## Hecho (v4)
+- [x] Lóbulos como unidades seleccionables con ficha propia
+- [x] Enfermedades por estadios: Alzheimer, Parkinson, ELA, Huntington, esclerosis múltiple, hidrocefalia
+- [x] Nueve enfermedades raras con su distribución característica
+- [x] Modo Fármacos: 16 fármacos sobre 20 mapas PET de receptores y los sistemas de neurotransmisores
+
 ## Pendiente para completar el mapeo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
 - [ ] Núcleos del tálamo (atlas THOMAS)
@@ -24,8 +30,8 @@
 
 ## Simulaciones siguientes
 - [ ] Esquizofrenia como alteración dopaminérgica y de conectividad, no solo estructural
-- [ ] Alzheimer como trayectoria temporal (estadios de Braak)
-- [ ] Parkinson: pérdida nigral y circuito de los ganglios basales
+- [ ] Más enfermedades raras (leucodistrofias, ataxias espinocerebelosas, Niemann-Pick C, mitocondriales)
+- [ ] Interacciones entre fármacos y ocupación de receptores por dosis
 - [ ] Hemorragia, hidrocefalia, metástasis
 
 ## Pulido final (cuando esté completo)

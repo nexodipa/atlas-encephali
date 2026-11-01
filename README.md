@@ -17,6 +17,7 @@ Toda la aplicación es un solo archivo, `index.html`, que funciona sin servidor.
 - Sistema ventricular (laterales, III y IV), quiasma óptico, tronco del encéfalo y cerebelo por lóbulos de Larsell.
 - 75 tractos de sustancia blanca: asociación, proyección, comisurales, pedúnculos cerebelosos, vías del tronco y pares craneales. Se colorean por tipo o por dirección, como en la imagen por tensor de difusión.
 - Sistemas de neurotransmisores animados: dopamina (vías nigroestriatal, mesolímbica, mesocortical y tuberoinfundibular), serotonina, noradrenalina y acetilcolina.
+- Los lóbulos se seleccionan como unidades completas, con ficha propia (funciones, clínica, conexiones y regiones que lo forman).
 - Una región seleccionada se separa de la superficie. El control "Inflar" despliega los surcos, "Separar" aleja los bloques y "Corteza" la vuelve translúcida para ver las estructuras profundas.
 
 **Patología**
@@ -27,6 +28,16 @@ Mapas de la d de Cohen (casos − controles) de los metaanálisis del consorcio 
 - Parkinson, anorexia nerviosa, síndrome de deleción 22q11.2.
 
 Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofrenia y Parkinson se muestra además la alteración dopaminérgica: exceso mesolímbico y déficit mesocortical en el primer caso, pérdida nigroestriatal en el segundo.
+
+**Enfermedades** (en el modo Patología)
+- Progresión por estadios: Alzheimer (Braak, tau), Parkinson (Braak, alfa-sinucleína), ELA (TDP-43, Brettschneider), Huntington (Vonsattel, con atrofia del estriado y dilatación ventricular), esclerosis múltiple e hidrocefalia.
+- Enfermedades raras: Wilson, Creutzfeldt-Jakob, adrenoleucodistrofia ligada al X, encefalitis de Rasmussen, PKAN, Fahr, Leigh, Marchiafava-Bignami y Urbach-Wiethe.
+
+**Fármacos**
+16 fármacos (antipsicóticos, antiparkinsonianos, estimulantes, antidepresivos, psicodélicos, ketamina, benzodiacepinas, opioides, nicotina, cannabis, procolinérgicos y anticolinérgicos, pitolisant). Cada uno muestra:
+- la densidad real de su diana en el cerebro, a partir de 20 mapas PET de receptores y transportadores (Hansen y cols., 2022);
+- su efecto sobre los sistemas de neurotransmisores;
+- el mecanismo, el efecto buscado y los efectos adversos.
 
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
@@ -53,6 +64,7 @@ git clone --depth 1 https://github.com/MICA-MNI/ENIGMA.git
 # + frankyeh/data-atlas (human/CerebrA, human/HCP842_tractography) en ./data-atlas
 # + niivue/niivue-demo-images (CIT168) en ./niivue-demo-images
 # + DiedrichsenLab/cerebellar_atlases en ./ca
+# + netneurolab/hansen_receptors (data/PET_nifti_images) en ./hr
 python pipeline/process.py        # escribe out/atlas.bin.gz y out/meta.json -> copiar a build/
 python pipeline/build_page.py     # escribe index.html
 ```
@@ -69,8 +81,9 @@ Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSu
 | Núcleos del mesencéfalo y diencéfalo | CIT168 (Pauli y cols., 2018) | CC BY 4.0 |
 | Tractos | Atlas HCP-842 (Yeh y cols., 2018), vía frankyeh/data-atlas | Datos del Human Connectome Project; ver el repositorio original |
 | Cerebelo | Diedrichsen y cols. (2009) | **CC BY-NC 3.0: uso no comercial** |
+| Receptores (PET) | Hansen y cols. (2022), netneurolab/hansen_receptors | **CC BY-NC-SA 4.0: no comercial, compartir igual** |
 
-El proyecto es de acceso libre. La única pieza con licencia no comercial es el atlas de lóbulos del cerebelo; para un uso comercial habría que sustituirla, por ejemplo por las regiones cerebelosas de CerebrA.
+El proyecto es de acceso libre y sin fines comerciales. Dos piezas tienen licencia no comercial (el atlas de lóbulos del cerebelo y los mapas de receptores); los mapas de receptores además obligan a compartir sus derivados con la misma licencia.
 
 ## Advertencia
 
