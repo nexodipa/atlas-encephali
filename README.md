@@ -57,12 +57,20 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
 - **Glioblastoma:** crecimiento con edema y efecto de masa. El tejido se desplaza como un medio incompresible, con frenado por la hoz y el cráneo. Calcula la desviación de la línea media.
 
+**Idiomas**
+Selector en la cabecera con 13 idiomas: español, inglés, francés, alemán, portugués, italiano, ruso, chino simplificado, japonés, coreano, árabe, hebreo e hindi. Árabe y hebreo invierten la maquetación (derecha a izquierda) y cada escritura carga su tipografía Noto.
+- La interfaz (modos, controles, vistas, cortes, leyendas) viene traducida en el propio archivo.
+- El contenido (fichas, casos, preguntas) se traduce bajo demanda con Claude cuando el atlas se abre en claude.ai, con instrucciones de terminología médica, y se guarda en el navegador. Es traducción automática y se marca como tal.
+- Las traducciones se pueden exportar y, revisadas, añadirse a `lang/` como paquetes que se incrustan en la compilación (ver `lang/README.md`). Abierta fuera de claude.ai, la copia de GitHub muestra traducida la interfaz y lo que tenga paquete; el resto queda en español.
+
 ## Estructura
 
 ```
 index.html              aplicación compilada (abrir directamente en el navegador)
 src/template.html       interfaz, motor 3D (three.js r128) y lógica
 src/content.js          textos: regiones, estructuras, trastornos, territorios
+src/i18n.js             idiomas: selector, paquetes de interfaz y traducción bajo demanda
+lang/*.json             paquetes de traducción revisados (opcional)
 pipeline/process.py     genera build/ a partir de los atlas originales
 pipeline/build_page.py  ensambla index.html desde src/ y build/
 build/atlas.bin.gz      mallas y etiquetas cuantizadas (int16, 0,01 mm)

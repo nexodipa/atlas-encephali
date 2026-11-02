@@ -37,10 +37,16 @@
 - [x] Terminología latina e inglesa, glosario y códigos CIE-11
 - [x] Licencias, CITATION.cff, metadatos para Zenodo y registro de revisión
 
+## Hecho (v7, idiomas)
+- [x] Selector de 13 idiomas, con derecha a izquierda para árabe y hebreo y tipografías Noto por escritura
+- [x] Interfaz traducida a mano en los 13 idiomas
+- [x] Contenido traducido bajo demanda con Claude, guardado en el navegador y exportable
+- [x] Paquetes revisados en `lang/` incrustados en la compilación
+
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
 - [ ] DOI de Zenodo (activar la integración y publicar una release)
-- [ ] Interfaz y contenido en inglés
+- [ ] Paquetes de contenido revisados por clínicos nativos (empezar por inglés, francés y portugués)
 - [ ] Afinidades numéricas (Ki) en lugar de tres niveles
 - [ ] Más casos clínicos (medulares, de nervio periférico, psiquiátricos con diagnóstico diferencial)
 

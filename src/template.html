@@ -31,6 +31,15 @@ header.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom
 .modes button:last-child{border-right:0}
 .modes button:hover{color:var(--fg);background:var(--bg-3)}
 .modes button.on{background:var(--bone);color:var(--bg)}
+.langbox{display:flex;align-items:center;gap:10px;font-size:12px}
+.langbox select{background:var(--bg-2);border:1px solid var(--line-2);border-radius:3px;padding:5px 8px;font-size:12.5px}
+#trStatus{font-family:var(--mono);font-size:10.5px;color:var(--faint);max-width:260px;line-height:1.3}
+#trExport{font-size:11.5px}
+html[dir=rtl] *{letter-spacing:0!important}
+html[dir=rtl] .modes{margin-left:0;margin-right:auto}
+html[dir=rtl] .modes button{border-right:0;border-left:1px solid var(--line)}
+html[dir=rtl] .modes button:last-child{border-left:0}
+html[dir=rtl] .left{border-right:0;border-left:1px solid var(--line)}
 main{display:grid;grid-template-columns:minmax(0,1fr) 440px;min-height:0}
 .left{display:flex;flex-direction:column;min-height:0;min-width:0;border-right:1px solid var(--line)}
 #stage{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse 70% 60% at 50% 45%,#15222b 0%,#0d1418 55%,var(--bg) 100%)}
@@ -144,10 +153,11 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
 
 <div class="app">
   <header class="top">
-    <div class="brand"><b>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
+    <div class="brand"><b data-notr>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
     <nav class="modes" id="modes" aria-label="Modo">
       <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button>
     </nav>
+    <div class="langbox"><span id="trStatus" role="status" hidden></span><button id="trExport" class="lnk" hidden>Exportar traducciones</button><select id="langSel" aria-label="Idioma" data-notr><option value="es">Español</option></select></div>
   </header>
   <main>
     <section class="left">
@@ -630,7 +640,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 6. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 7. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -1198,7 +1208,7 @@ $('#sliceOv').onchange=e=>{ SL.ov=e.target.value; if(SL.ax!=='off') drawSlice();
 $('#sliceFlip').onchange=e=>{ SL.flip=e.target.checked; if(SL.ax!=='off') drawSlice(); };
 const sOut=$('#sliceCv');
 function sliceHit(ev){ const rc=sOut.getBoundingClientRect(), [W,H,D]=sliceDims(); const c=Math.floor((ev.clientX-rc.left)/rc.width*W), r=Math.floor((ev.clientY-rc.top)/rc.height*H); if(c<0||r<0||c>=W||r>=H) return null; const [i,j,k]=sliceVox(c,r,Math.round(SL.t*(D-1))); return volLabel(i,j,k); }
-sOut.addEventListener('mousemove',ev=>{ const L=sliceHit(ev); if(!L) return; $('#sliceInfo').innerHTML=`<b>${L.name||'Fuera del encéfalo'}</b>${L.tract?'<br>Tracto: '+L.tract:''}<br>MNI ${L.mni.join(', ')}`; });
+sOut.addEventListener('mousemove',ev=>{ const L=sliceHit(ev); if(!L) return; $('#sliceInfo').innerHTML=`<b>${L.name||'Fuera del encéfalo'}</b>${L.tract?'<br>Tracto: <span>'+L.tract+'</span>':''}<br>MNI ${L.mni.join(', ')}`; });
 sOut.addEventListener('click',ev=>{ const L=sliceHit(ev); if(L&&L.sel){ if(S.mode!=='anat') setMode('anat'); select(L.sel); } });
 
 /* ============ controles ============ */
@@ -1308,4 +1318,7 @@ function frame(){
 }
 rebuildCtx(); recolor(); $('#loading').remove(); requestAnimationFrame(frame);
 }
+</script>
+<script>
+/*I18N*/
 </script>
