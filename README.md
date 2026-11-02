@@ -29,15 +29,20 @@ Mapas de la d de Cohen (casos − controles) de los metaanálisis del consorcio 
 
 Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofrenia y Parkinson se muestra además la alteración dopaminérgica: exceso mesolímbico y déficit mesocortical en el primer caso, pérdida nigroestriatal en el segundo.
 
-**Enfermedades** (en el modo Patología)
-- Progresión por estadios: Alzheimer (Braak, tau), Parkinson (Braak, alfa-sinucleína), ELA (TDP-43, Brettschneider), Huntington (Vonsattel, con atrofia del estriado y dilatación ventricular), esclerosis múltiple e hidrocefalia.
-- Enfermedades raras: Wilson, Creutzfeldt-Jakob, adrenoleucodistrofia ligada al X, encefalitis de Rasmussen, PKAN, Fahr, Leigh, Marchiafava-Bignami y Urbach-Wiethe.
+**Patología** (cinco pestañas)
+- **Psicopatología:** 14 trastornos como modelos de circuito (esquizofrenia, bipolar, depresión, ansiedad generalizada, pánico, TEPT, TOC, TDAH, autismo, Tourette, adicción, anorexia, límite de la personalidad, catatonia). Mapa de hiper e hipoactividad, circuitos y sistemas de neurotransmisores animados, síntomas asociados a cada circuito y fármacos enlazados.
+- **Organicidad:** 19 causas médicas de cuadros psiquiátricos (delirium, encefalitis anti-NMDA y herpética, Wernicke-Korsakoff, encefalopatía hepática, tiroides, B12, neurosífilis, VIH, traumatismo, tumor frontal, epilepsia temporal, hidrocefalia normotensiva, monóxido de carbono, metanol, corticoides, lupus, porfiria, demencia frontotemporal), con signos de alarma, diagnóstico y tratamiento.
+- **Neurodegenerativas:** 14 procesos con progresión por estadios: Alzheimer, Parkinson, ELA, Huntington, esclerosis múltiple, hidrocefalia, demencia frontotemporal conductual, cuerpos de Lewy, parálisis supranuclear progresiva, atrofia multisistémica, degeneración corticobasal, atrofia cortical posterior, afasias progresivas primarias y demencia vascular subcortical.
+- **Raras:** 20 enfermedades, de Wilson y Creutzfeldt-Jakob a Niemann-Pick C, CADASIL, esclerosis tuberosa, insomnio familiar fatal o narcolepsia tipo 1.
+- **ENIGMA:** mapas de grosor y volumen de 10 trastornos.
 
 **Fármacos**
-16 fármacos (antipsicóticos, antiparkinsonianos, estimulantes, antidepresivos, psicodélicos, ketamina, benzodiacepinas, opioides, nicotina, cannabis, procolinérgicos y anticolinérgicos, pitolisant). Cada uno muestra:
-- la densidad real de su diana en el cerebro, a partir de 20 mapas PET de receptores y transportadores (Hansen y cols., 2022);
-- su efecto sobre los sistemas de neurotransmisores;
-- el mecanismo, el efecto buscado y los efectos adversos.
+81 fármacos en 11 clases. Cada uno muestra:
+- el perfil de afinidad por diana y el tipo de acción (antagonista, agonista parcial, inhibidor...);
+- la densidad real de sus dianas en el cerebro, a partir de 20 mapas PET (Hansen y cols., 2022), una por una o como huella combinada;
+- la curva de ocupación según la dosis para antipsicóticos (D2) y antidepresivos (SERT), con las ventanas clínicas;
+- su efecto sobre los sistemas de neurotransmisores, ahora con histamina y orexina, modulado por la dosis;
+- mecanismo, efecto buscado, efectos adversos y los trastornos en que se usa.
 
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.

@@ -20,6 +20,13 @@
 - [x] Nueve enfermedades raras con su distribución característica
 - [x] Modo Fármacos: 16 fármacos sobre 20 mapas PET de receptores y los sistemas de neurotransmisores
 
+## Hecho (v5)
+- [x] Catálogo de 81 fármacos con perfil de afinidad, huella combinada y curvas de ocupación por dosis
+- [x] Sistemas de histamina y orexina
+- [x] Psicopatología: 14 trastornos como modelos de circuito
+- [x] Organicidad: 19 causas médicas de cuadros psiquiátricos
+- [x] Ocho neurodegenerativas más y once enfermedades raras más
+
 ## Pendiente para completar el mapeo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
 - [ ] Núcleos del tálamo (atlas THOMAS)
@@ -29,9 +36,8 @@
 - [ ] Descripciones para más áreas HCP-MMP1
 
 ## Simulaciones siguientes
-- [ ] Esquizofrenia como alteración dopaminérgica y de conectividad, no solo estructural
-- [ ] Más enfermedades raras (leucodistrofias, ataxias espinocerebelosas, Niemann-Pick C, mitocondriales)
-- [ ] Interacciones entre fármacos y ocupación de receptores por dosis
+- [ ] Interacciones entre fármacos (síndrome serotoninérgico, carga anticolinérgica, inductores e inhibidores)
+- [ ] Más psicopatologías (trastornos disociativos, somatomorfos, del sueño, sexuales)
 - [ ] Hemorragia, hidrocefalia, metástasis
 
 ## Pulido final (cuando esté completo)
