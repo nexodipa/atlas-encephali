@@ -44,6 +44,15 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - su efecto sobre los sistemas de neurotransmisores, ahora con histamina y orexina, modulado por la dosis;
 - mecanismo, efecto buscado, efectos adversos y los trastornos en que se usa.
 
+**Herramientas académicas (v6)**
+- **Referencias verificadas:** 119 artículos comprobados contra PubMed (autor, revista, año, volumen y página), enlazados por PMID y DOI en cada ficha, y una bibliografía general.
+- **Guías clínicas y nivel de recomendación:** cada trastorno enlaza sus guías (APA, NICE, CANMAT, BAP) y marca los fármacos como primera línea, segunda línea, potenciación, casos resistentes o evidencia limitada o negativa.
+- **Estudio:** 20 casos clínicos de localización (el estudiante toca la estructura lesionada en un cerebro sin colores ni nombres y recibe corrección y pregunta de seguimiento), banco de más de 230 preguntas y tarjetas de repetición espaciada (Leitner) en siete mazos.
+- **Semiología:** exploración neurológica con localización resaltada en el modelo (pares craneales, motor, sensibilidad, cerebelo, ganglios basales, mirada, funciones corticales) y psicopatología descriptiva (examen del estado mental, curso y forma del pensamiento, delirios, alucinaciones, Schneider, síntomas negativos, catatonia).
+- **Cortes seccionales:** cortes axiales, coronales y sagitales sobre la plantilla MNI ICBM152 con estructuras (CerebrA) o tractos superpuestos; al pasar el cursor se identifica la estructura y sus coordenadas MNI.
+- **Farmacología clínica:** vida media, metabolismo, monitorización y embarazo para 43 fármacos, equivalencias de antipsicóticos y benzodiacepinas, y un comprobador de interacciones por mecanismo.
+- **Terminología:** nombres en latín e inglés en las fichas, glosario trilingüe con búsqueda y códigos CIE-11.
+
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
 - **Glioblastoma:** crecimiento con edema y efecto de masa. El tejido se desplaza como un medio incompresible, con frenado por la hoz y el cráneo. Calcula la desviación de la línea media.
@@ -86,9 +95,18 @@ Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSu
 | Núcleos del mesencéfalo y diencéfalo | CIT168 (Pauli y cols., 2018) | CC BY 4.0 |
 | Tractos | Atlas HCP-842 (Yeh y cols., 2018), vía frankyeh/data-atlas | Datos del Human Connectome Project; ver el repositorio original |
 | Cerebelo | Diedrichsen y cols. (2009) | **CC BY-NC 3.0: uso no comercial** |
+| Plantilla para cortes | MNI ICBM152 2009 simétrica (vía nilearn) | Licencia MNI: uso libre con aviso de copyright |
 | Receptores (PET) | Hansen y cols. (2022), netneurolab/hansen_receptors | **CC BY-NC-SA 4.0: no comercial, compartir igual** |
 
 El proyecto es de acceso libre y sin fines comerciales. Dos piezas tienen licencia no comercial (el atlas de lóbulos del cerebelo y los mapas de receptores); los mapas de receptores además obligan a compartir sus derivados con la misma licencia.
+
+## Cómo citar
+
+Ver `CITATION.cff`. Para obtener un DOI permanente: activar el repositorio en Zenodo (zenodo.org, sección GitHub) y publicar una *release* en GitHub; Zenodo archiva cada versión y le asigna un DOI.
+
+## Licencias del proyecto
+
+Código: MIT (`LICENSE`). Contenido textual: CC BY-NC-SA 4.0 (`LICENSE-CONTENT.md`). Estado de revisión académica: `REVIEW.md`.
 
 ## Advertencia
 

@@ -263,6 +263,36 @@ for key, fn in RECS:
     print(key, 'deep max/cortex median', rec_meta[key]['deep_vs_ctx'])
 meta['receptors'] = rec_meta
 
+
+# ---- Volumen para cortes seccionales (plantilla MNI ICBM152 2009, 2 mm) ----
+from scipy.ndimage import map_coordinates as _mc
+T1 = nib.load('/usr/local/lib/python3.13/site-packages/nilearn/datasets/data/mni_icbm152_t1_tal_nlin_sym_09a_converted.nii.gz')
+gx = np.arange(-90, 91, 2); gy = np.arange(-126, 91, 2); gz = np.arange(-72, 109, 2)
+X, Y, Z = np.meshgrid(gx, gy, gz, indexing='ij'); P = np.stack([X.ravel(), Y.ravel(), Z.ravel()], 1).astype(np.float64)
+def samp_vol(img, dat, order):
+    ijk = nib.affines.apply_affine(np.linalg.inv(img.affine), P).T
+    return _mc(dat, ijk, order=order, mode='constant', cval=0).reshape(X.shape)
+t1 = samp_vol(T1, np.asarray(T1.dataobj, dtype=np.float32), 1)
+t1 = np.clip(t1 / np.percentile(t1[t1 > 0], 99.5) * 255, 0, 255).astype(np.uint8)
+cer2 = nib.load('data-atlas/human/CerebrA.nii.gz')
+lab = samp_vol(cer2, np.asarray(cer2.dataobj).astype(np.float32), 0).astype(np.uint8)
+# tractos: para cada vóxel, el tracto más específico (de menor volumen) que lo contiene
+trv = nib.load('data-atlas/human/HCP842_tractography.nii.gz'); tid_v = np.zeros(X.shape, np.uint8); best = np.full(X.shape, 1e12)
+for ti, nm in enumerate(tnames):
+    if nm in SKIP or nm not in tract_meta: continue
+    m3 = np.asarray(trv.dataobj[..., ti]).astype(np.float32)
+    vol = m3.sum()
+    if nm == 'Corpus_Callosum': vol = 1e11
+    sm = samp_vol(trv, m3, 0) > 0.5
+    upd = sm & (vol < best); tid_v[upd] = tract_meta.index(nm) + 1; best[upd] = vol
+# orden de los ejes en el archivo: x (91), y (109), z (91), con x más rápido al aplanar en orden 'F'
+add('vol_t1', np.ascontiguousarray(t1.transpose(2, 1, 0)))
+add('vol_lab', np.ascontiguousarray(lab.transpose(2, 1, 0)))
+add('vol_tr', np.ascontiguousarray(tid_v.transpose(2, 1, 0)))
+meta['vol'] = {'dims': [len(gx), len(gy), len(gz)], 'origin': [-90, -126, -72], 'step': 2,
+  'cerebra': {int(l.split()[0]): l.split()[1] for l in open('data-atlas/human/CerebrA.txt') if l.strip()}}
+print('vol', t1.shape, (lab > 0).sum(), (tid_v > 0).sum())
+
 # ---------------- Estadísticas ENIGMA ----------------
 SS = E + 'summary_statistics/'
 def read_stats(fn):

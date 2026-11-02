@@ -27,6 +27,23 @@
 - [x] Organicidad: 19 causas médicas de cuadros psiquiátricos
 - [x] Ocho neurodegenerativas más y once enfermedades raras más
 
+## Hecho (v6, académico)
+- [x] 119 referencias verificadas en PubMed, enlazadas en las fichas, y bibliografía general
+- [x] Guías clínicas y nivel de recomendación de los tratamientos
+- [x] Casos clínicos de localización, banco de preguntas y tarjetas de repetición espaciada
+- [x] Semiología neurológica y psicopatología descriptiva
+- [x] Cortes seccionales sobre la plantilla MNI con estructuras y tractos
+- [x] Farmacocinética, monitorización, embarazo, equivalencias e interacciones
+- [x] Terminología latina e inglesa, glosario y códigos CIE-11
+- [x] Licencias, CITATION.cff, metadatos para Zenodo y registro de revisión
+
+## Pendiente académico
+- [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
+- [ ] DOI de Zenodo (activar la integración y publicar una release)
+- [ ] Interfaz y contenido en inglés
+- [ ] Afinidades numéricas (Ki) en lugar de tres niveles
+- [ ] Más casos clínicos (medulares, de nervio periférico, psiquiátricos con diagnóstico diferencial)
+
 ## Pendiente para completar el mapeo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
 - [ ] Núcleos del tálamo (atlas THOMAS)

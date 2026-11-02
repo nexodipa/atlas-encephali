@@ -1,0 +1,9 @@
+{
+  "title": "Atlas Encephali: atlas 3D interactivo del encéfalo",
+  "upload_type": "software",
+  "description": "Atlas 3D interactivo y abierto del encéfalo para estudiantes de medicina y salud mental, con anatomía real, patología, farmacología basada en mapas PET de receptores, casos clínicos y referencias verificadas en PubMed.",
+  "creators": [{"name": "Puglla, Josué"}],
+  "license": "MIT",
+  "keywords": ["neuroanatomy", "medical education", "psychopharmacology", "psychopathology", "neuroimaging atlas"],
+  "language": "spa"
+}
