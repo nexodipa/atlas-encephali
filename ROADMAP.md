@@ -55,6 +55,11 @@
 - [x] Nivel de solidez del modelo de circuito en cada trastorno
 - [x] 15 referencias nuevas verificadas en PubMed y el DSM-5-TR como referencia general
 
+## Hecho (v10)
+- [x] Resto de los diagnósticos del DSM-5-TR: 113 entradas en 21 capítulos
+- [x] Organicidad ampliada a 36 causas en diez grupos
+- [x] 19 referencias nuevas verificadas en PubMed
+
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
 - [ ] DOI de Zenodo (activar la integración y publicar una release)
@@ -72,7 +77,6 @@
 
 ## Simulaciones siguientes
 - [ ] Interacciones entre fármacos (síndrome serotoninérgico, carga anticolinérgica, inductores e inhibidores)
-- [ ] Trastornos restantes del DSM-5-TR con menos peso docente (pica, rumiación, apego reactivo, piromanía, hipersomnia, apnea, cada sustancia por separado)
 - [ ] Hemorragias extraaxiales (subaracnoidea, subdural, epidural) y herniaciones
 
 ## Pulido final (cuando esté completo)
