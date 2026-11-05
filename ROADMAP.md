@@ -50,6 +50,11 @@
 - [x] Once casos clínicos más (tronco, diencéfalo, síndromes corticales y diagnósticos diferenciales psiquiátricos) y doce preguntas
 - [x] 21 referencias nuevas verificadas en PubMed
 
+## Hecho (v9, DSM-5-TR)
+- [x] Psicopatología ampliada a 77 entradas y ordenada por los 20 capítulos del DSM-5-TR
+- [x] Nivel de solidez del modelo de circuito en cada trastorno
+- [x] 15 referencias nuevas verificadas en PubMed y el DSM-5-TR como referencia general
+
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
 - [ ] DOI de Zenodo (activar la integración y publicar una release)
@@ -67,7 +72,7 @@
 
 ## Simulaciones siguientes
 - [ ] Interacciones entre fármacos (síndrome serotoninérgico, carga anticolinérgica, inductores e inhibidores)
-- [ ] Más psicopatologías (disfunciones sexuales, disforia de género como experiencia y no trastorno en la CIE-11, juego patológico)
+- [ ] Trastornos restantes del DSM-5-TR con menos peso docente (pica, rumiación, apego reactivo, piromanía, hipersomnia, apnea, cada sustancia por separado)
 - [ ] Hemorragias extraaxiales (subaracnoidea, subdural, epidural) y herniaciones
 
 ## Pulido final (cuando esté completo)

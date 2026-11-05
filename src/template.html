@@ -105,6 +105,8 @@ dl.facts dd{margin:0;min-width:0}
 .refs i{color:var(--fg);font-style:normal}
 .refs a{color:var(--accent);font-family:var(--mono);font-size:11px;text-decoration:none;margin-right:8px}
 .refs a:hover{text-decoration:underline}
+
+.lvl.ev-consolidado{border-color:#5fae97;color:#8fd1b9}.lvl.ev-parcial{border-color:var(--warn);color:var(--warn)}.lvl.ev-preliminar{border-color:var(--line-2);color:var(--faint)}
 .lvl{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:2px;border:1px solid var(--line-2);color:var(--muted);margin-left:2px}
 .lvl.primera{border-color:var(--accent);color:var(--accent)}
 .lvl.negativa{border-color:var(--pos);color:var(--pos)}
@@ -434,6 +436,7 @@ function renderDrug(){
     $('#occTxt').innerHTML=`Ocupación estimada: <b>${v0}%</b>${zone?` · ${zone[2].toLowerCase()}`:''}. ${D.occ.note||''}`; };
     dr.onchange=()=>drugView(); }
 }
+const EVTXT={consolidado:['consolidado','Hallazgos replicados en metaanálisis y estudios amplios.'],parcial:['parcial','Hallazgos consistentes pero incompletos o de pocos grupos.'],preliminar:['preliminar','Pocos estudios o resultados heterogéneos; tómese como hipótesis.']};
 function renderPsy(){
   const P=PSY[S.psy]; const grps=[...new Set(Object.values(PSY).map(p=>p.grp))];
   const E=P.enigma&&META.disorders[P.enigma];
@@ -441,6 +444,8 @@ function renderPsy(){
   <select id="psySel" style="margin-bottom:14px">${grps.map(g=>`<optgroup label="${g}">${Object.keys(PSY).filter(k=>PSY[k].grp===g).map(k=>`<option value="${k}" ${k===S.psy?'selected':''}>${PSY[k].es}</option>`).join('')}</optgroup>`).join('')}</select>
   <p class="lede">${P.lede}</p>
   <h3>Modelo neurobiológico</h3><p>${P.model}</p>
+  ${P.ev?`<p style="margin-top:8px"><span class="lvl ev-${P.ev}" title="${EVTXT[P.ev][1]}">Modelo de circuito: ${EVTXT[P.ev][0]}</span> <span style="font-size:12px;color:var(--faint)">${EVTXT[P.ev][1]}</span></p>`:''}
+  ${Object.keys(P.act).length?'':`<div class="warnbox" style="border-color:var(--line-2)">No hay un patrón cerebral consistente que mostrar para este trastorno, así que el modelo queda en gris.</div>`}
   ${Object.keys(P.nt).length||P.circ.length?`<h3>En el modelo</h3><ul>${Object.entries(P.nt).map(([k,m])=>`<li><span class="sw" style="background:${NT[k].color};margin-right:6px"></span>${NT[k].es}: ${m==='hyper'?'hiperfunción':m==='hypo'?'hipofunción':'degeneración'}</li>`).join('')}${P.circ.map(c=>`<li><span class="sw" style="background:${c.color};margin-right:6px"></span>${c.es}: ${c.mod==='hypo'?'conexión debilitada':'conexión hiperactiva'}</li>`).join('')}</ul>`:''}
   <h3>Síntomas y circuitos</h3><dl class="facts">${P.sx.map(([a,b])=>`<dt style="font-family:var(--body);font-size:13px;color:var(--fg)">${a}</dt><dd style="color:var(--muted)">${b}</dd>`).join('')}</dl>
   ${P.tx.length?`<h3>Fármacos y nivel de recomendación</h3><div class="chips">${P.tx.map(d=>{ const l=(TXLEVEL[S.psy]||{})[d]; return `<button class="chip" data-go="drug:${d}">${DRUGS[d].es}${l?`<span class="lvl ${l}">${LVLTXT[l]}</span>`:''}</button>`; }).join('')}</div>
@@ -712,7 +717,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 8. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 9. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
