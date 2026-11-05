@@ -3,7 +3,7 @@ import base64, pathlib
 root = pathlib.Path(__file__).resolve().parents[1]
 s = (root / 'src/template.html').read_text(encoding='utf-8')
 meta = (root / 'build/meta.json').read_text(encoding='utf-8')
-content = (root / 'src/content.js').read_text(encoding='utf-8')
+content = (root / 'src/content.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content2.js').read_text(encoding='utf-8')
 b64 = base64.b64encode((root / 'build/atlas.bin.gz').read_bytes()).decode()
 import json
 i18n = (root / 'src/i18n.js').read_text(encoding='utf-8')

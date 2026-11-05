@@ -43,12 +43,19 @@
 - [x] Contenido traducido bajo demanda con Claude, guardado en el navegador y exportable
 - [x] Paquetes revisados en `lang/` incrustados en la compilación
 
+## Hecho (v8, clínica)
+- [x] Simulación de hemorragia intraparenquimatosa: seis localizaciones, volumen y ABC/2, escala ICH y manejo según la guía AHA/ASA 2022
+- [x] Simulación de metástasis múltiples con cinco primarios y la conducta según el número de lesiones (guía ASCO-SNO-ASTRO 2022)
+- [x] Seis psicopatologías más: neurológico funcional, malestar corporal, despersonalización, insomnio crónico, conducta del sueño REM y atracón
+- [x] Once casos clínicos más (tronco, diencéfalo, síndromes corticales y diagnósticos diferenciales psiquiátricos) y doce preguntas
+- [x] 21 referencias nuevas verificadas en PubMed
+
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
 - [ ] DOI de Zenodo (activar la integración y publicar una release)
 - [ ] Paquetes de contenido revisados por clínicos nativos (empezar por inglés, francés y portugués)
-- [ ] Afinidades numéricas (Ki) en lugar de tres niveles
-- [ ] Más casos clínicos (medulares, de nervio periférico, psiquiátricos con diagnóstico diferencial)
+- [ ] Casos medulares y de nervio periférico: requieren modelar la médula espinal y los nervios
+- [ ] Afinidades numéricas (Ki) desde la base PDSP, en lugar de tres niveles
 
 ## Pendiente para completar el mapeo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
@@ -60,8 +67,8 @@
 
 ## Simulaciones siguientes
 - [ ] Interacciones entre fármacos (síndrome serotoninérgico, carga anticolinérgica, inductores e inhibidores)
-- [ ] Más psicopatologías (trastornos disociativos, somatomorfos, del sueño, sexuales)
-- [ ] Hemorragia, hidrocefalia, metástasis
+- [ ] Más psicopatologías (disfunciones sexuales, disforia de género como experiencia y no trastorno en la CIE-11, juego patológico)
+- [ ] Hemorragias extraaxiales (subaracnoidea, subdural, epidural) y herniaciones
 
 ## Pulido final (cuando esté completo)
 - [ ] Revisión de rendimiento en móviles de gama baja (nivel de detalle, carga diferida)

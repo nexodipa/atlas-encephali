@@ -30,7 +30,7 @@ Mapas de la d de Cohen (casos − controles) de los metaanálisis del consorcio 
 Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofrenia y Parkinson se muestra además la alteración dopaminérgica: exceso mesolímbico y déficit mesocortical en el primer caso, pérdida nigroestriatal en el segundo.
 
 **Patología** (cinco pestañas)
-- **Psicopatología:** 14 trastornos como modelos de circuito (esquizofrenia, bipolar, depresión, ansiedad generalizada, pánico, TEPT, TOC, TDAH, autismo, Tourette, adicción, anorexia, límite de la personalidad, catatonia). Mapa de hiper e hipoactividad, circuitos y sistemas de neurotransmisores animados, síntomas asociados a cada circuito y fármacos enlazados.
+- **Psicopatología:** 20 trastornos como modelos de circuito (esquizofrenia, bipolar, depresión, ansiedad generalizada, pánico, TEPT, TOC, TDAH, autismo, Tourette, adicción, anorexia, atracón, límite de la personalidad, catatonia, neurológico funcional, malestar corporal, despersonalización, insomnio crónico y trastorno de conducta del sueño REM). Mapa de hiper e hipoactividad, circuitos y sistemas de neurotransmisores animados, síntomas asociados a cada circuito y fármacos enlazados.
 - **Organicidad:** 19 causas médicas de cuadros psiquiátricos (delirium, encefalitis anti-NMDA y herpética, Wernicke-Korsakoff, encefalopatía hepática, tiroides, B12, neurosífilis, VIH, traumatismo, tumor frontal, epilepsia temporal, hidrocefalia normotensiva, monóxido de carbono, metanol, corticoides, lupus, porfiria, demencia frontotemporal), con signos de alarma, diagnóstico y tratamiento.
 - **Neurodegenerativas:** 14 procesos con progresión por estadios: Alzheimer, Parkinson, ELA, Huntington, esclerosis múltiple, hidrocefalia, demencia frontotemporal conductual, cuerpos de Lewy, parálisis supranuclear progresiva, atrofia multisistémica, degeneración corticobasal, atrofia cortical posterior, afasias progresivas primarias y demencia vascular subcortical.
 - **Raras:** 20 enfermedades, de Wilson y Creutzfeldt-Jakob a Niemann-Pick C, CADASIL, esclerosis tuberosa, insomnio familiar fatal o narcolepsia tipo 1.
@@ -45,9 +45,9 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - mecanismo, efecto buscado, efectos adversos y los trastornos en que se usa.
 
 **Herramientas académicas (v6)**
-- **Referencias verificadas:** 119 artículos comprobados contra PubMed (autor, revista, año, volumen y página), enlazados por PMID y DOI en cada ficha, y una bibliografía general.
+- **Referencias verificadas:** 140 artículos comprobados contra PubMed (autor, revista, año, volumen y página), enlazados por PMID y DOI en cada ficha, y una bibliografía general.
 - **Guías clínicas y nivel de recomendación:** cada trastorno enlaza sus guías (APA, NICE, CANMAT, BAP) y marca los fármacos como primera línea, segunda línea, potenciación, casos resistentes o evidencia limitada o negativa.
-- **Estudio:** 20 casos clínicos de localización (el estudiante toca la estructura lesionada en un cerebro sin colores ni nombres y recibe corrección y pregunta de seguimiento), banco de más de 230 preguntas y tarjetas de repetición espaciada (Leitner) en siete mazos.
+- **Estudio:** 31 casos clínicos de localización (el estudiante toca la estructura lesionada en un cerebro sin colores ni nombres y recibe corrección y pregunta de seguimiento), banco de más de 230 preguntas y tarjetas de repetición espaciada (Leitner) en siete mazos.
 - **Semiología:** exploración neurológica con localización resaltada en el modelo (pares craneales, motor, sensibilidad, cerebelo, ganglios basales, mirada, funciones corticales) y psicopatología descriptiva (examen del estado mental, curso y forma del pensamiento, delirios, alucinaciones, Schneider, síntomas negativos, catatonia).
 - **Cortes seccionales:** cortes axiales, coronales y sagitales sobre la plantilla MNI ICBM152 con estructuras (CerebrA) o tractos superpuestos; al pasar el cursor se identifica la estructura y sus coordenadas MNI.
 - **Farmacología clínica:** vida media, metabolismo, monitorización y embarazo para 43 fármacos, equivalencias de antipsicóticos y benzodiacepinas, y un comprobador de interacciones por mecanismo.
@@ -55,6 +55,8 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
+- **Hemorragia intraparenquimatosa:** putamen, tálamo, caudado, lobar, cerebelo y protuberancia; volumen con su estimación ABC/2, calculadora de la escala ICH (Hemphill y cols., 2001) y manejo inicial según la guía AHA/ASA 2022.
+- **Metástasis:** hasta diez lesiones en la unión corticosubcortical, cinco tumores primarios y la conducta según el número de lesiones (radiocirugía, cirugía, radioterapia holocraneal con protección del hipocampo).
 - **Glioblastoma:** crecimiento con edema y efecto de masa. El tejido se desplaza como un medio incompresible, con frenado por la hoz y el cráneo. Calcula la desviación de la línea media.
 
 **Idiomas**
