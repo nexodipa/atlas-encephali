@@ -45,7 +45,7 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - mecanismo, efecto buscado, efectos adversos y los trastornos en que se usa.
 
 **Herramientas académicas (v6)**
-- **Referencias verificadas:** 187 artículos comprobados en PubMed, más el DSM-5-TR, contra PubMed (autor, revista, año, volumen y página), enlazados por PMID y DOI en cada ficha, y una bibliografía general.
+- **Referencias verificadas:** 198 artículos comprobados en PubMed, más el DSM-5-TR, contra PubMed (autor, revista, año, volumen y página), enlazados por PMID y DOI en cada ficha, y una bibliografía general.
 - **Guías clínicas y nivel de recomendación:** cada trastorno enlaza sus guías (APA, NICE, CANMAT, BAP) y marca los fármacos como primera línea, segunda línea, potenciación, casos resistentes o evidencia limitada o negativa.
 - **Estudio:** 31 casos clínicos de localización (el estudiante toca la estructura lesionada en un cerebro sin colores ni nombres y recibe corrección y pregunta de seguimiento), banco de más de 230 preguntas y tarjetas de repetición espaciada (Leitner) en siete mazos.
 - **Semiología:** exploración neurológica con localización resaltada en el modelo (pares craneales, motor, sensibilidad, cerebelo, ganglios basales, mirada, funciones corticales) y psicopatología descriptiva (examen del estado mental, curso y forma del pensamiento, delirios, alucinaciones, Schneider, síntomas negativos, catatonia).
@@ -54,8 +54,10 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - **Terminología:** nombres en latín e inglés en las fichas, glosario trilingüe con búsqueda y códigos CIE-11.
 
 **Aprender**
-- **Recorridos guiados:** ocho explicaciones paso a paso sobre el modelo, con cámara animada, estructuras que se encienden, flujos de neurotransmisores y reproducción automática o con las flechas del teclado: circuito de Papez, vías de la dopamina y antipsicóticos, vía visual, lenguaje y afasias, vía motora, miedo y extinción, recompensa y adicción, y sueño y vigilia.
-- **Casos que evolucionan:** cinco casos ramificados (62 recorridos posibles) en los que cada decisión cambia la evolución del paciente, las constantes y lo que muestra el modelo: psicosis por encefalitis anti-NMDA, delirium posoperatorio, ictus con oclusión de la cerebral media, síndrome serotoninérgico e intoxicación por litio. Al final se muestra cada decisión con su explicación, la puntuación y las referencias; el mejor resultado se guarda en el navegador.
+- **Rutas de aprendizaje:** cinco programas por asignatura (neuroanatomía funcional, neurología clínica, psicopatología, psicofarmacología, neuropsiquiatría y organicidad) que ordenan en unidades 142 actividades: recorridos, fichas, casos, diferenciales, simulaciones, preguntas y tarjetas. El progreso se guarda en el navegador, con un botón para continuar donde se dejó.
+- **Recorridos guiados:** trece explicaciones paso a paso sobre el modelo, con cámara animada, estructuras que se encienden, flujos de neurotransmisores y reproducción automática o con las flechas del teclado: circuito de Papez, vías de la dopamina y antipsicóticos, vía visual, lenguaje y afasias, vía motora, miedo y extinción, recompensa y adicción, sueño y vigilia, pares craneales, territorios arteriales, eje del estrés, serotonina y antidepresivos, y sistema límbico.
+- **Modo clase:** oculta los controles y muestra el texto del recorrido en grande sobre el modelo, con botones para avanzar; pensado para proyectar.
+- **Casos que evolucionan:** diez casos ramificados (108 recorridos posibles) en los que cada decisión cambia la evolución del paciente, las constantes y lo que muestra el modelo: psicosis por encefalitis anti-NMDA, delirium posoperatorio, ictus con oclusión de la cerebral media, síndrome serotoninérgico, intoxicación por litio, estado epiléptico, primer episodio maníaco, delirium tremens, hemorragia subaracnoidea y meningitis bacteriana. Al final se muestra cada decisión con su explicación, la puntuación y las referencias; el mejor resultado se guarda en el navegador.
 - **Diagnóstico diferencial:** dos fichas cualesquiera (psicopatología, organicidad, neurodegenerativas, raras) lado a lado, con sus regiones en colores distintos y comunes en un tercero, una tabla comparativa y 17 pares clásicos con las claves para distinguirlos y la prueba que suele decidir (pánico y feocromocitoma, esquizofrenia y encefalitis anti-NMDA, síndrome neuroléptico maligno y serotoninérgico, delirium y demencia, entre otros).
 
 **Simulación** (didáctica)
@@ -69,6 +71,8 @@ Selector en la cabecera con 13 idiomas: español, inglés, francés, alemán, po
 - La interfaz (modos, controles, vistas, cortes, leyendas) viene traducida en el propio archivo.
 - El contenido (fichas, casos, preguntas) se traduce bajo demanda con Claude cuando el atlas se abre en claude.ai, con instrucciones de terminología médica, y se guarda en el navegador. Es traducción automática y se marca como tal.
 - Las traducciones se pueden exportar y, revisadas, añadirse a `lang/` como paquetes que se incrustan en la compilación (ver `lang/README.md`). Abierta fuera de claude.ai, la copia de GitHub muestra traducida la interfaz y lo que tenga paquete; el resto queda en español.
+
+**Accesibilidad:** con el foco en el modelo, las flechas lo giran y + y − acercan o alejan; los recorridos avanzan con las flechas; la interfaz se adapta a móviles.
 
 ## Estructura
 

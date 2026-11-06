@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Atlas Encephali</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +20,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 button,select{font:inherit;color:inherit}
+#stage:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{display:grid;grid-template-rows:auto 1fr;height:100%}
 header.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
@@ -138,10 +140,29 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
 .stat span{font-size:11px;color:var(--faint)}
 .tourcap{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);max-width:min(760px,90%);background:color-mix(in srgb,var(--bg) 82%,transparent);border:1px solid var(--line-2);border-radius:4px;padding:10px 18px;text-align:center;pointer-events:none;backdrop-filter:blur(6px)}
 .tourcap span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.1em}.tourcap b{font-family:var(--display);font-size:22px;font-weight:500;color:var(--fg)}
+.presbtn{position:absolute;top:12px;right:14px;background:color-mix(in srgb,var(--bg) 80%,transparent);border:1px solid var(--line-2);border-radius:3px;padding:5px 10px;font-size:11.5px;color:var(--muted);cursor:pointer;z-index:6}
+.presbtn:hover{color:var(--fg)}.toroute{top:46px!important}
+.tourcap .capx,.tourcap .capnav{display:none}
+body.present .toolbar,body.present .hud{display:none}
+body.present .pin{font-size:112%}
+body.present:has(#tourCap:not([hidden])) main{grid-template-columns:minmax(0,1fr) 0}
+body.present:has(#tourCap:not([hidden])) .panel{display:none}
+body.present .tourcap{bottom:28px;max-width:min(980px,92%);pointer-events:auto;padding:16px 26px}
+body.present .tourcap b{font-size:30px}
+body.present .tourcap .capx{display:block;font-size:19px;line-height:1.55;margin:10px 0 0;text-align:left;color:var(--fg)}
+body.present .tourcap .capnav{display:flex;justify-content:center;gap:10px;margin-top:12px}
+body.present .tourcap .capnav button{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;padding:6px 18px;font-size:16px;cursor:pointer;color:var(--fg)}
+body.present .tourcap .capnav button:disabled{opacity:.3}
+@media (max-width:700px){.modes{display:grid;grid-template-columns:repeat(3,1fr);width:100%}.modes button{border-bottom:1px solid var(--line)}.presbtn{display:none}.hud div:last-child{display:none}.tourcap b{font-size:17px}.tourcap{bottom:12px}}
 .tourlist{display:grid;gap:8px}.tourcard{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:12px 14px;cursor:pointer}
 .tourcard:hover{border-color:var(--accent)}.tourcard b{font-family:var(--display);font-size:18px;font-weight:500}.tourcard span{font-size:13px;color:var(--muted)}.tourcard .tl{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em}
 .tourdots{display:flex;gap:6px;margin-top:12px}.tourdots button{width:26px;height:6px;border-radius:3px;border:0;background:var(--line-2);cursor:pointer}.tourdots button.done{background:var(--muted)}.tourdots button.on{background:var(--accent)}
 .tournav{display:flex;gap:8px;margin:18px 0 8px}.tournav button{flex:1;background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;padding:9px;cursor:pointer;font-size:13px}.tournav button:disabled{opacity:.35;cursor:default}.tournav button:hover:not(:disabled){border-color:var(--accent)}
+.rbar{display:block;height:4px;background:var(--line-2);border-radius:2px;overflow:hidden;margin-top:6px}.rbar i{display:block;height:100%;background:var(--accent)}.rbar.big{height:6px;margin:8px 0 4px}
+.rlist{list-style:none;padding:0;margin:6px 0 0}.rlist li button{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:8px 2px;cursor:pointer;font-size:13.5px;color:var(--fg)}
+.rlist li button:hover{color:var(--accent)}.rlist .rk{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;min-width:104px;white-space:nowrap}.rlist li.done button{color:var(--muted)}.rlist li.done .rk::before{content:"✓ ";color:#5fae97}
+.tournav1{width:100%;background:var(--bone);color:var(--bg);border:0;border-radius:3px;padding:10px 12px;cursor:pointer;font-size:13.5px;text-align:left}
+.toroute{position:absolute;top:44px;right:14px;background:color-mix(in srgb,var(--bg) 85%,transparent);border:1px solid var(--line-2);border-radius:3px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--fg);z-index:5}
 .ecch{display:grid;gap:8px}.ecch button{text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:11px 13px;font-size:14px;line-height:1.45;cursor:pointer}.ecch button:hover{border-color:var(--accent)}
 .eclog{padding-left:18px;font-size:13.5px}.eclog li{margin-bottom:10px}
 .diffsel{display:grid;gap:8px;margin:14px 0 8px}.diffsel label{display:flex;align-items:center;gap:8px}.diffsel select{flex:1}
@@ -173,10 +194,10 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
   </header>
   <main>
     <section class="left">
-      <div id="stage" aria-label="Modelo 3D del encéfalo">
+      <div id="stage" aria-label="Modelo 3D del encéfalo. Con el foco aquí, las flechas giran el modelo y + y − acercan o alejan.">
         <div class="loading" id="loading">Cargando superficies corticales y núcleos…</div>
         <div class="hud"><div class="view">Vista <em id="viewName">lateral izquierda</em></div><div>Arrastra para rotar · rueda o pellizco para acercar · toca una región</div></div>
-        <div class="tourcap" id="tourCap" hidden></div><div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
+        <div class="tourcap" id="tourCap" hidden></div><button class="presbtn" id="presBtn" title="Modo clase: oculta los controles y amplía el texto (Esc para salir)">Modo clase</button><div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
         <button class="clear" id="clearBtn" hidden>Quitar selección</button>
         <div id="sliceBox" hidden><canvas id="sliceCv" aria-label="Corte de resonancia"></canvas><div id="sliceInfo">Pasa el cursor por el corte</div></div>
         <div class="tip" id="tip" hidden></div>
@@ -2931,6 +2952,48 @@ emotion:{es:"El sistema límbico y la emoción",lvl:"Neurociencia",min:4,
  ]}
 });
 
+/* ---- rutas de aprendizaje por asignatura ----
+   Elemento: [tipo, argumento, etiqueta opcional]. Tipos: go (ficha), tour, ec (caso que evoluciona), sc (caso de localización, por id),
+   diff (par clásico, índice), quiz (mazo de preguntas), flash (mazo de tarjetas), sim (pestaña de simulación), semio (semiología) */
+const ROUTES={
+ anat:{es:"Neuroanatomía funcional",lede:"De los lóbulos a los circuitos: dónde está cada función y qué ocurre cuando se lesiona.",units:[
+  {t:"Organización general",it:[["go","lobe:frontal"],["go","lobe:parietal"],["go","lobe:temporal"],["go","lobe:occipital"],["go","lobe:limbic"],["go","lobe:insula"]]},
+  {t:"Motor y sensitivo",it:[["tour","motor"],["go","dk:precentral"],["go","dk:postcentral"],["sc","hemiballism"],["sc","parkinson"],["sc","vermis"]]},
+  {t:"Visión",it:[["tour","vision"],["sc","hemianopsia"],["sc","prosop"],["sc","anton"],["sc","balint"]]},
+  {t:"Lenguaje y cognición",it:[["tour","lang"],["sc","broca"],["sc","wernicke"],["sc","conduction"],["sc","tcmotor"],["sc","gerstmann"],["sc","alexia"],["sc","neglect"]]},
+  {t:"Memoria y emoción",it:[["tour","papez"],["tour","emotion"],["go","deep:Lhippo"],["go","deep:Lamyg"],["sc","korsakoff"],["sc","kluver"],["sc","hsv"]]},
+  {t:"Tronco y pares craneales",it:[["tour","cn"],["sc","weber"],["sc","wallenberg"],["sc","millard"],["sc","dejerine"],["sc","parinaud"]]},
+  {t:"Evaluación",it:[["quiz","Neuroanatomía"],["flash","Regiones"],["flash","Núcleos"],["flash","Tractos"]]}]},
+ neuro:{es:"Neurología clínica",lede:"Vascular, urgencias, neurodegenerativas y semiología, con casos en los que decides tú.",units:[
+  {t:"Semiología",it:[["semio","neuro"]]},
+  {t:"Patología vascular",it:[["tour","arteries"],["sc","aca"],["sc","thalamic"],["ec","stroke"],["sim","isq","Simulación de ictus"],["sim","ich","Simulación de hemorragia"]]},
+  {t:"Urgencias neurológicas",it:[["ec","status"],["ec","sah"],["ec","meningitis"]]},
+  {t:"Tumores",it:[["sim","gbm","Simulación de glioblastoma"],["sim","met","Simulación de metástasis"],["sc","olfgroove"]]},
+  {t:"Neurodegenerativas",it:[["go","ndg:ad"],["go","ndg:pd"],["go","ndg:dlb"],["go","ndg:hd"],["go","ndg:als"],["diff",14],["sc","huntington"],["sc","rbd"]]},
+  {t:"Evaluación",it:[["quiz","Neurología"]]}]},
+ psy:{es:"Psicopatología",lede:"Los grandes síndromes, sus modelos de circuito y el razonamiento diagnóstico.",units:[
+  {t:"Semiología psicopatológica",it:[["semio","psy"]]},
+  {t:"Psicosis",it:[["go","psy:scz"],["tour","da"],["sc","hallucinations"],["diff",1],["diff",10]]},
+  {t:"Trastornos del ánimo",it:[["go","psy:mdd"],["go","psy:bd"],["ec","mania"],["diff",7],["diff",6],["go","psy:suic"]]},
+  {t:"Ansiedad, obsesiones y trauma",it:[["tour","fear"],["go","psy:panic"],["go","psy:ocd"],["go","psy:ptsd"],["diff",0],["diff",5]]},
+  {t:"Adicciones",it:[["tour","reward"],["go","psy:aud"],["ec","dt"],["go","psy:oud"]]},
+  {t:"Neurodesarrollo y personalidad",it:[["go","psy:adhd"],["go","psy:asd"],["diff",12],["diff",13],["go","psy:bpd"]]},
+  {t:"Evaluación",it:[["quiz","Psicopatología"],["flash","Psicopatología"]]}]},
+ pharm:{es:"Psicofarmacología",lede:"Mecanismos, dosis, interacciones y efectos adversos con su base anatómica.",units:[
+  {t:"Antipsicóticos",it:[["tour","da"],["go","drug:haloperidol"],["go","drug:clozapine"],["go","drug:aripiprazole"],["go","psy:nms"],["go","psy:td"],["diff",4]]},
+  {t:"Antidepresivos",it:[["tour","serotonin"],["go","drug:sertraline"],["go","drug:venlafaxine"],["go","drug:bupropion"],["ec","serotonin"],["go","psy:adds"]]},
+  {t:"Estabilizadores",it:[["go","drug:lithium"],["go","drug:valproate"],["go","drug:lamotrigine"],["ec","lithium"]]},
+  {t:"Ansiolíticos e hipnóticos",it:[["go","drug:diazepam"],["go","psy:sed"],["tour","sleep"],["go","drug:zolpidem"]]},
+  {t:"Evaluación",it:[["quiz","Farmacología"],["flash","Fármacos"]]}]},
+ np:{es:"Neuropsiquiatría y organicidad",lede:"Cuándo un cuadro psiquiátrico es una enfermedad médica, y cómo no pasarlo por alto.",units:[
+  {t:"Delirium",it:[["go","org:delirium"],["ec","delirium"],["diff",3]]},
+  {t:"Encefalitis y causas inmunes",it:[["ec","nmda"],["go","org:hsv"],["go","org:lgi1"],["diff",1]]},
+  {t:"Causas metabólicas y endocrinas",it:[["go","org:thyroid"],["diff",2],["diff",0],["go","org:hypona"],["go","org:cushing"],["diff",9]]},
+  {t:"Tóxicas y carenciales",it:[["go","org:wk"],["ec","dt"],["go","org:b12"],["go","org:serotonin"],["go","org:anticholinergic"]]},
+  {t:"Lesiones estructurales",it:[["sc","orbitofrontal"],["sc","abulia"],["sc","olfgroove"],["sc","secmania"],["go","org:poststroke"],["go","org:ncc"]]},
+  {t:"Evaluación",it:[["quiz","Organicidad"],["flash","Organicidad"]]}]}
+};
+
 </script>
 <script>
 "use strict";
@@ -2938,7 +3001,7 @@ emotion:{es:"El sistema límbico y la emoción",lvl:"Neurociencia",min:4,
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
-  learn:{tab:'tour',tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
+  learn:{tab:'route',route:null,tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -3362,7 +3425,7 @@ pin.addEventListener('click',e=>{
   if(t==='deep') return select({kind:'deep',key:v});
   if(t==='stem') return select({kind:'stem',id:+v});
   if(t==='cb') return select({kind:'cb',id:v});
-  if(t==='tr') return select({kind:'tr',id:isNaN(+v)?META.tracts.indexOf(v):+v});
+  if(t==='tr'){ let id=isNaN(+v)?META.tracts.indexOf(v):+v; if(id<0) id=META.tracts.findIndex(n=>trBase(n)===v); if(id<0) return; return select({kind:'tr',id}); }
   if(t==='nt') return select({kind:'nt',id:v});
 });
 function showPanel(){
@@ -3445,7 +3508,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 12. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 13. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -3609,6 +3672,52 @@ function learnEnter(){ const L=S.learn; stopTour();
   else { studyView({v:'latL'}); }
   renderLearn(); }
 
+
+/* rutas de aprendizaje con progreso guardado en este navegador */
+const itemId=it=>it[0]+':'+it[1];
+function rDone(){ return store.get('rdone',{}); }
+function markDone(id){ const d=rDone(); if(!d[id]){ d[id]=Date.now(); store.set('rdone',d); } }
+function itemLabel(it){ const [k,a,l]=it; if(l) return l;
+  if(k==='tour') return 'Recorrido: '+TOURS[a].es; if(k==='ec') return 'Caso que evoluciona: '+ECASES[a].es;
+  if(k==='sc'){ const c=CASES.find(c=>c.id===a); return 'Caso de localización: '+(c?c.es:a); }
+  if(k==='diff'){ const p=DIFF[a]; return 'Diferencial: '+ENT(p.a).o.es+' y '+ENT(p.b).o.es; }
+  if(k==='quiz') return 'Preguntas de '+a.toLowerCase(); if(k==='flash') return 'Tarjetas: '+a.toLowerCase();
+  if(k==='semio') return a==='psy'?'Semiología psicopatológica':'Exploración neurológica';
+  if(k==='go'){ const [t,v]=a.split(':'); const src={lobe:LOBES,dk:DK,psy:PSY,org:ORG,ndg:DISEASE,rare:RARE,drug:DRUGS}[t]; if(src&&src[v]) return (src[v].es||src[v].name);
+    if(t==='deep') return DEEP[v.slice(1)]?DEEP[v.slice(1)].es:v; return a; }
+  return a; }
+const KIND={tour:'Recorrido',ec:'Caso',sc:'Localización',diff:'Diferencial',quiz:'Preguntas',flash:'Tarjetas',semio:'Semiología',go:'Ficha',sim:'Simulación'};
+function openItem(it){ const [k,a]=it, L=S.learn; markDone(itemId(it)); L.from=L.route;
+  if(k==='tour'){ if(S.mode!=='learn') setMode('learn'); L.tab='tour'; L.tour=a; L.step=0; learnEnter(); }
+  else if(k==='ec'){ if(S.mode!=='learn') setMode('learn'); L.tab='case'; L.ec={id:a,node:ECASES[a].start,log:[]}; learnEnter(); }
+  else if(k==='diff'){ if(S.mode!=='learn') setMode('learn'); const p=DIFF[a]; L.tab='diff'; L.a=p.a; L.b=p.b; learnEnter(); }
+  else if(k==='sc'){ const i=CASES.findIndex(c=>c.id===a); Object.assign(S.study,{tab:'cases',ci:Math.max(0,i),state:'ask',reveal:[],wrong:null,fq:null}); setMode('study'); }
+  else if(k==='quiz'){ Object.assign(S.study,{tab:'quiz',deck:a,qi:0,qa:null}); setMode('study'); }
+  else if(k==='flash'){ Object.assign(S.study,{tab:'flash',fdeck:a,fcard:null,fshow:false}); setMode('study'); }
+  else if(k==='semio'){ Object.assign(S.study,{tab:'semio',semio:a,si:null}); setMode('study'); }
+  else if(k==='sim'){ S.simTab=a; setMode('sim'); }
+  else if(k==='go'){ const b=document.createElement('button'); b.dataset.go=a; b.hidden=true; pin.appendChild(b); b.click(); }
+  panel.scrollTop=0; showBackToRoute(); }
+function showBackToRoute(){ let bt=$('#toRoute'); if(!bt){ bt=document.createElement('button'); bt.id='toRoute'; bt.className='toroute'; $('#stage').appendChild(bt);
+    bt.onclick=()=>{ S.learn.tab='route'; S.learn.route=S.learn.from; if(S.mode!=='learn') setMode('learn'); else learnEnter(); bt.hidden=true; }; }
+  bt.textContent='← Volver a la ruta: '+ROUTES[S.learn.from].es; bt.hidden=false; }
+function routePct(r){ const d=rDone(); const all=ROUTES[r].units.flatMap(u=>u.it); return [all.filter(it=>d[itemId(it)]).length, all.length]; }
+function renderRoutes(){ const L=S.learn, d=rDone();
+  if(!L.route) return `<p class="sub2">Programas ordenados por asignatura que combinan recorridos, fichas, casos y preguntas. El avance se guarda en este navegador.</p>
+    <div class="tourlist">${Object.entries(ROUTES).map(([k,R])=>{ const [a,n]=routePct(k); return `<button class="tourcard" data-route="${k}"><span class="tl">${n} actividades · ${a?Math.round(100*a/n)+'% completado':'sin empezar'}</span><b>${R.es}</b><span>${R.lede}</span><span class="rbar"><i style="width:${100*a/n}%"></i></span></button>`; }).join('')}</div>`;
+  const R=ROUTES[L.route], [a,n]=routePct(L.route); const next=R.units.flatMap(u=>u.it).find(it=>!d[itemId(it)]);
+  return `<div class="crumbs"><button id="rBack">Rutas</button><span>/</span><span>${R.es}</span></div>
+  <p class="sub2">${R.lede}</p><div class="rbar big"><i style="width:${100*a/n}%"></i></div><p class="note">${a} de ${n} actividades</p>
+  ${next?`<p><button class="tournav1" id="rNext">Continuar: ${itemLabel(next)}</button></p>`:'<p><b>Ruta completada.</b></p>'}
+  ${R.units.map((u,ui)=>{ const done=u.it.filter(it=>d[itemId(it)]).length; return `<h3>${ui+1}. ${u.t} <span style="float:right;font-family:var(--mono);font-size:10.5px;color:var(--faint)">${done}/${u.it.length}</span></h3>
+    <ul class="rlist">${u.it.map(it=>`<li class="${d[itemId(it)]?'done':''}"><button data-ri='${JSON.stringify(it)}'><span class="rk">${KIND[it[0]]}</span>${itemLabel(it)}</button></li>`).join('')}</ul>`; }).join('')}
+  <p style="margin-top:14px"><button class="lnk" id="rReset">Reiniciar el progreso de esta ruta</button></p>`; }
+function bindRoutes(){ const L=S.learn;
+  pin.querySelectorAll('[data-route]').forEach(b=>b.onclick=()=>{ L.route=b.dataset.route; renderLearn(); panel.scrollTop=0; });
+  const bk=$('#rBack'); if(bk) bk.onclick=()=>{ L.route=null; renderLearn(); };
+  pin.querySelectorAll('[data-ri]').forEach(b=>b.onclick=()=>openItem(JSON.parse(b.dataset.ri)));
+  const nx=$('#rNext'); if(nx) nx.onclick=()=>{ const d=rDone(); const it=ROUTES[L.route].units.flatMap(u=>u.it).find(it=>!d[itemId(it)]); if(it) openItem(it); };
+  const rs=$('#rReset'); if(rs) rs.onclick=()=>{ const d=rDone(); ROUTES[L.route].units.flatMap(u=>u.it).forEach(it=>delete d[itemId(it)]); store.set('rdone',d); renderLearn(); }; }
 const QTXT={ok:['Adecuada','#5fae97'],meh:['Mejorable','#e8c46a'],bad:['Error','#e2685a']};
 function renderECase(){ const L=S.learn, best=store.get('ecbest',{});
   if(!L.ec) return `<p class="sub2">Casos clínicos en los que decides tú: cada decisión cambia la evolución del paciente y lo que muestra el modelo. Al final verás el razonamiento de cada paso.</p>
@@ -3641,14 +3750,16 @@ function stopTour(){ if(tourTimer){ clearInterval(tourTimer); tourTimer=null; } 
 function tourGo(i){ const L=S.learn, T=TOURS[L.tour]; L.step=Math.max(0,Math.min(T.steps.length-1,i)); learnView(T.steps[L.step]); renderLearn(); }
 function renderLearn(){
   const L=S.learn; const cap=$('#tourCap');
-  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='tour'?'Recorridos guiados':L.tab==='case'?'Casos que evolucionan':'Diagnóstico diferencial'}</h2>
-  <div class="seg" style="margin-bottom:16px"><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="case" class="${L.tab==='case'?'on':''}">Casos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
-  if(L.tab==='tour'){
+  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='route'?'Rutas de aprendizaje':L.tab==='tour'?'Recorridos guiados':L.tab==='case'?'Casos que evolucionan':'Diagnóstico diferencial'}</h2>
+  <div class="seg" style="margin-bottom:16px"><button data-lt="route" class="${L.tab==='route'?'on':''}">Rutas</button><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="case" class="${L.tab==='case'?'on':''}">Casos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
+  if(L.tab==='route'){ cap.hidden=true; const tr=$('#toRoute'); if(tr) tr.hidden=true; h+=renderRoutes(); }
+  else if(L.tab==='tour'){
     if(!L.tour){ cap.hidden=true;
       h+=`<p class="sub2">Explicaciones paso a paso sobre el modelo: la cámara se mueve, las estructuras se encienden y el texto avanza. Sirven para estudiar solo o para proyectar en clase.</p>
       <div class="tourlist">${Object.entries(TOURS).map(([k,T])=>`<button class="tourcard" data-tour="${k}"><span class="tl">${T.lvl} · ${T.steps.length} pasos · ${T.min} min</span><b>${T.es}</b><span>${T.lede}</span></button>`).join('')}</div>`;
     } else { const T=TOURS[L.tour], st=T.steps[L.step], n=T.steps.length;
-      cap.hidden=false; cap.innerHTML=`<span>${L.step+1} / ${n}</span><b>${st.t}</b>`;
+      cap.hidden=false; cap.innerHTML=`<span>${L.step+1} / ${n}</span><b>${st.t}</b><p class="capx">${st.x}</p><div class="capnav"><button data-cn="-1" ${L.step===0?'disabled':''}>←</button><button data-cn="1">${L.step===n-1?'Fin':'→'}</button></div>`;
+      cap.querySelectorAll('[data-cn]').forEach(b=>b.onclick=()=>{ stopTour(); const d=+b.dataset.cn; if(d>0&&L.step===n-1){ document.body.classList.remove('present'); L.tour=null; setNT(null); learnEnter(); } else tourGo(L.step+d); });
       h+=`<div class="crumbs"><button id="tourBack">Recorridos</button><span>/</span><span>${T.es}</span></div>
       <div class="tourdots">${T.steps.map((s,i)=>`<button data-ts="${i}" class="${i===L.step?'on':i<L.step?'done':''}" title="${s.t}"></button>`).join('')}</div>
       <p class="kicker" style="margin-top:14px">Paso ${L.step+1} de ${n}</p><h3 style="margin-top:0;border:0;text-transform:none;letter-spacing:0;font-family:var(--display);font-size:22px;color:var(--fg)">${st.t}</h3>
@@ -3689,12 +3800,14 @@ function renderLearn(){
   const nx=$('#tNext'); if(nx) nx.onclick=()=>{ stopTour(); if(L.step===TOURS[L.tour].steps.length-1){ L.tour=null; setNT(null); learnEnter(); } else tourGo(L.step+1); };
   const pl=$('#tPlay'); if(pl) pl.onclick=()=>{ if(L.play){ stopTour(); renderLearn(); return; } L.play=true; renderLearn(); tourTimer=setInterval(()=>{ const T=TOURS[L.tour]; if(!T||S.mode!=='learn'){ stopTour(); return; } if(L.step>=T.steps.length-1){ stopTour(); renderLearn(); return; } tourGo(L.step+1); },11000); };
   const dp=$('#dPair'); if(dp) dp.onchange=()=>{ if(dp.value==='') return; const p=DIFF[+dp.value]; L.a=p.a; L.b=p.b; learnEnter(); };
-  bindECase();
+  bindECase(); bindRoutes();
   const dA=$('#dA'), dB=$('#dB'); if(dA){ dA.onchange=()=>{ L.a=dA.value; learnEnter(); }; dB.onchange=()=>{ L.b=dB.value; learnEnter(); }; }
 }
 document.addEventListener('keydown',e=>{ if(S.mode!=='learn'||S.learn.tab!=='tour'||!S.learn.tour||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
   if(e.key==='ArrowRight'){ stopTour(); tourGo(S.learn.step+1); } if(e.key==='ArrowLeft'){ stopTour(); tourGo(S.learn.step-1); } });
 
+function setPresent(on){ document.body.classList.toggle('present',on); $('#presBtn').textContent=on?'Salir del modo clase':'Modo clase'; setTimeout(()=>window.dispatchEvent(new Event('resize')),50); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.contains('present')) setPresent(false); });
 function setMode(m){
   if((S.mode==='study'||S.mode==='learn')&&m!==S.mode&&m!=='study'&&m!=='learn'){ S.ghost=1; $('#ghost').value=100; S.layers.tracts=false; const c=document.querySelector('[data-l="tracts"]'); if(c) c.checked=false; S.hemi='both'; document.querySelectorAll('#hemi button').forEach(b=>b.classList.toggle('on',b.dataset.h==='both')); }
   S.mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
@@ -4154,6 +4267,11 @@ sOut.addEventListener('click',ev=>{ const L=sliceHit(ev); if(L&&L.sel){ if(S.mod
 /* ============ controles ============ */
 function markSeg(id,sel){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.matches(sel)));}
 const VIEWS={latL:[-Math.PI/2,0.1],latR:[Math.PI/2,0.1],ant:[0,0.12],post:[Math.PI,0.12],sup:[0,1.45],inf:[0,-1.4]};
+stage.tabIndex=0;
+stage.addEventListener('keydown',e=>{ if(S.mode==='learn'&&S.learn.tab==='tour'&&S.learn.tour) return; const k=e.key; let used=true;
+  if(k==='ArrowLeft') camT.yaw-=0.2; else if(k==='ArrowRight') camT.yaw+=0.2; else if(k==='ArrowUp') camT.pitch=Math.min(1.3,camT.pitch+0.15); else if(k==='ArrowDown') camT.pitch=Math.max(-1.3,camT.pitch-0.15);
+  else if(k==='+'||k==='=') camT.dist=Math.max(220,camT.dist-40); else if(k==='-') camT.dist=Math.min(1000,camT.dist+40); else used=false;
+  if(used){ idle=false; e.preventDefault(); } });
 $('#views').onclick=e=>{const b=e.target.closest('button'); if(!b) return; const v=VIEWS[b.dataset.v]; camT.yaw=v[0]; camT.pitch=v[1]; idle=false; markSeg('views',`[data-v="${b.dataset.v}"]`);};
 function setHemi(h){S.hemi=h; markSeg('hemi',`[data-h="${h}"]`);}
 $('#hemi').onclick=e=>{const b=e.target.closest('button'); if(b) setHemi(b.dataset.h);};
@@ -4161,6 +4279,8 @@ $('#parc').onclick=e=>{const b=e.target.closest('button'); if(!b) return; S.parc
 $('#infl').oninput=e=>{S.infl=e.target.value/100; rebuildCtx();};
 $('#explode').oninput=e=>{S.explode=e.target.value/100;};
 $('#ghost').oninput=e=>{S.ghost=e.target.value/100;};
+$('#presBtn').onclick=()=>setPresent(!document.body.classList.contains('present'));
+
 function toggleLayer(l,v){S.layers[l]=v; const i=document.querySelector(`[data-l="${l}"]`); if(i) i.checked=v;}
 $('#layers').onchange=e=>{const i=e.target; if(i.dataset.l){ S.layers[i.dataset.l]=i.checked; if(i.dataset.l==='tracts'&&i.checked) ghostDown(0.12);} };
 function ghostDown(v){ if(S.ghost>v+0.05){ S.ghost=v; $('#ghost').value=Math.round(v*100);} }

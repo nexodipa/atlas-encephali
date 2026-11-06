@@ -66,10 +66,11 @@
 
 ## Siguiente (visión docente)
 - [x] Casos que evolucionan: cinco casos ramificados (v12)
-- [ ] Más casos que evolucionan: estado epiléptico, primer episodio maníaco, abstinencia alcohólica y delirium tremens, cefalea con signos de alarma, meningitis
-- [ ] Rutas de aprendizaje por asignatura con registro de progreso
-- [ ] Más recorridos: sistema límbico y emoción, pares craneales, irrigación arterial, eje del estrés, sistema serotoninérgico y antidepresivos
-- [ ] Modo presentación para clase (panel oculto, texto grande)
+- [x] Cinco casos que evolucionan más (v13)
+- [ ] Progreso sincronizado entre dispositivos y paneles para docentes (requiere cuentas)
+- [x] Rutas de aprendizaje por asignatura con registro de progreso (v13)
+- [x] Recorridos de pares craneales, territorios arteriales, eje del estrés, serotonina y sistema límbico (v13)
+- [x] Modo clase para proyectar (v13)
 
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
@@ -93,6 +94,6 @@
 ## Pulido final (cuando esté completo)
 - [ ] Revisión de rendimiento en móviles de gama baja (nivel de detalle, carga diferida)
 - [ ] Malla cortical de mayor resolución (fsaverage6) con LOD
-- [ ] Accesibilidad: navegación por teclado del índice y del modelo
+- [x] Navegación por teclado del modelo y adaptación a móviles (v13)
 - [ ] Revisión clínica y bibliográfica de todos los textos
 - [ ] Arquitectura común para los módulos de otros órganos (Labs)

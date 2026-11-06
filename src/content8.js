@@ -151,3 +151,45 @@ emotion:{es:"El sistema límbico y la emoción",lvl:"Neurociencia",min:4,
   {t:"Regular la emoción",x:"La prefrontal lateral y medial reinterpretan y frenan la respuesta límbica. Esa regulación es la que entrena la psicoterapia, y su fallo atraviesa la depresión, la ansiedad, el trastorno límite y la agresión impulsiva.",hl:["rostralmiddlefrontal","medialorbitofrontal","amyg"],col:"#9fd8ff",circ:[{color:"#9fd8ff",path:["c:rostralmiddlefrontal","d:amyg"],mod:"hypo"}],v:"latL",g:0.5,go:"psy:bpd"}
  ]}
 });
+
+/* ---- rutas de aprendizaje por asignatura ----
+   Elemento: [tipo, argumento, etiqueta opcional]. Tipos: go (ficha), tour, ec (caso que evoluciona), sc (caso de localización, por id),
+   diff (par clásico, índice), quiz (mazo de preguntas), flash (mazo de tarjetas), sim (pestaña de simulación), semio (semiología) */
+const ROUTES={
+ anat:{es:"Neuroanatomía funcional",lede:"De los lóbulos a los circuitos: dónde está cada función y qué ocurre cuando se lesiona.",units:[
+  {t:"Organización general",it:[["go","lobe:frontal"],["go","lobe:parietal"],["go","lobe:temporal"],["go","lobe:occipital"],["go","lobe:limbic"],["go","lobe:insula"]]},
+  {t:"Motor y sensitivo",it:[["tour","motor"],["go","dk:precentral"],["go","dk:postcentral"],["sc","hemiballism"],["sc","parkinson"],["sc","vermis"]]},
+  {t:"Visión",it:[["tour","vision"],["sc","hemianopsia"],["sc","prosop"],["sc","anton"],["sc","balint"]]},
+  {t:"Lenguaje y cognición",it:[["tour","lang"],["sc","broca"],["sc","wernicke"],["sc","conduction"],["sc","tcmotor"],["sc","gerstmann"],["sc","alexia"],["sc","neglect"]]},
+  {t:"Memoria y emoción",it:[["tour","papez"],["tour","emotion"],["go","deep:Lhippo"],["go","deep:Lamyg"],["sc","korsakoff"],["sc","kluver"],["sc","hsv"]]},
+  {t:"Tronco y pares craneales",it:[["tour","cn"],["sc","weber"],["sc","wallenberg"],["sc","millard"],["sc","dejerine"],["sc","parinaud"]]},
+  {t:"Evaluación",it:[["quiz","Neuroanatomía"],["flash","Regiones"],["flash","Núcleos"],["flash","Tractos"]]}]},
+ neuro:{es:"Neurología clínica",lede:"Vascular, urgencias, neurodegenerativas y semiología, con casos en los que decides tú.",units:[
+  {t:"Semiología",it:[["semio","neuro"]]},
+  {t:"Patología vascular",it:[["tour","arteries"],["sc","aca"],["sc","thalamic"],["ec","stroke"],["sim","isq","Simulación de ictus"],["sim","ich","Simulación de hemorragia"]]},
+  {t:"Urgencias neurológicas",it:[["ec","status"],["ec","sah"],["ec","meningitis"]]},
+  {t:"Tumores",it:[["sim","gbm","Simulación de glioblastoma"],["sim","met","Simulación de metástasis"],["sc","olfgroove"]]},
+  {t:"Neurodegenerativas",it:[["go","ndg:ad"],["go","ndg:pd"],["go","ndg:dlb"],["go","ndg:hd"],["go","ndg:als"],["diff",14],["sc","huntington"],["sc","rbd"]]},
+  {t:"Evaluación",it:[["quiz","Neurología"]]}]},
+ psy:{es:"Psicopatología",lede:"Los grandes síndromes, sus modelos de circuito y el razonamiento diagnóstico.",units:[
+  {t:"Semiología psicopatológica",it:[["semio","psy"]]},
+  {t:"Psicosis",it:[["go","psy:scz"],["tour","da"],["sc","hallucinations"],["diff",1],["diff",10]]},
+  {t:"Trastornos del ánimo",it:[["go","psy:mdd"],["go","psy:bd"],["ec","mania"],["diff",7],["diff",6],["go","psy:suic"]]},
+  {t:"Ansiedad, obsesiones y trauma",it:[["tour","fear"],["go","psy:panic"],["go","psy:ocd"],["go","psy:ptsd"],["diff",0],["diff",5]]},
+  {t:"Adicciones",it:[["tour","reward"],["go","psy:aud"],["ec","dt"],["go","psy:oud"]]},
+  {t:"Neurodesarrollo y personalidad",it:[["go","psy:adhd"],["go","psy:asd"],["diff",12],["diff",13],["go","psy:bpd"]]},
+  {t:"Evaluación",it:[["quiz","Psicopatología"],["flash","Psicopatología"]]}]},
+ pharm:{es:"Psicofarmacología",lede:"Mecanismos, dosis, interacciones y efectos adversos con su base anatómica.",units:[
+  {t:"Antipsicóticos",it:[["tour","da"],["go","drug:haloperidol"],["go","drug:clozapine"],["go","drug:aripiprazole"],["go","psy:nms"],["go","psy:td"],["diff",4]]},
+  {t:"Antidepresivos",it:[["tour","serotonin"],["go","drug:sertraline"],["go","drug:venlafaxine"],["go","drug:bupropion"],["ec","serotonin"],["go","psy:adds"]]},
+  {t:"Estabilizadores",it:[["go","drug:lithium"],["go","drug:valproate"],["go","drug:lamotrigine"],["ec","lithium"]]},
+  {t:"Ansiolíticos e hipnóticos",it:[["go","drug:diazepam"],["go","psy:sed"],["tour","sleep"],["go","drug:zolpidem"]]},
+  {t:"Evaluación",it:[["quiz","Farmacología"],["flash","Fármacos"]]}]},
+ np:{es:"Neuropsiquiatría y organicidad",lede:"Cuándo un cuadro psiquiátrico es una enfermedad médica, y cómo no pasarlo por alto.",units:[
+  {t:"Delirium",it:[["go","org:delirium"],["ec","delirium"],["diff",3]]},
+  {t:"Encefalitis y causas inmunes",it:[["ec","nmda"],["go","org:hsv"],["go","org:lgi1"],["diff",1]]},
+  {t:"Causas metabólicas y endocrinas",it:[["go","org:thyroid"],["diff",2],["diff",0],["go","org:hypona"],["go","org:cushing"],["diff",9]]},
+  {t:"Tóxicas y carenciales",it:[["go","org:wk"],["ec","dt"],["go","org:b12"],["go","org:serotonin"],["go","org:anticholinergic"]]},
+  {t:"Lesiones estructurales",it:[["sc","orbitofrontal"],["sc","abulia"],["sc","olfgroove"],["sc","secmania"],["go","org:poststroke"],["go","org:ncc"]]},
+  {t:"Evaluación",it:[["quiz","Organicidad"],["flash","Organicidad"]]}]}
+};
