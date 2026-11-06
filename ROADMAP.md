@@ -65,7 +65,8 @@
 - [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
 
 ## Siguiente (visión docente)
-- [ ] Casos que evolucionan según las decisiones del estudiante (pruebas, tratamiento, evolución)
+- [x] Casos que evolucionan: cinco casos ramificados (v12)
+- [ ] Más casos que evolucionan: estado epiléptico, primer episodio maníaco, abstinencia alcohólica y delirium tremens, cefalea con signos de alarma, meningitis
 - [ ] Rutas de aprendizaje por asignatura con registro de progreso
 - [ ] Más recorridos: sistema límbico y emoción, pares craneales, irrigación arterial, eje del estrés, sistema serotoninérgico y antidepresivos
 - [ ] Modo presentación para clase (panel oculto, texto grande)

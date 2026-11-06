@@ -142,6 +142,8 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
 .tourcard:hover{border-color:var(--accent)}.tourcard b{font-family:var(--display);font-size:18px;font-weight:500}.tourcard span{font-size:13px;color:var(--muted)}.tourcard .tl{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em}
 .tourdots{display:flex;gap:6px;margin-top:12px}.tourdots button{width:26px;height:6px;border-radius:3px;border:0;background:var(--line-2);cursor:pointer}.tourdots button.done{background:var(--muted)}.tourdots button.on{background:var(--accent)}
 .tournav{display:flex;gap:8px;margin:18px 0 8px}.tournav button{flex:1;background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;padding:9px;cursor:pointer;font-size:13px}.tournav button:disabled{opacity:.35;cursor:default}.tournav button:hover:not(:disabled){border-color:var(--accent)}
+.ecch{display:grid;gap:8px}.ecch button{text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:11px 13px;font-size:14px;line-height:1.45;cursor:pointer}.ecch button:hover{border-color:var(--accent)}
+.eclog{padding-left:18px;font-size:13.5px}.eclog li{margin-bottom:10px}
 .diffsel{display:grid;gap:8px;margin:14px 0 8px}.diffsel label{display:flex;align-items:center;gap:8px}.diffsel select{flex:1}
 .difft{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}.difft th,.difft td{border-top:1px solid var(--line);padding:8px 6px;vertical-align:top;text-align:left}.difft thead th{font-family:var(--display);font-size:15px;font-weight:500}.difft tbody th{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;width:72px}.difft ul{margin:4px 0 0;padding-left:16px}
 .warnbox{border-left:2px solid var(--warn);padding:6px 0 6px 12px;font-size:13px;color:var(--fg);margin:10px 0}
@@ -219,7 +221,7 @@ const META = /*META*/null;
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
-  learn:{tab:'tour',tour:null,step:0,play:false,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
+  learn:{tab:'tour',tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -726,7 +728,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 11. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 12. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -885,15 +887,45 @@ const LCOL={a:'#e2685a',b:'#5aa9e6'};
 function learnView(o){ studyView({v:o.v||'latL',ghost:o.g==null?1:o.g,tracts:!!o.tr}); if(o.nt||o.circ){ const sys=Object.keys(o.nt||{}); const extra=[]; for(const c of (o.circ||[])) for(let i=0;i<c.path.length-1;i++) extra.push({color:c.color,src:[c.path[i]],dst:[c.path[i+1]],mod:c.mod||'hyper'}); setNT({sys,mod:o.nt||{},extra}); } }
 function learnEnter(){ const L=S.learn; stopTour();
   if(L.tab==='tour'&&L.tour) learnView(TOURS[L.tour].steps[L.step]);
+  else if(L.tab==='case'&&L.ec){ const nd=ECASES[L.ec.id].nodes[L.ec.node]; if(nd.hl) learnView(nd); else studyView({v:'latL'}); }
   else if(L.tab==='diff'){ const ks=[...entKeys(L.a),...entKeys(L.b)]; const deep=ks.some(k=>!DK[k.replace(/^[LR]_/,'')]&&!k.startsWith('tr:')); learnView({v:'latL',g:deep?0.35:1,tr:ks.some(k=>k.startsWith('tr:'))}); }
   else { studyView({v:'latL'}); }
   renderLearn(); }
+
+const QTXT={ok:['Adecuada','#5fae97'],meh:['Mejorable','#e8c46a'],bad:['Error','#e2685a']};
+function renderECase(){ const L=S.learn, best=store.get('ecbest',{});
+  if(!L.ec) return `<p class="sub2">Casos clínicos en los que decides tú: cada decisión cambia la evolución del paciente y lo que muestra el modelo. Al final verás el razonamiento de cada paso.</p>
+    <div class="tourlist">${Object.entries(ECASES).map(([k,C])=>`<button class="tourcard" data-ec="${k}"><span class="tl">${C.area}${best[k]!=null?` · mejor resultado ${best[k]}%`:''}</span><b>${C.es}</b></button>`).join('')}</div>
+    <p class="note">Casos didácticos y simplificados: las decisiones reales dependen del paciente concreto, de los protocolos locales y de la evolución.</p>`;
+  const C=ECASES[L.ec.id], nd=C.nodes[L.ec.node];
+  let h=`<div class="crumbs"><button id="ecBack">Casos</button><span>/</span><span>${C.es}</span></div>
+  <div class="tourdots">${L.ec.log.map(e=>`<button class="done" style="background:${QTXT[e.q][1]}" title="${e.l}"></button>`).join('')}<button class="on"></button></div>
+  <h3 style="margin-top:14px;border:0;text-transform:none;letter-spacing:0;font-family:var(--display);font-size:21px;color:var(--fg)">${nd.t}</h3>`;
+  const last=L.ec.log[L.ec.log.length-1];
+  if(last&&!nd.end) h+=`<div class="warnbox" style="border-color:${QTXT[last.q][1]}"><b>${QTXT[last.q][0]}.</b> ${last.fb}</div>`;
+  if(nd.vit) h+=`<div class="stat">${Object.entries(nd.vit).map(([k,v])=>`<div><b style="font-size:16px">${v}</b><span>${k}</span></div>`).join('')}</div>`;
+  h+=`<p style="font-size:15px;line-height:1.65">${nd.x}</p>`;
+  if(!nd.end) h+=`<p class="kicker" style="margin-top:12px">¿Qué haces?</p><div class="ecch">${nd.ch.map((c,i)=>`<button data-ech="${i}">${c.l}</button>`).join('')}</div>`;
+  else { const n=L.ec.log.length, ok=L.ec.log.filter(e=>e.q==='ok').length, pct=Math.round(100*ok/Math.max(1,n));
+    if(last) h+=`<div class="warnbox" style="border-color:${QTXT[last.q][1]}"><b>${QTXT[last.q][0]}.</b> ${last.fb}</div>`;
+    h+=`<div class="stat"><div><b>${ok} / ${n}</b><span>decisiones adecuadas</span></div><div><b>${pct}%</b><span>resultado</span></div><div><b>${nd.good?'Favorable':'Desfavorable'}</b><span>evolución</span></div></div>
+    <h3>Tu razonamiento, paso a paso</h3><ol class="eclog">${L.ec.log.map(e=>`<li><span style="color:${QTXT[e.q][1]};font-family:var(--mono);font-size:11px">${QTXT[e.q][0].toUpperCase()}</span><br><b>${e.t}:</b> ${e.l}<br><span style="color:var(--muted)">${e.fb}</span></li>`).join('')}</ol>
+    <p><button class="lnk" id="ecAgain">Repetir el caso</button> · <button class="lnk" data-go="${nd.go}">Abrir la ficha relacionada</button></p>`;
+    if(C.refs) h+=refsHtml(C.refs);
+    if(!L.ec.saved){ L.ec.saved=true; const b=store.get('ecbest',{}); b[L.ec.id]=Math.max(b[L.ec.id]||0,pct); store.set('ecbest',b); } }
+  return h; }
+function bindECase(){ const L=S.learn;
+  pin.querySelectorAll('[data-ec]').forEach(b=>b.onclick=()=>{ L.ec={id:b.dataset.ec,node:ECASES[b.dataset.ec].start,log:[]}; learnEnter(); panel.scrollTop=0; });
+  const bk=$('#ecBack'); if(bk) bk.onclick=()=>{ L.ec=null; setNT(null); learnEnter(); };
+  const ag=$('#ecAgain'); if(ag) ag.onclick=()=>{ L.ec={id:L.ec.id,node:ECASES[L.ec.id].start,log:[]}; learnEnter(); panel.scrollTop=0; };
+  pin.querySelectorAll('[data-ech]').forEach(b=>b.onclick=()=>{ const C=ECASES[L.ec.id], nd=C.nodes[L.ec.node], c=nd.ch[+b.dataset.ech];
+    L.ec.log.push({t:nd.t,l:c.l,q:c.q,fb:c.fb}); L.ec.node=c.to; setNT(null); learnEnter(); panel.scrollTop=0; }); }
 function stopTour(){ if(tourTimer){ clearInterval(tourTimer); tourTimer=null; } S.learn.play=false; }
 function tourGo(i){ const L=S.learn, T=TOURS[L.tour]; L.step=Math.max(0,Math.min(T.steps.length-1,i)); learnView(T.steps[L.step]); renderLearn(); }
 function renderLearn(){
   const L=S.learn; const cap=$('#tourCap');
-  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='tour'?'Recorridos guiados':'Diagnóstico diferencial'}</h2>
-  <div class="seg" style="margin-bottom:16px"><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
+  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='tour'?'Recorridos guiados':L.tab==='case'?'Casos que evolucionan':'Diagnóstico diferencial'}</h2>
+  <div class="seg" style="margin-bottom:16px"><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="case" class="${L.tab==='case'?'on':''}">Casos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
   if(L.tab==='tour'){
     if(!L.tour){ cap.hidden=true;
       h+=`<p class="sub2">Explicaciones paso a paso sobre el modelo: la cámara se mueve, las estructuras se encienden y el texto avanza. Sirven para estudiar solo o para proyectar en clase.</p>
@@ -907,7 +939,7 @@ function renderLearn(){
       ${st.go?`<p><button class="lnk" data-go="${st.go}" id="tourOpen">Abrir la ficha relacionada</button></p>`:''}
       <div class="tournav"><button id="tPrev" ${L.step===0?'disabled':''}>← Anterior</button><button id="tPlay">${L.play?'Pausa':'Reproducir'}</button><button id="tNext">${L.step===n-1?'Terminar':'Siguiente →'}</button></div>
       <p class="note">Usa las flechas del teclado para avanzar. Al abrir una ficha sales del recorrido; vuelve con el modo Aprender.</p>`; }
-  } else { cap.hidden=true;
+  } else if(L.tab==='case'){ cap.hidden=true; h+=renderECase(); } else { cap.hidden=true;
     const opts=sel=>['psy','org','ndg','rare'].map(t=>{ const src={psy:PSY,org:ORG,ndg:DISEASE,rare:RARE}[t]; return `<optgroup label="${ENTTYPE[t]}">${Object.keys(src).map(k=>`<option value="${t}:${k}" ${sel===t+':'+k?'selected':''}>${src[k].es}</option>`).join('')}</optgroup>`; }).join('');
     const A=ENT(L.a), B=ENT(L.b), pair=DIFF.find(p=>p.a===L.a&&p.b===L.b||p.a===L.b&&p.b===L.a);
     const ka=new Set(entKeys(L.a).map(keyName)), kb=new Set(entKeys(L.b).map(keyName));
@@ -940,6 +972,7 @@ function renderLearn(){
   const nx=$('#tNext'); if(nx) nx.onclick=()=>{ stopTour(); if(L.step===TOURS[L.tour].steps.length-1){ L.tour=null; setNT(null); learnEnter(); } else tourGo(L.step+1); };
   const pl=$('#tPlay'); if(pl) pl.onclick=()=>{ if(L.play){ stopTour(); renderLearn(); return; } L.play=true; renderLearn(); tourTimer=setInterval(()=>{ const T=TOURS[L.tour]; if(!T||S.mode!=='learn'){ stopTour(); return; } if(L.step>=T.steps.length-1){ stopTour(); renderLearn(); return; } tourGo(L.step+1); },11000); };
   const dp=$('#dPair'); if(dp) dp.onchange=()=>{ if(dp.value==='') return; const p=DIFF[+dp.value]; L.a=p.a; L.b=p.b; learnEnter(); };
+  bindECase();
   const dA=$('#dA'), dB=$('#dB'); if(dA){ dA.onchange=()=>{ L.a=dA.value; learnEnter(); }; dB.onchange=()=>{ L.b=dB.value; learnEnter(); }; }
 }
 document.addEventListener('keydown',e=>{ if(S.mode!=='learn'||S.learn.tab!=='tour'||!S.learn.tour||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
@@ -1134,6 +1167,7 @@ function learnCond(){
     const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]);
     for(const x of set) c.deep[x]=(c.deep[x]&&c.deep[x]!==v)?2:v; } };
   if(L.tab==='tour'&&L.tour){ const st=TOURS[L.tour].steps[L.step]; c.color=hexRGB(st.col||'#9fd8ff'); mk(st.hl||[],1); return c; }
+  if(L.tab==='case'&&L.ec){ const nd=ECASES[L.ec.id].nodes[L.ec.node]; if(!nd.hl) return null; c.color=hexRGB(nd.col||'#9fd8ff'); mk(nd.hl,1); return c; }
   if(L.tab==='diff'){ c.pair=true; mk(entKeys(L.a),1); mk(entKeys(L.b),-1); return c; }
   return null;
 }

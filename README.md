@@ -55,6 +55,7 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 
 **Aprender**
 - **Recorridos guiados:** ocho explicaciones paso a paso sobre el modelo, con cámara animada, estructuras que se encienden, flujos de neurotransmisores y reproducción automática o con las flechas del teclado: circuito de Papez, vías de la dopamina y antipsicóticos, vía visual, lenguaje y afasias, vía motora, miedo y extinción, recompensa y adicción, y sueño y vigilia.
+- **Casos que evolucionan:** cinco casos ramificados (62 recorridos posibles) en los que cada decisión cambia la evolución del paciente, las constantes y lo que muestra el modelo: psicosis por encefalitis anti-NMDA, delirium posoperatorio, ictus con oclusión de la cerebral media, síndrome serotoninérgico e intoxicación por litio. Al final se muestra cada decisión con su explicación, la puntuación y las referencias; el mejor resultado se guarda en el navegador.
 - **Diagnóstico diferencial:** dos fichas cualesquiera (psicopatología, organicidad, neurodegenerativas, raras) lado a lado, con sus regiones en colores distintos y comunes en un tercero, una tabla comparativa y 17 pares clásicos con las claves para distinguirlos y la prueba que suele decidir (pánico y feocromocitoma, esquizofrenia y encefalitis anti-NMDA, síndrome neuroléptico maligno y serotoninérgico, delirium y demencia, entre otros).
 
 **Simulación** (didáctica)
