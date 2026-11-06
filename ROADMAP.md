@@ -60,6 +60,16 @@
 - [x] Organicidad ampliada a 36 causas en diez grupos
 - [x] 19 referencias nuevas verificadas en PubMed
 
+## Hecho (v11, aprender)
+- [x] Modo Aprender con ocho recorridos guiados
+- [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
+
+## Siguiente (visión docente)
+- [ ] Casos que evolucionan según las decisiones del estudiante (pruebas, tratamiento, evolución)
+- [ ] Rutas de aprendizaje por asignatura con registro de progreso
+- [ ] Más recorridos: sistema límbico y emoción, pares craneales, irrigación arterial, eje del estrés, sistema serotoninérgico y antidepresivos
+- [ ] Modo presentación para clase (panel oculto, texto grande)
+
 ## Pendiente académico
 - [ ] Revisión por docentes de cada módulo (ver REVIEW.md)
 - [ ] DOI de Zenodo (activar la integración y publicar una release)
@@ -84,5 +94,4 @@
 - [ ] Malla cortical de mayor resolución (fsaverage6) con LOD
 - [ ] Accesibilidad: navegación por teclado del índice y del modelo
 - [ ] Revisión clínica y bibliográfica de todos los textos
-- [ ] Modo de enseñanza guiada: recorridos paso a paso
 - [ ] Arquitectura común para los módulos de otros órganos (Labs)

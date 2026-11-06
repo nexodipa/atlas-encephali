@@ -53,6 +53,10 @@ Cada ficha anatómica cruza su región con los diez trastornos. Para esquizofren
 - **Farmacología clínica:** vida media, metabolismo, monitorización y embarazo para 43 fármacos, equivalencias de antipsicóticos y benzodiacepinas, y un comprobador de interacciones por mecanismo.
 - **Terminología:** nombres en latín e inglés en las fichas, glosario trilingüe con búsqueda y códigos CIE-11.
 
+**Aprender**
+- **Recorridos guiados:** ocho explicaciones paso a paso sobre el modelo, con cámara animada, estructuras que se encienden, flujos de neurotransmisores y reproducción automática o con las flechas del teclado: circuito de Papez, vías de la dopamina y antipsicóticos, vía visual, lenguaje y afasias, vía motora, miedo y extinción, recompensa y adicción, y sueño y vigilia.
+- **Diagnóstico diferencial:** dos fichas cualesquiera (psicopatología, organicidad, neurodegenerativas, raras) lado a lado, con sus regiones en colores distintos y comunes en un tercero, una tabla comparativa y 17 pares clásicos con las claves para distinguirlos y la prueba que suele decidir (pánico y feocromocitoma, esquizofrenia y encefalitis anti-NMDA, síndrome neuroléptico maligno y serotoninérgico, delirium y demencia, entre otros).
+
 **Simulación** (didáctica)
 - **Ictus:** territorios de las arterias cerebrales media (tronco, división superior e inferior), anterior y posterior, con los déficits según el lado.
 - **Hemorragia intraparenquimatosa:** putamen, tálamo, caudado, lobar, cerebelo y protuberancia; volumen con su estimación ABC/2, calculadora de la escala ICH (Hemphill y cols., 2001) y manejo inicial según la guía AHA/ASA 2022.

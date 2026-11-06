@@ -136,6 +136,14 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
 .stat div{background:var(--bg-3);border:1px solid var(--line);border-radius:3px;padding:8px 10px}
 .stat b{display:block;font-family:var(--mono);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
 .stat span{font-size:11px;color:var(--faint)}
+.tourcap{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);max-width:min(760px,90%);background:color-mix(in srgb,var(--bg) 82%,transparent);border:1px solid var(--line-2);border-radius:4px;padding:10px 18px;text-align:center;pointer-events:none;backdrop-filter:blur(6px)}
+.tourcap span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.1em}.tourcap b{font-family:var(--display);font-size:22px;font-weight:500;color:var(--fg)}
+.tourlist{display:grid;gap:8px}.tourcard{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:12px 14px;cursor:pointer}
+.tourcard:hover{border-color:var(--accent)}.tourcard b{font-family:var(--display);font-size:18px;font-weight:500}.tourcard span{font-size:13px;color:var(--muted)}.tourcard .tl{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em}
+.tourdots{display:flex;gap:6px;margin-top:12px}.tourdots button{width:26px;height:6px;border-radius:3px;border:0;background:var(--line-2);cursor:pointer}.tourdots button.done{background:var(--muted)}.tourdots button.on{background:var(--accent)}
+.tournav{display:flex;gap:8px;margin:18px 0 8px}.tournav button{flex:1;background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;padding:9px;cursor:pointer;font-size:13px}.tournav button:disabled{opacity:.35;cursor:default}.tournav button:hover:not(:disabled){border-color:var(--accent)}
+.diffsel{display:grid;gap:8px;margin:14px 0 8px}.diffsel label{display:flex;align-items:center;gap:8px}.diffsel select{flex:1}
+.difft{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}.difft th,.difft td{border-top:1px solid var(--line);padding:8px 6px;vertical-align:top;text-align:left}.difft thead th{font-family:var(--display);font-size:15px;font-weight:500}.difft tbody th{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;width:72px}.difft ul{margin:4px 0 0;padding-left:16px}
 .warnbox{border-left:2px solid var(--warn);padding:6px 0 6px 12px;font-size:13px;color:var(--fg);margin:10px 0}
 .rngrow{display:flex;align-items:center;gap:10px;margin:10px 0}
 .rngrow input{flex:1;width:auto}
@@ -157,7 +165,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
   <header class="top">
     <div class="brand"><b data-notr>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
     <nav class="modes" id="modes" aria-label="Modo">
-      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button>
+      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button><button data-m="learn">Aprender</button>
     </nav>
     <div class="langbox"><span id="trStatus" role="status" hidden></span><button id="trExport" class="lnk" hidden>Exportar traducciones</button><select id="langSel" aria-label="Idioma" data-notr><option value="es">Español</option></select></div>
   </header>
@@ -166,7 +174,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
       <div id="stage" aria-label="Modelo 3D del encéfalo">
         <div class="loading" id="loading">Cargando superficies corticales y núcleos…</div>
         <div class="hud"><div class="view">Vista <em id="viewName">lateral izquierda</em></div><div>Arrastra para rotar · rueda o pellizco para acercar · toca una región</div></div>
-        <div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
+        <div class="tourcap" id="tourCap" hidden></div><div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
         <button class="clear" id="clearBtn" hidden>Quitar selección</button>
         <div id="sliceBox" hidden><canvas id="sliceCv" aria-label="Corte de resonancia"></canvas><div id="sliceInfo">Pasa el cursor por el corte</div></div>
         <div class="tip" id="tip" hidden></div>
@@ -211,7 +219,7 @@ const META = /*META*/null;
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
-  study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
+  learn:{tab:'tour',tour:null,step:0,play:false,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -628,7 +636,7 @@ pin.addEventListener('click',e=>{
   if(t==='ndg'){ S.pathTab='dis'; S.disease=v; S.stage=0; setMode('path'); return; }
   if(t==='rare'){ S.pathTab='rare'; S.rare=v; setMode('path'); return; }
   if(t==='drug'){ S.drug=v; S.dose=null; S.rec=drugTargets(DRUGS[v])[0]||null; setMode('drug'); return; }
-  if(S.mode==='study'&&['dk','deep','stem','cb','tr','lobe','gl'].includes(t)) setMode('anat');
+  if((S.mode==='study'||S.mode==='learn')&&['dk','deep','stem','cb','tr','lobe','gl','nt'].includes(t)) setMode('anat');
   if(t==='lobe') return select({kind:'lobe',id:v,h:b.dataset.go.split(':')[2]||'lh'});
   if(t==='dk') return select({kind:'dk',id:isNaN(+v)?DKN.indexOf('L_'+v):+v});
   if(t==='gl') return select({kind:'gl',id:+v});
@@ -643,6 +651,7 @@ function showPanel(){
   if(S.mode==='sim') return renderSim();
   if(S.mode==='drug') return renderDrug();
   if(S.mode==='study') return renderStudy();
+  if(S.mode==='learn') return renderLearn();
   const s=S.sel; if(!s) return renderIndex();
   if(s.kind==='lobe') renderLobe(s.id,s.h); else if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id); else if(s.kind==='tr') renderTract(s.id); else if(s.kind==='nt') renderNT(s.id);
   if(S.mode==='path') pin.insertAdjacentHTML('afterbegin',`<p style="margin-bottom:14px"><button class="lnk" data-go="index">← Volver al mapa de ${META.disorders[S.dis].name}</button></p>`);
@@ -717,7 +726,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 10. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 11. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -860,16 +869,93 @@ const TUMLOC={
 };
 
 /* ============ modos y controles ============ */
+/* ============ aprender: recorridos guiados y diagnóstico diferencial ============ */
+let tourTimer=null;
+const ENT=ref=>{ const [t,k]=ref.split(':'); const src={psy:PSY,org:ORG,ndg:DISEASE,rare:RARE}[t]; return src&&src[k]?{t,k,o:src[k]}:null; };
+const ENTTYPE={psy:'Psicopatología',org:'Organicidad',ndg:'Neurodegenerativa',rare:'Enfermedad rara'};
+function entKeys(ref){ const e=ENT(ref); if(!e) return []; const o=e.o;
+  if(e.t==='psy') return Object.entries(o.act).filter(([,v])=>Math.abs(v)>=0.3).map(([k])=>k);
+  if(e.t==='org') return o.keys.slice();
+  const out=[]; const add=x=>{ (x.ctx||[]).forEach(n=>out.push(n)); (x.deep||[]).forEach(n=>out.push(n)); (x.tr||[]).forEach(n=>out.push('tr:'+n)); (x.keys||[]).forEach(n=>out.push(n)); };
+  if(e.t==='ndg') o.stages.forEach(add); else add(o); return [...new Set(out)]; }
+function keyName(k){ if(k.startsWith('tr:')){ const b=k.slice(3); return TRACT[b]?TRACT[b].es:b.replace(/_/g,' '); } if(k==='cb'||k.startsWith('cb:')) return CB[k.slice(3)]?CB[k.slice(3)].es:'Cerebelo';
+  const side=/^[LR]_/.test(k)?(k[0]==='L'?' izq.':' der.'):/^[LR][a-z]/.test(k)&&DEEP[k.slice(1)]?(k[0]==='L'?' izq.':' der.'):'';
+  const b=k.replace(/^[LR]_/,'').replace(/^[LR](?=[a-z])/,m=>DEEP[k.slice(1)]?'':m); if(DK[b]) return DK[b].es+side; if(DEEP[b]) return DEEP[b].es+side; if(k==='Lvent'||k==='Rvent'||k==='vent') return 'Ventrículos laterales'; return b; }
+const LCOL={a:'#e2685a',b:'#5aa9e6'};
+function learnView(o){ studyView({v:o.v||'latL',ghost:o.g==null?1:o.g,tracts:!!o.tr}); if(o.nt||o.circ){ const sys=Object.keys(o.nt||{}); const extra=[]; for(const c of (o.circ||[])) for(let i=0;i<c.path.length-1;i++) extra.push({color:c.color,src:[c.path[i]],dst:[c.path[i+1]],mod:c.mod||'hyper'}); setNT({sys,mod:o.nt||{},extra}); } }
+function learnEnter(){ const L=S.learn; stopTour();
+  if(L.tab==='tour'&&L.tour) learnView(TOURS[L.tour].steps[L.step]);
+  else if(L.tab==='diff'){ const ks=[...entKeys(L.a),...entKeys(L.b)]; const deep=ks.some(k=>!DK[k.replace(/^[LR]_/,'')]&&!k.startsWith('tr:')); learnView({v:'latL',g:deep?0.35:1,tr:ks.some(k=>k.startsWith('tr:'))}); }
+  else { studyView({v:'latL'}); }
+  renderLearn(); }
+function stopTour(){ if(tourTimer){ clearInterval(tourTimer); tourTimer=null; } S.learn.play=false; }
+function tourGo(i){ const L=S.learn, T=TOURS[L.tour]; L.step=Math.max(0,Math.min(T.steps.length-1,i)); learnView(T.steps[L.step]); renderLearn(); }
+function renderLearn(){
+  const L=S.learn; const cap=$('#tourCap');
+  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='tour'?'Recorridos guiados':'Diagnóstico diferencial'}</h2>
+  <div class="seg" style="margin-bottom:16px"><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
+  if(L.tab==='tour'){
+    if(!L.tour){ cap.hidden=true;
+      h+=`<p class="sub2">Explicaciones paso a paso sobre el modelo: la cámara se mueve, las estructuras se encienden y el texto avanza. Sirven para estudiar solo o para proyectar en clase.</p>
+      <div class="tourlist">${Object.entries(TOURS).map(([k,T])=>`<button class="tourcard" data-tour="${k}"><span class="tl">${T.lvl} · ${T.steps.length} pasos · ${T.min} min</span><b>${T.es}</b><span>${T.lede}</span></button>`).join('')}</div>`;
+    } else { const T=TOURS[L.tour], st=T.steps[L.step], n=T.steps.length;
+      cap.hidden=false; cap.innerHTML=`<span>${L.step+1} / ${n}</span><b>${st.t}</b>`;
+      h+=`<div class="crumbs"><button id="tourBack">Recorridos</button><span>/</span><span>${T.es}</span></div>
+      <div class="tourdots">${T.steps.map((s,i)=>`<button data-ts="${i}" class="${i===L.step?'on':i<L.step?'done':''}" title="${s.t}"></button>`).join('')}</div>
+      <p class="kicker" style="margin-top:14px">Paso ${L.step+1} de ${n}</p><h3 style="margin-top:0;border:0;text-transform:none;letter-spacing:0;font-family:var(--display);font-size:22px;color:var(--fg)">${st.t}</h3>
+      <p style="font-size:15px;line-height:1.65">${st.x}</p>
+      ${st.go?`<p><button class="lnk" data-go="${st.go}" id="tourOpen">Abrir la ficha relacionada</button></p>`:''}
+      <div class="tournav"><button id="tPrev" ${L.step===0?'disabled':''}>← Anterior</button><button id="tPlay">${L.play?'Pausa':'Reproducir'}</button><button id="tNext">${L.step===n-1?'Terminar':'Siguiente →'}</button></div>
+      <p class="note">Usa las flechas del teclado para avanzar. Al abrir una ficha sales del recorrido; vuelve con el modo Aprender.</p>`; }
+  } else { cap.hidden=true;
+    const opts=sel=>['psy','org','ndg','rare'].map(t=>{ const src={psy:PSY,org:ORG,ndg:DISEASE,rare:RARE}[t]; return `<optgroup label="${ENTTYPE[t]}">${Object.keys(src).map(k=>`<option value="${t}:${k}" ${sel===t+':'+k?'selected':''}>${src[k].es}</option>`).join('')}</optgroup>`; }).join('');
+    const A=ENT(L.a), B=ENT(L.b), pair=DIFF.find(p=>p.a===L.a&&p.b===L.b||p.a===L.b&&p.b===L.a);
+    const ka=new Set(entKeys(L.a).map(keyName)), kb=new Set(entKeys(L.b).map(keyName));
+    const both=[...ka].filter(x=>kb.has(x)), onlyA=[...ka].filter(x=>!kb.has(x)), onlyB=[...kb].filter(x=>!ka.has(x));
+    const f=(e,which)=>{ const o=e.o; if(which==='what') return e.t==='psy'?o.lede:e.t==='org'?o.cause:e.t==='ndg'?o.lede:o.txt;
+      if(which==='clin') return e.t==='psy'?`<ul>${o.sx.map(s=>`<li>${s[0]}</li>`).join('')}</ul>`:e.t==='org'?o.psy+(o.flags?`<ul>${o.flags.map(x=>`<li>${x}</li>`).join('')}</ul>`:''):e.t==='ndg'?o.stages.map(s=>s.es).join(' → '):(o.gene||'');
+      if(which==='tx') return e.t==='psy'?(o.tx.length?o.tx.map(d=>DRUGS[d].es).join(', ')+'. ':'')+(o.note||'').replace(/<[^>]+>/g,''):e.t==='org'?o.tx:(o.tx||''); };
+    h+=`<p class="sub2">Dos cuadros lado a lado: sus mapas en el modelo y los rasgos que los separan.</p>
+    <label class="lab" for="dPair">Pares clásicos</label><select id="dPair" style="margin-top:6px"><option value="">Elige un par o combina libremente abajo</option>${DIFF.map((p,i)=>`<option value="${i}" ${p===pair?'selected':''}>${ENT(p.a).o.es} · ${ENT(p.b).o.es}</option>`).join('')}</select>
+    <div class="diffsel"><label><span class="sw" style="background:${LCOL.a}"></span><select id="dA">${opts(L.a)}</select></label><label><span class="sw" style="background:${LCOL.b}"></span><select id="dB">${opts(L.b)}</select></label></div>
+    <p style="font-size:12.5px;color:var(--muted)"><span class="sw" style="background:${LCOL.a}"></span> solo el primero &nbsp; <span class="sw" style="background:${LCOL.b}"></span> solo el segundo &nbsp; <span class="sw" style="background:#c79be0"></span> ambos</p>`;
+    if(pair) h+=`<div class="warnbox" style="border-color:var(--accent)"><b>Claves para distinguirlos</b><ul style="margin-top:6px">${pair.k.map(x=>`<li>${x}</li>`).join('')}</ul>${pair.t?`<p style="margin-top:6px"><b>Prueba que suele decidir:</b> ${pair.t}</p>`:''}</div>`;
+    h+=`<table class="difft"><thead><tr><th></th><th style="color:${LCOL.a}">${A.o.es}</th><th style="color:${LCOL.b}">${B.o.es}</th></tr></thead><tbody>
+      <tr><th>Tipo</th><td>${ENTTYPE[A.t]}${A.o.grp?' · '+A.o.grp:''}</td><td>${ENTTYPE[B.t]}${B.o.grp?' · '+B.o.grp:''}</td></tr>
+      <tr><th>Qué es</th><td>${f(A,'what')}</td><td>${f(B,'what')}</td></tr>
+      <tr><th>Clínica</th><td>${f(A,'clin')}</td><td>${f(B,'clin')}</td></tr>
+      ${A.t==='org'||B.t==='org'?`<tr><th>Diagnóstico</th><td>${A.o.dx||''}</td><td>${B.o.dx||''}</td></tr>`:''}
+      <tr><th>Tratamiento</th><td>${f(A,'tx')}</td><td>${f(B,'tx')}</td></tr>
+      <tr><th>Regiones</th><td>${onlyA.join(', ')||'—'}</td><td>${onlyB.join(', ')||'—'}</td></tr></tbody></table>
+    ${both.length?`<p style="font-size:13px"><b>Comparten:</b> ${both.join(', ')}.</p>`:''}
+    <p style="margin-top:10px"><button class="lnk" data-go="${L.a}">Abrir la ficha completa de ${A.o.es}</button><br><button class="lnk" data-go="${L.b}">Abrir la ficha completa de ${B.o.es}</button></p>
+    <p class="note">Las regiones son las que el atlas marca en cada ficha; un mismo lugar puede estar alterado por mecanismos distintos. El diagnóstico diferencial descansa en la clínica y las pruebas, no en la imagen.</p>`;
+  }
+  pin.innerHTML=h;
+  pin.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ S.learn.tab=b.dataset.lt; learnEnter(); });
+  pin.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{ L.tour=b.dataset.tour; L.step=0; learnEnter(); });
+  pin.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{ stopTour(); tourGo(+b.dataset.ts); });
+  const bk=$('#tourBack'); if(bk) bk.onclick=()=>{ stopTour(); L.tour=null; setNT(null); learnEnter(); };
+  const pv=$('#tPrev'); if(pv) pv.onclick=()=>{ stopTour(); tourGo(L.step-1); };
+  const nx=$('#tNext'); if(nx) nx.onclick=()=>{ stopTour(); if(L.step===TOURS[L.tour].steps.length-1){ L.tour=null; setNT(null); learnEnter(); } else tourGo(L.step+1); };
+  const pl=$('#tPlay'); if(pl) pl.onclick=()=>{ if(L.play){ stopTour(); renderLearn(); return; } L.play=true; renderLearn(); tourTimer=setInterval(()=>{ const T=TOURS[L.tour]; if(!T||S.mode!=='learn'){ stopTour(); return; } if(L.step>=T.steps.length-1){ stopTour(); renderLearn(); return; } tourGo(L.step+1); },11000); };
+  const dp=$('#dPair'); if(dp) dp.onchange=()=>{ if(dp.value==='') return; const p=DIFF[+dp.value]; L.a=p.a; L.b=p.b; learnEnter(); };
+  const dA=$('#dA'), dB=$('#dB'); if(dA){ dA.onchange=()=>{ L.a=dA.value; learnEnter(); }; dB.onchange=()=>{ L.b=dB.value; learnEnter(); }; }
+}
+document.addEventListener('keydown',e=>{ if(S.mode!=='learn'||S.learn.tab!=='tour'||!S.learn.tour||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if(e.key==='ArrowRight'){ stopTour(); tourGo(S.learn.step+1); } if(e.key==='ArrowLeft'){ stopTour(); tourGo(S.learn.step-1); } });
+
 function setMode(m){
-  if(S.mode==='study'&&m!=='study'){ S.ghost=1; $('#ghost').value=100; S.layers.tracts=false; const c=document.querySelector('[data-l="tracts"]'); if(c) c.checked=false; S.hemi='both'; document.querySelectorAll('#hemi button').forEach(b=>b.classList.toggle('on',b.dataset.h==='both')); }
+  if((S.mode==='study'||S.mode==='learn')&&m!==S.mode&&m!=='study'&&m!=='learn'){ S.ghost=1; $('#ghost').value=100; S.layers.tracts=false; const c=document.querySelector('[data-l="tracts"]'); if(c) c.checked=false; S.hemi='both'; document.querySelectorAll('#hemi button').forEach(b=>b.classList.toggle('on',b.dataset.h==='both')); }
   S.mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   $('#legend').hidden = !(m==='path'&&S.pathTab==='enigma' || m==='drug');
   if(m==='drug'){ $('#legendTitle').textContent='Densidad relativa de la diana (PET)'; $('#legendBar').style.background='linear-gradient(90deg,#0d1b2a,#1f4e79,#2a9d8f,#e9c46a,#f7f3e3)'; $('#legendTicks').innerHTML='<span>baja</span><span></span><span>alta</span>'; }
   else { $('#legendTitle').textContent='d de Cohen (casos − controles)'; $('#legendBar').style.background=''; $('#legendTicks').innerHTML='<span>−0,6</span><span>0</span><span>+0,6</span>'; }
   if(m!=='sim'){ if(S.tumor.R>0||S.ich.vol>0||S.met.n>0){S.tumor.R=0; S.ich.vol=0; S.met.n=0; applyTumor();} S.stroke.on=false; }
   setNT(null);
-  if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0); else if(m==='study') setTimeout(()=>studyEnter(),0);
-  if(m==='study'&&S.sel){ S.sel=null; $('#clearBtn').hidden=true; }
+  if(S.mode!=='learn'){ stopTour(); $('#tourCap').hidden=true; }
+  if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0); else if(m==='study') setTimeout(()=>studyEnter(),0); else if(m==='learn') setTimeout(()=>learnEnter(),0);
+  if((m==='study'||m==='learn')&&S.sel){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m!=='study'){ S.study.reveal=[]; S.study.wrong=null; }
   if(m!=='anat'&&S.sel&&(S.sel.kind==='nt')){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m==='sim'){ S.sel=null; $('#clearBtn').hidden=true; }
@@ -1039,11 +1125,24 @@ function shadeOf(s){ const t=Math.max(0,Math.min(1,(s+12)/36)); return 1.02-0.42
 function regionSelectedV(o,i){ const s=S.sel; if(!s) return false; return selTest(o,s)(i); }
 const SEQ=['#0d1b2a','#1f4e79','#2a9d8f','#e9c46a','#f7f3e3'].map(hexRGB);
 function seqColor(t){ if(t==null) return [0.3,0.32,0.34]; t=Math.max(0,Math.min(1,t))*(SEQ.length-1); const i=Math.min(SEQ.length-2,Math.floor(t)); return mix(SEQ[i],SEQ[i+1],t-i); }
+function learnCond(){
+  const L=S.learn, c={ctx:{},deep:{},tr:{},cb:{},shrink:{},vent:1,color:null};
+  const mk=(keys,v)=>{ for(const k of keys){
+    if(k.startsWith('tr:')){ META.tracts.forEach((n,i)=>{ if(trBase(n)===k.slice(3)) c.tr[i]=(c.tr[i]&&c.tr[i]!==v)?2:v; }); continue; }
+    if(k==='cb'||k.startsWith('cb:')){ const kk=k.slice(3)||'all'; c.cb[kk]=(c.cb[kk]&&c.cb[kk]!==v)?2:v; continue; }
+    if(DK[k.replace(/^[LR]_/,'')]){ for(const nm of (/^[LR]_/.test(k)?[k]:['L_'+k,'R_'+k])) c.ctx[nm]=(c.ctx[nm]&&c.ctx[nm]!==v)?2:v; continue; }
+    const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]);
+    for(const x of set) c.deep[x]=(c.deep[x]&&c.deep[x]!==v)?2:v; } };
+  if(L.tab==='tour'&&L.tour){ const st=TOURS[L.tour].steps[L.step]; c.color=hexRGB(st.col||'#9fd8ff'); mk(st.hl||[],1); return c; }
+  if(L.tab==='diff'){ c.pair=true; mk(entKeys(L.a),1); mk(entKeys(L.b),-1); return c; }
+  return null;
+}
 function condition(){
   if(S.mode==='study'){ const c={ctx:{},deep:{},tr:{},cb:{},study:true,base:[0.8,0.78,0.74],shrink:{},vent:1};
     const put=(sp,v)=>{ const [t,...r]=sp.split(':'); const x=r.join(':');
       if(t==='c') c.ctx[x]=v; else if(t==='d') c.deep[x]=v; else if(t==='s') c.deep['stem'+x]=v; else if(t==='cb') c.cb.all=v; else if(t==='t'){ const i=META.tracts.indexOf(x); if(i>=0) c.tr[i]=v; } };
     (S.study.reveal||[]).forEach(sp=>put(sp,1)); if(S.study.wrong) put(S.study.wrong,-1); return c; }
+  if(S.mode==='learn') return learnCond();
   if(S.mode!=='path'||S.pathTab==='enigma') return null;
   const c={ctx:{},deep:{},tr:{},color:null,shrink:{},vent:1};
   const addDeep=(k,v)=>{ const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]); for(const x of set) c.deep[x]=Math.max(c.deep[x]||0,v); };
@@ -1066,7 +1165,7 @@ function condition(){
   return c;
 }
 let COND=null;
-function condCol(v,GREY){ if(v==null||v===0) return null; if(COND.study) return v>0?[0.55,0.84,1.0]:[0.92,0.4,0.33]; return COND.signed?divColor(v*0.6):mix(GREY,COND.color,0.45+0.55*v); }
+function condCol(v,GREY){ if(v==null||v===0) return null; if(COND.pair) return v===2?[0.78,0.6,0.88]:v>0?[0.89,0.41,0.35]:[0.35,0.66,0.9]; if(COND.study) return v>0?[0.55,0.84,1.0]:[0.92,0.4,0.33]; return COND.signed?divColor(v*0.6):mix(GREY,COND.color,0.45+0.55*v); }
 function mixWeights(){ const d=DRUGS[S.drug]; const t=drugTargets(d); return t.map(r=>[r,(d.aff[r]||d.aff[r==='M1'?'M':'']||[1])[0]]); }
 function deepRec(k){ if(S.rec==='__mix'){ let a=0,w=0; for(const [r,wt] of mixWeights()){ const v=(META.receptors[r].deep||{})[k]; if(v!=null){a+=wt*v;w+=wt;} } return w?a/w:null; } const R0=META.receptors[S.rec]; return R0?(R0.deep||{})[k]:null; }
 recolor=()=>{
@@ -1379,15 +1478,16 @@ function frame(){
     if(o.cen){ let tsc=1; if(COND&&S.mode==='path'){ const b=o.key.replace(/^[LR]/,''); if(COND.shrink[b]) tsc=COND.shrink[b]; if(o.layer==='vent') tsc=COND.vent||1; } o.sc+=(tsc-o.sc)*k; o.mesh.scale.setScalar(o.sc); }
     const pop=targets.includes(o)&&o.kind==='deep'?6:0;
     tmp.copy(o.dir).multiplyScalar(o.mag*S.explode+pop); o.off.lerp(tmp,k); o.mesh.position.copy(o.off); if(o.cen&&o.sc!==1) o.mesh.position.addScaledVector(o.cen,1-o.sc);
-    let op=o.layer==='ctx'?S.ghost:1;
+    let m0dw=true; let op=o.layer==='ctx'?S.ghost:1;
     if(targets.length&&!targets.includes(o)) op=o.layer==='ctx'?Math.min(op,0.12):0.25;
     if(o.layer==='ctx'&&S.mode==='sim'&&MS.length) op=Math.min(op,0.55);
     if(S.mode==='sim'&&MS.length&&o.layer!=='ctx'&&MS.some(M=>M.c.y<C0.y-8)&&(o.layer==='cb'||o.layer==='stem')) op=Math.min(op,0.3);
     if(o===TRO&&(S.sel&&S.sel.kind==='tr'||COND)) op=0.08;
     if(o===TRO&&S.nt) op=0.15;
-    if(S.nt&&o.layer!=='ctx'&&o!==TRO) op=Math.min(op,0.4);
+    if(S.nt&&o.layer!=='ctx'&&o!==TRO&&S.mode!=='learn') op=Math.min(op,0.4);
+    if(o.layer==='ctx'&&S.mode==='learn'&&op<0.5) m0dw=false;
     o.op+=(op-o.op)*k; const m=o.mesh.material;
-    if(o.layer==='ctx'){ const sd=o.op<0.97?THREE.FrontSide:THREE.DoubleSide; if(m.side!==sd){ m.side=sd; m.needsUpdate=true; } } m.opacity=o.op; m.depthWrite=o.layer==='ctx'?true:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
+    if(o.layer==='ctx'){ const sd=o.op<0.97?THREE.FrontSide:THREE.DoubleSide; if(m.side!==sd){ m.side=sd; m.needsUpdate=true; } } m.opacity=o.op; m.depthWrite=o.layer==='ctx'?m0dw:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
     m.emissive.setRGB(0,0,0); if(targets.includes(o)&&o!==TRO) m.emissive.setRGB(0.12,0.12,0.12);
     if(S.hover&&!S.sel&&((S.hover.kind==='deep'&&o.key===S.hover.key))) m.emissive.setRGB(0.08,0.08,0.08);
   }

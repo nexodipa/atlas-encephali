@@ -136,6 +136,14 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
 .stat div{background:var(--bg-3);border:1px solid var(--line);border-radius:3px;padding:8px 10px}
 .stat b{display:block;font-family:var(--mono);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
 .stat span{font-size:11px;color:var(--faint)}
+.tourcap{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);max-width:min(760px,90%);background:color-mix(in srgb,var(--bg) 82%,transparent);border:1px solid var(--line-2);border-radius:4px;padding:10px 18px;text-align:center;pointer-events:none;backdrop-filter:blur(6px)}
+.tourcap span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.1em}.tourcap b{font-family:var(--display);font-size:22px;font-weight:500;color:var(--fg)}
+.tourlist{display:grid;gap:8px}.tourcard{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:12px 14px;cursor:pointer}
+.tourcard:hover{border-color:var(--accent)}.tourcard b{font-family:var(--display);font-size:18px;font-weight:500}.tourcard span{font-size:13px;color:var(--muted)}.tourcard .tl{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.06em}
+.tourdots{display:flex;gap:6px;margin-top:12px}.tourdots button{width:26px;height:6px;border-radius:3px;border:0;background:var(--line-2);cursor:pointer}.tourdots button.done{background:var(--muted)}.tourdots button.on{background:var(--accent)}
+.tournav{display:flex;gap:8px;margin:18px 0 8px}.tournav button{flex:1;background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;padding:9px;cursor:pointer;font-size:13px}.tournav button:disabled{opacity:.35;cursor:default}.tournav button:hover:not(:disabled){border-color:var(--accent)}
+.diffsel{display:grid;gap:8px;margin:14px 0 8px}.diffsel label{display:flex;align-items:center;gap:8px}.diffsel select{flex:1}
+.difft{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}.difft th,.difft td{border-top:1px solid var(--line);padding:8px 6px;vertical-align:top;text-align:left}.difft thead th{font-family:var(--display);font-size:15px;font-weight:500}.difft tbody th{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;width:72px}.difft ul{margin:4px 0 0;padding-left:16px}
 .warnbox{border-left:2px solid var(--warn);padding:6px 0 6px 12px;font-size:13px;color:var(--fg);margin:10px 0}
 .rngrow{display:flex;align-items:center;gap:10px;margin:10px 0}
 .rngrow input{flex:1;width:auto}
@@ -157,7 +165,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
   <header class="top">
     <div class="brand"><b data-notr>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
     <nav class="modes" id="modes" aria-label="Modo">
-      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button>
+      <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button><button data-m="learn">Aprender</button>
     </nav>
     <div class="langbox"><span id="trStatus" role="status" hidden></span><button id="trExport" class="lnk" hidden>Exportar traducciones</button><select id="langSel" aria-label="Idioma" data-notr><option value="es">Español</option></select></div>
   </header>
@@ -166,7 +174,7 @@ select{background:var(--bg-3);border:1px solid var(--line-2);border-radius:3px;p
       <div id="stage" aria-label="Modelo 3D del encéfalo">
         <div class="loading" id="loading">Cargando superficies corticales y núcleos…</div>
         <div class="hud"><div class="view">Vista <em id="viewName">lateral izquierda</em></div><div>Arrastra para rotar · rueda o pellizco para acercar · toca una región</div></div>
-        <div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
+        <div class="tourcap" id="tourCap" hidden></div><div class="legendbar" id="legend" hidden><div id="legendTitle">d de Cohen (casos − controles)</div><div class="bar" id="legendBar"></div><div class="ticks" id="legendTicks"><span>−0,6</span><span>0</span><span>+0,6</span></div></div>
         <button class="clear" id="clearBtn" hidden>Quitar selección</button>
         <div id="sliceBox" hidden><canvas id="sliceCv" aria-label="Corte de resonancia"></canvas><div id="sliceInfo">Pasa el cursor por el corte</div></div>
         <div class="tip" id="tip" hidden></div>
@@ -2557,6 +2565,106 @@ Object.assign(ICD11,{hypona:"5C72",hypogly:"5A41",cushing:"5A70",addison:"5A74",
   const all=Object.assign({},ORG); const keys=Object.keys(all).sort((a,b)=>order.indexOf(all[a].grp)-order.indexOf(all[b].grp));
   for(const k of Object.keys(ORG)) delete ORG[k]; for(const k of keys) ORG[k]=all[k]; }
 
+// ===== v11: aprender — recorridos guiados y diagnóstico diferencial =====
+// Paso de recorrido: t título, x texto, hl claves a resaltar (formato de ORG.keys), col color, v vista (latL latR medL medR ant post sup inf),
+// g opacidad de la corteza, tr mostrar tractos, nt sistemas animados {clave:'hyper'|'hypo'|'degen'|'norm'}, circ flujos propios, go ficha relacionada
+const TOURS={
+papez:{es:"Circuito de Papez y la memoria",lvl:"Neuroanatomía",min:4,
+ lede:"Cómo se forma un recuerdo nuevo, siguiendo el bucle que James Papez describió en 1937 como circuito de la emoción y que hoy se considera, sobre todo, un circuito de la memoria episódica.",
+ steps:[
+  {t:"La puerta de entrada: corteza entorrinal",x:"La información de todas las cortezas de asociación converge en la corteza entorrinal y parahipocampal, en la cara medial del lóbulo temporal. Es la primera zona que alcanza la tau en la enfermedad de Alzheimer (estadio I de Braak).",hl:["entorhinal","parahippocampal"],col:"#9fd8ff",v:"inf",g:0.5,go:"dk:entorhinal"},
+  {t:"El hipocampo une los elementos del recuerdo",x:"A través de la vía perforante, el hipocampo (giro dentado, CA3, CA1, subículo) liga el qué, el dónde y el cuándo de un episodio. Su lesión bilateral, como en el paciente H. M., impide formar recuerdos nuevos sin afectar a los antiguos ni a las habilidades.",hl:["hippo"],col:"#9fd8ff",v:"latL",g:0.2,go:"deep:Lhippo"},
+  {t:"El fórnix lleva la señal hacia delante",x:"Los axones del subículo forman el fórnix, que se arquea bajo el cuerpo calloso hasta los cuerpos mamilares. Su sección bilateral (tumores, cirugía del tercer ventrículo) produce amnesia.",hl:["hippo","tr:Fornix","mam"],col:"#9fd8ff",v:"latL",g:0.15,tr:true},
+  {t:"Cuerpos mamilares y tálamo anterior",x:"De los cuerpos mamilares, el haz mamilotalámico llega al núcleo anterior del tálamo. Es la zona que daña el déficit de tiamina: la encefalopatía de Wernicke deja la amnesia con confabulación del síndrome de Korsakoff.",hl:["mam","thal"],col:"#e8c46a",v:"medL",g:0.25,go:"org:wk"},
+  {t:"Del tálamo al cingulado",x:"El tálamo anterior proyecta a la corteza cingulada, que a través del cíngulo (el haz de sustancia blanca que la recorre) vuelve a la corteza entorrinal y cierra el bucle. La corteza retroesplenial y el cingulado posterior son de las primeras en perder metabolismo en el Alzheimer.",hl:["caudalanteriorcingulate","posteriorcingulate","isthmuscingulate","tr:Cingulum"],col:"#e8c46a",v:"medL",g:1,tr:true},
+  {t:"El circuito completo",x:"Entorrinal → hipocampo → fórnix → cuerpos mamilares → tálamo anterior → cingulado → entorrinal. Una lesión en cualquier punto del recorrido produce amnesia anterógrada: por eso amnesias de causas tan distintas (Alzheimer, Korsakoff, encefalitis herpética, infarto talámico) se parecen.",hl:["entorhinal","parahippocampal","hippo","tr:Fornix","mam","thal","caudalanteriorcingulate","posteriorcingulate","isthmuscingulate","tr:Cingulum"],col:"#9fd8ff",v:"medL",g:0.6,tr:true,go:"ndg:ad"}
+ ]},
+da:{es:"Las cuatro vías de la dopamina y los antipsicóticos",lvl:"Psicofarmacología",min:5,
+ lede:"Por qué los antipsicóticos alivian las alucinaciones pero pueden empeorar la apatía, producir rigidez o subir la prolactina: todo depende de qué vía dopaminérgica bloquean.",
+ steps:[
+  {t:"Dos núcleos de origen",x:"Casi toda la dopamina cerebral nace en dos núcleos vecinos del mesencéfalo: la sustancia negra compacta y el área tegmental ventral, más el núcleo arqueado del hipotálamo.",hl:["snc","vta","hth"],col:"#f07a4c",v:"inf",g:0.15,go:"deep:Lvta"},
+  {t:"Vía mesolímbica: los síntomas positivos",x:"Del área tegmental ventral al núcleo accumbens. Señala la saliencia: qué merece atención. En la psicosis, la síntesis de dopamina en el estriado está aumentada, y los estímulos irrelevantes se cargan de significado: ideas delirantes y alucinaciones. Bloquear los D2 aquí es lo que hace eficaz a un antipsicótico.",hl:["vta","accumb"],col:"#f07a4c",nt:{da_ml:"hyper"},v:"latL",g:0.2,go:"nt:da_ml"},
+  {t:"Vía mesocortical: los síntomas negativos",x:"Del área tegmental ventral a la corteza prefrontal. En la esquizofrenia está hipoactiva, lo que contribuye a la apatía y a los déficits cognitivos. Los antipsicóticos no la mejoran y, si bloquean demasiado, pueden empeorarla.",hl:["vta","rostralmiddlefrontal","superiorfrontal"],col:"#9fd8ff",nt:{da_mc:"hypo"},v:"latL",g:0.5,go:"nt:da_mc"},
+  {t:"Vía nigroestriatal: los efectos motores",x:"De la sustancia negra al putamen y el caudado, para el control del movimiento. Cuando el bloqueo de los D2 supera el 80%, aparecen parkinsonismo, distonía aguda y acatisia; tras años, discinesia tardía.",hl:["snc","put","caud"],col:"#f07a4c",nt:{da_ns:"hypo"},v:"latL",g:0.2,go:"psy:dip"},
+  {t:"Vía tuberoinfundibular: la prolactina",x:"Del hipotálamo a la hipófisis, donde la dopamina frena la prolactina. Al bloquearla suben la prolactina, con galactorrea, amenorrea y disfunción sexual; risperidona y haloperidol lo hacen más que aripiprazol o quetiapina.",hl:["hth"],col:"#f07a4c",nt:{da_ti:"hypo"},v:"inf",g:0.2,go:"nt:da_ti"},
+  {t:"La ventana terapéutica",x:"La mayoría de los antipsicóticos funciona con una ocupación D2 del 65 al 78%: por debajo, poco efecto antipsicótico; por encima, efectos motores. En la ficha del haloperidol puedes mover la dosis y ver la ocupación.",hl:["accumb","put","caud"],col:"#f07a4c",nt:{da_ml:"hyper",da_ns:"norm"},v:"latL",g:0.2,go:"drug:haloperidol"}
+ ]},
+vision:{es:"De la retina a la corteza visual",lvl:"Neuroanatomía",min:4,
+ lede:"El recorrido de la información visual y por qué cada lesión produce un defecto de campo distinto.",
+ steps:[
+  {t:"Nervio óptico y quiasma",x:"Las fibras de la mitad nasal de cada retina se cruzan en el quiasma óptico; las temporales siguen por el mismo lado. Un tumor de hipófisis que comprime el quiasma desde abajo produce una hemianopsia bitemporal.",hl:["chiasm","tr:CNII"],col:"#9fd8ff",v:"inf",g:0.2,tr:true},
+  {t:"Cuerpo geniculado lateral",x:"Las cintillas ópticas llegan al núcleo geniculado lateral del tálamo. A partir de aquí, cada hemisferio procesa la mitad contraria del campo visual: una lesión detrás del quiasma produce hemianopsia homónima.",hl:["thal"],col:"#9fd8ff",v:"inf",g:0.2},
+  {t:"Radiaciones ópticas",x:"Las radiaciones ópticas se abren en abanico hacia el occipital. Las fibras inferiores rodean el asta temporal (asa de Meyer): una lesión temporal produce una cuadrantanopsia superior («en el cielo»); una parietal, inferior.",hl:["tr:Optic_Radiation"],col:"#9fd8ff",v:"latL",g:0.2,tr:true},
+  {t:"Corteza visual primaria (V1)",x:"En la cisura calcarina, el área 17 de Brodmann. El infarto de la arteria cerebral posterior produce una hemianopsia homónima contralateral, a menudo con respeto macular por la irrigación doble del polo occipital.",hl:["pericalcarine","cuneus","lingual"],col:"#9fd8ff",v:"medL",g:1,go:"dk:pericalcarine"},
+  {t:"Dos vías: dónde y qué",x:"Desde V1 salen la vía dorsal hacia el parietal (dónde está y cómo alcanzarlo; su lesión produce el síndrome de Bálint) y la vía ventral hacia el temporal inferior (qué es; su lesión produce agnosias, como la prosopagnosia en el fusiforme).",hl:["superiorparietal","inferiorparietal","fusiform","inferiortemporal","lateraloccipital"],col:"#e8c46a",v:"latL",g:1,go:"dk:fusiform"}
+ ]},
+lang:{es:"El lenguaje y las afasias",lvl:"Neurología",min:4,
+ lede:"Las áreas del lenguaje del hemisferio izquierdo, cómo se conectan y qué afasia produce cada lesión.",
+ steps:[
+  {t:"Área de Broca",x:"En la circunvolución frontal inferior izquierda (porciones opercular y triangular, áreas 44 y 45). Su lesión produce una afasia no fluida, con habla trabajosa y agramatical, comprensión relativamente conservada y conciencia del déficit.",hl:["L_parsopercularis","L_parstriangularis"],col:"#e2685a",v:"latL",g:1,go:"dk:parsopercularis"},
+  {t:"Área de Wernicke",x:"En la parte posterior de la circunvolución temporal superior izquierda. Su lesión produce una afasia fluida pero vacía, con parafasias y mala comprensión, a menudo sin conciencia del déficit, lo que puede confundirse con una psicosis.",hl:["L_superiortemporal","L_bankssts"],col:"#e2685a",v:"latL",g:1,go:"dk:superiortemporal"},
+  {t:"Fascículo arqueado",x:"Une las dos áreas por la sustancia blanca parietal. Su lesión produce la afasia de conducción: habla fluida, comprensión buena y repetición muy alterada.",hl:["tr:Arcuate_Fasciculus"],col:"#9fd8ff",v:"latL",g:0.2,tr:true},
+  {t:"Más allá del modelo clásico",x:"El lenguaje es una red: la circunvolución angular para la lectura, el temporal anterior para el significado de las palabras (afectado en la afasia progresiva primaria semántica), la vía ventral por la cápsula extrema y el fascículo uncinado. Si se conserva la repetición, la afasia es transcortical.",hl:["L_inferiorparietal","L_supramarginal","L_temporalpole","L_middletemporal","tr:Arcuate_Fasciculus"],col:"#e8c46a",v:"latL",g:0.8,tr:true,go:"ndg:ppa"}
+ ]},
+motor:{es:"La vía motora y sus circuitos de ajuste",lvl:"Neurología",min:5,
+ lede:"De la decisión de moverse a la contracción muscular, y los dos circuitos que ajustan el movimiento: ganglios basales y cerebelo.",
+ steps:[
+  {t:"Corteza motora primaria",x:"La circunvolución precentral, con el homúnculo: la cara y la mano en la convexidad lateral, la pierna en la cara medial (lobulillo paracentral). Por eso un infarto de la cerebral media afecta sobre todo a la cara y el brazo, y uno de la anterior, a la pierna.",hl:["precentral","paracentral"],col:"#e2685a",v:"latL",g:1,go:"dk:precentral"},
+  {t:"Haz corticoespinal",x:"Las fibras bajan por la cápsula interna, los pedúnculos cerebrales y la protuberancia, y se cruzan en las pirámides del bulbo. Una lesión por encima del cruce produce debilidad contralateral; los síndromes alternos del tronco combinan un par craneal de un lado con debilidad del otro.",hl:["tr:Cortico_Spinal_Tract","stem0","stem1","stem2"],col:"#e2685a",v:"ant",g:0.2,tr:true},
+  {t:"Ganglios basales: elegir el movimiento",x:"El estriado recibe la corteza y, por las vías directa e indirecta, abre o cierra el freno que el pálido ejerce sobre el tálamo. La dopamina de la sustancia negra facilita la directa: si falta, el movimiento se vuelve pobre y lento (Parkinson).",hl:["caud","put","pal","stn","snc","thal"],col:"#e8c46a",nt:{da_ns:"norm"},v:"latL",g:0.2,go:"ndg:pd"},
+  {t:"Hiper e hipocinesia",x:"El exceso de la vía directa o la lesión del núcleo subtalámico producen movimientos de más: corea en la enfermedad de Huntington (pérdida del caudado), balismo tras un infarto subtalámico. La estimulación cerebral profunda del subtalámico mejora el Parkinson.",hl:["caud","stn"],col:"#e8c46a",v:"ant",g:0.2,go:"ndg:hd"},
+  {t:"Cerebelo: corregir el movimiento",x:"El cerebelo compara lo planeado con lo ejecutado y corrige sobre la marcha. Su lesión produce ataxia del mismo lado, dismetría, temblor intencional y disartria. El vermis controla el tronco y la marcha; los hemisferios, las extremidades.",hl:["cb","tr:Middle_Cerebellar_Peduncle","tr:Superior_Cerebellar_Peduncle"],col:"#9fd8ff",v:"post",g:0.5,tr:true,go:"cb:ant"}
+ ]},
+fear:{es:"Miedo, ansiedad y su extinción",lvl:"Psicopatología",min:4,
+ lede:"El circuito que detecta la amenaza, el que la frena y por qué la exposición funciona en los trastornos de ansiedad y el TEPT.",
+ steps:[
+  {t:"La amígdala detecta la amenaza",x:"Recibe información sensorial rápida desde el tálamo y más elaborada desde la corteza, y asigna valor de amenaza. En la fobia, la ansiedad social y el TEPT responde en exceso (Etkin y Wager, 2007).",hl:["amyg","thal"],col:"#e2685a",v:"inf",g:0.2,go:"deep:Lamyg"},
+  {t:"La respuesta del cuerpo",x:"La amígdala activa el hipotálamo (eje del estrés, sistema simpático) y la sustancia gris periacueductal (paralización, huida), y el locus coeruleus libera noradrenalina: taquicardia, sudoración, alerta.",hl:["amyg","hth","stem0"],col:"#e2685a",nt:{ne:"hyper"},v:"latL",g:0.2,go:"nt:ne"},
+  {t:"La ínsula siente el cuerpo",x:"La ínsula representa las sensaciones internas (latido, respiración). Está hiperactiva en los trastornos de ansiedad, y en el pánico las sensaciones corporales se interpretan como catastróficas.",hl:["insula","amyg"],col:"#e2685a",v:"latL",g:1,go:"psy:panic"},
+  {t:"La prefrontal ventromedial frena el miedo",x:"La extinción no borra el recuerdo del miedo: crea un aprendizaje nuevo de seguridad, guardado en la prefrontal ventromedial, que inhibe la amígdala. El hipocampo aporta el contexto. En el TEPT esta región está hipoactiva y el hipocampo es más pequeño.",hl:["medialorbitofrontal","rostralanteriorcingulate","hippo"],col:"#9fd8ff",v:"medL",g:0.6,go:"psy:ptsd"},
+  {t:"Por qué funciona la exposición",x:"Enfrentarse al estímulo sin que ocurra lo temido entrena ese aprendizaje de seguridad. Las benzodiacepinas alivian la ansiedad pero pueden dificultar la extinción; la evitación la impide del todo.",hl:["medialorbitofrontal","amyg","hippo"],col:"#9fd8ff",v:"medL",g:0.6,go:"psy:sphob"}
+ ]},
+reward:{es:"Recompensa y adicción",lvl:"Psicopatología",min:4,
+ lede:"El sistema que nos mueve hacia lo que necesitamos y cómo las drogas lo secuestran, en las tres etapas descritas por Koob y Volkow.",
+ steps:[
+  {t:"El error de predicción",x:"Las neuronas dopaminérgicas del área tegmental ventral se disparan cuando algo es mejor de lo esperado, no ante la recompensa en sí. Esa señal enseña al estriado ventral qué buscar.",hl:["vta","accumb"],col:"#f07a4c",nt:{da_ml:"norm"},v:"latL",g:0.2,go:"nt:da_ml"},
+  {t:"Atracón e intoxicación",x:"Todas las drogas aumentan la dopamina en el accumbens, más deprisa y con más intensidad que las recompensas naturales. Con la repetición, el control pasa del estriado ventral al dorsal: del deseo al hábito.",hl:["accumb","put","caud"],col:"#f07a4c",nt:{da_ml:"hyper"},v:"latL",g:0.2,go:"psy:stim"},
+  {t:"Abstinencia y afecto negativo",x:"Con el uso crónico, el sistema de recompensa se apaga y se reclutan los sistemas del estrés de la amígdala extendida (CRF, dinorfina). Se consume para dejar de sentirse mal más que para sentirse bien.",hl:["amyg","hth","accumb"],col:"#b9a0e8",v:"latL",g:0.2,go:"psy:aud"},
+  {t:"Preocupación y anticipación",x:"La prefrontal y la ínsula, que deberían frenar, rinden menos, y las señales asociadas a la droga disparan el deseo. Las lesiones de la ínsula pueden suprimir de golpe la adicción al tabaco.",hl:["rostralmiddlefrontal","medialorbitofrontal","lateralorbitofrontal","insula","caudalanteriorcingulate"],col:"#9fd8ff",v:"latL",g:1,go:"psy:addiction"}
+ ]},
+sleep:{es:"Sueño y vigilia",lvl:"Neurociencia",min:4,
+ lede:"Los sistemas que nos mantienen despiertos, el interruptor que los apaga y lo que falla en el insomnio y la narcolepsia.",
+ steps:[
+  {t:"El sistema activador ascendente",x:"Desde el tronco y el hipotálamo, varios sistemas mantienen la corteza despierta: noradrenalina del locus coeruleus, serotonina del rafe, histamina del hipotálamo posterior y acetilcolina del tronco y del prosencéfalo basal.",hl:["stem0","stem1","hth","bf"],col:"#e8c46a",nt:{ne:"norm",ht:"norm",hist:"norm",ach:"norm"},v:"latL",g:0.3},
+  {t:"La orexina estabiliza la vigilia",x:"Las neuronas de orexina del hipotálamo lateral refuerzan a todos los sistemas de alerta. Cuando se pierden, como en la narcolepsia tipo 1, la vigilia y el sueño REM se invaden mutuamente: ataques de sueño y cataplejía.",hl:["hth"],col:"#e8c46a",nt:{orx:"norm"},v:"inf",g:0.2,go:"psy:narco"},
+  {t:"El interruptor del sueño",x:"El núcleo preóptico ventrolateral del hipotálamo inhibe los sistemas de alerta. La adenosina, que se acumula durante la vigilia, lo activa; la cafeína bloquea esa señal.",hl:["hth"],col:"#9fd8ff",v:"inf",g:0.2,go:"psy:caf"},
+  {t:"El sueño REM",x:"El tegmento pontino genera el REM y, a través del bulbo, la atonía muscular. Si la sinucleína daña estos núcleos, se representan los sueños: trastorno de conducta del sueño REM, años antes del Parkinson.",hl:["stem1","stem2"],col:"#9fd8ff",v:"latL",g:0.2,go:"psy:rbd"},
+  {t:"Cuando la vigilia no se apaga",x:"En el insomnio crónico, los sistemas de alerta siguen activos de noche (hiperactivación). Los hipnóticos actuales actúan en distintos puntos: el zolpidem potencia el GABA, el suvorexant bloquea la orexina.",hl:["hth","caudalanteriorcingulate","thal"],col:"#e2685a",nt:{orx:"hyper",ne:"hyper"},v:"latL",g:0.4,go:"psy:insomnia"}
+ ]}
+};
+
+/* pares clásicos de diagnóstico diferencial: a y b son referencias de ficha; k claves para distinguir; t prueba que suele decidir */
+const DIFF=[
+ {a:"psy:panic",b:"org:pheo",k:["En el feocromocitoma la presión arterial se dispara durante la crisis; en el pánico sube poco.","La cefalea pulsátil intensa es típica del feocromocitoma y rara en el pánico.","El pánico se desencadena con señales temidas o aparece por sorpresa y deja miedo anticipatorio; el feocromocitoma, con la presión abdominal, el ejercicio o ciertos fármacos."],t:"Metanefrinas libres en plasma u orina."},
+ {a:"psy:scz",b:"org:nmda",k:["La encefalitis anti-NMDA empieza de forma brusca, a menudo tras un cuadro gripal, en una mujer joven.","Aparecen pronto discinesias orofaciales, crisis, disminución de la conciencia e inestabilidad autonómica.","La intolerancia extrema a los antipsicóticos (rigidez, fiebre) debe hacer sospecharla."],t:"Anticuerpos anti-NMDAR en líquido cefalorraquídeo; buscar teratoma de ovario."},
+ {a:"psy:mdd",b:"org:thyroid",k:["El hipotiroidismo añade intolerancia al frío, estreñimiento, piel seca, aumento de peso y bradicardia.","La lentitud psicomotora es global y el enlentecimiento cognitivo predomina sobre la culpa o la anhedonia.","Una depresión resistente obliga a medir la TSH."],t:"TSH y T4 libre."},
+ {a:"org:delirium",b:"ndg:ad",k:["El delirium empieza en horas o días y fluctúa a lo largo del día; la demencia avanza en meses o años.","En el delirium la atención y el nivel de conciencia están alterados; en el Alzheimer inicial, conservados.","La demencia es el principal factor de riesgo de delirium: pueden coexistir."],t:"Pruebas de atención (CAM, recitar los meses al revés) y búsqueda de la causa médica del delirium."},
+ {a:"psy:nms",b:"org:serotonin",k:["El síndrome serotoninérgico empieza en horas tras un cambio de dosis; el neuroléptico maligno, en días.","El serotoninérgico tiene clonus e hiperreflexia, sobre todo en las piernas; el neuroléptico maligno, rigidez «en tubo de plomo» y bradicinesia.","El fármaco implicado orienta: serotoninérgico frente a antidopaminérgico."],t:"Exploración del clonus y los reflejos; CK muy elevada en el neuroléptico maligno."},
+ {a:"psy:ocd",b:"psy:ocpd",k:["En el TOC las obsesiones se viven como ajenas y angustiosas (egodistónicas); en el trastorno de la personalidad, el perfeccionismo se vive como propio y razonable.","El TOC tiene obsesiones y compulsiones concretas; la personalidad obsesiva, un estilo general de rigidez.","Pueden coexistir."],t:"Entrevista clínica: preguntar si los pensamientos parecen absurdos o intrusivos."},
+ {a:"psy:bd",b:"psy:stim",k:["La manía inducida por estimulantes cede en días tras la abstinencia.","La anfetamina y la cocaína producen más paranoia y conducta estereotipada; la manía primaria, más expansividad sostenida.","Un episodio maníaco que persiste semanas tras la abstinencia apunta a un trastorno bipolar."],t:"Tóxicos en orina y seguimiento tras la abstinencia."},
+ {a:"psy:mdd",b:"psy:pgd",k:["En el duelo prolongado el malestar gira alrededor de la persona fallecida (anhelo, recuerdos); en la depresión es generalizado.","La autoestima suele conservarse en el duelo y no en la depresión.","Pueden coexistir y entonces se tratan ambos."],t:"Entrevista clínica; tiempo desde la pérdida (12 meses en el DSM-5-TR)."},
+ {a:"psy:fnd",b:"ndg:ms",k:["En el trastorno funcional hay signos positivos (Hoover, debilidad que cede con la distracción); en la esclerosis múltiple, signos de lesión de vía (reflejos vivos, Babinski).","La esclerosis múltiple tiene brotes con lesiones en la RM; el trastorno funcional, una RM normal.","Hasta un 10–15% de los pacientes con esclerosis múltiple tiene además síntomas funcionales."],t:"RM cerebral y medular con contraste; bandas oligoclonales en el líquido."},
+ {a:"psy:an",b:"org:addison",k:["En la insuficiencia suprarrenal no hay miedo a engordar ni distorsión de la imagen corporal.","La hiperpigmentación, la hipotensión y el deseo de sal orientan a Addison.","Hiponatremia con hiperpotasemia es típica de Addison; en la anorexia con purgas hay hipopotasemia."],t:"Cortisol matutino y ACTH; test de estimulación con ACTH."},
+ {a:"psy:scz",b:"org:epilepsy",k:["Las psicosis de la epilepsia temporal pueden ser postictales (tras una racha de crisis, con intervalo lúcido) o interictales.","El afecto suele estar mejor conservado y los síntomas negativos son raros.","Las crisis previas, el déjà vu o los automatismos orientan."],t:"EEG, a menudo prolongado, y RM con secuencias para esclerosis del hipocampo."},
+ {a:"psy:catatonia",b:"psy:nms",k:["Comparten mutismo, rigidez y estupor; el neuroléptico maligno añade fiebre, inestabilidad autonómica y CK elevada tras un antipsicótico.","La catatonia maligna puede ser indistinguible: algunos autores los consideran el mismo espectro.","Ambos responden a lorazepam y a terapia electroconvulsiva; los antipsicóticos empeoran los dos."],t:"Escala de Bush-Francis, CK, temperatura y antecedente de antipsicóticos."},
+ {a:"psy:asd",b:"psy:scd",k:["El autismo exige además intereses restringidos y conductas repetitivas o sensoriales.","La comunicación social pragmática afecta al uso del lenguaje en contexto, sin los patrones restringidos.","Muchos casos antes diagnosticados de autismo leve cumplirían criterios de ambos."],t:"Evaluación estandarizada (ADOS-2, ADI-R) por un equipo especializado."},
+ {a:"psy:adhd",b:"psy:bd",k:["El TDAH es crónico y empieza en la infancia; la manía es episódica, con un cambio claro respecto a lo habitual.","Grandiosidad, disminución de la necesidad de dormir y euforia son de la manía, no del TDAH.","Pueden coexistir; el TDAH es frecuente en el trastorno bipolar de inicio temprano."],t:"Cronología detallada de los síntomas, con informantes."},
+ {a:"psy:dlbx",b:"ndg:pd",k:[],t:""},
+ {a:"ndg:dlb",b:"ndg:ad",k:["En la demencia con cuerpos de Lewy hay fluctuaciones marcadas de la atención, alucinaciones visuales bien formadas y parkinsonismo desde el inicio.","La memoria se afecta menos al principio que en el Alzheimer; la atención y lo visuoespacial, más.","La sensibilidad grave a los antipsicóticos es característica de Lewy y puede ser mortal."],t:"DaTSCAN (captación reducida en Lewy) y gammagrafía cardíaca con MIBG."},
+ {a:"psy:gad",b:"org:thyroid",k:["El hipertiroidismo produce pérdida de peso con apetito aumentado, intolerancia al calor, temblor fino, taquicardia en reposo y bocio.","La ansiedad de base orgánica empieza a menudo sin estresores claros y no responde a las medidas habituales."],t:"TSH."},
+ {a:"psy:aud",b:"org:hepatic",k:["En la encefalopatía hepática aparece asterixis y la confusión fluctúa con desencadenantes (hemorragia, infección, estreñimiento).","La abstinencia alcohólica da temblor, sudoración, taquicardia y alucinaciones en las 24 a 72 horas tras el último consumo.","Ambas pueden darse en el mismo paciente; la encefalopatía de Wernicke también."],t:"Amonio, pruebas hepáticas, glucosa y tiamina empírica."}
+].filter(p=>p.k.length);
+
 </script>
 <script>
 "use strict";
@@ -2564,7 +2672,7 @@ Object.assign(ICD11,{hypona:"5C72",hypogly:"5A41",cushing:"5A70",addison:"5A74",
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false},trColor:'cls',nt:null,
-  study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
+  learn:{tab:'tour',tour:null,step:0,play:false,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -2981,7 +3089,7 @@ pin.addEventListener('click',e=>{
   if(t==='ndg'){ S.pathTab='dis'; S.disease=v; S.stage=0; setMode('path'); return; }
   if(t==='rare'){ S.pathTab='rare'; S.rare=v; setMode('path'); return; }
   if(t==='drug'){ S.drug=v; S.dose=null; S.rec=drugTargets(DRUGS[v])[0]||null; setMode('drug'); return; }
-  if(S.mode==='study'&&['dk','deep','stem','cb','tr','lobe','gl'].includes(t)) setMode('anat');
+  if((S.mode==='study'||S.mode==='learn')&&['dk','deep','stem','cb','tr','lobe','gl','nt'].includes(t)) setMode('anat');
   if(t==='lobe') return select({kind:'lobe',id:v,h:b.dataset.go.split(':')[2]||'lh'});
   if(t==='dk') return select({kind:'dk',id:isNaN(+v)?DKN.indexOf('L_'+v):+v});
   if(t==='gl') return select({kind:'gl',id:+v});
@@ -2996,6 +3104,7 @@ function showPanel(){
   if(S.mode==='sim') return renderSim();
   if(S.mode==='drug') return renderDrug();
   if(S.mode==='study') return renderStudy();
+  if(S.mode==='learn') return renderLearn();
   const s=S.sel; if(!s) return renderIndex();
   if(s.kind==='lobe') renderLobe(s.id,s.h); else if(s.kind==='dk') renderDK(s.id); else if(s.kind==='gl') renderGL(s.id); else if(s.kind==='deep') renderDeep(s.key); else if(s.kind==='stem') renderStem(s.id); else if(s.kind==='cb') renderCB(s.id); else if(s.kind==='tr') renderTract(s.id); else if(s.kind==='nt') renderNT(s.id);
   if(S.mode==='path') pin.insertAdjacentHTML('afterbegin',`<p style="margin-bottom:14px"><button class="lnk" data-go="index">← Volver al mapa de ${META.disorders[S.dis].name}</button></p>`);
@@ -3070,7 +3179,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 10. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 11. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -3213,16 +3322,93 @@ const TUMLOC={
 };
 
 /* ============ modos y controles ============ */
+/* ============ aprender: recorridos guiados y diagnóstico diferencial ============ */
+let tourTimer=null;
+const ENT=ref=>{ const [t,k]=ref.split(':'); const src={psy:PSY,org:ORG,ndg:DISEASE,rare:RARE}[t]; return src&&src[k]?{t,k,o:src[k]}:null; };
+const ENTTYPE={psy:'Psicopatología',org:'Organicidad',ndg:'Neurodegenerativa',rare:'Enfermedad rara'};
+function entKeys(ref){ const e=ENT(ref); if(!e) return []; const o=e.o;
+  if(e.t==='psy') return Object.entries(o.act).filter(([,v])=>Math.abs(v)>=0.3).map(([k])=>k);
+  if(e.t==='org') return o.keys.slice();
+  const out=[]; const add=x=>{ (x.ctx||[]).forEach(n=>out.push(n)); (x.deep||[]).forEach(n=>out.push(n)); (x.tr||[]).forEach(n=>out.push('tr:'+n)); (x.keys||[]).forEach(n=>out.push(n)); };
+  if(e.t==='ndg') o.stages.forEach(add); else add(o); return [...new Set(out)]; }
+function keyName(k){ if(k.startsWith('tr:')){ const b=k.slice(3); return TRACT[b]?TRACT[b].es:b.replace(/_/g,' '); } if(k==='cb'||k.startsWith('cb:')) return CB[k.slice(3)]?CB[k.slice(3)].es:'Cerebelo';
+  const side=/^[LR]_/.test(k)?(k[0]==='L'?' izq.':' der.'):/^[LR][a-z]/.test(k)&&DEEP[k.slice(1)]?(k[0]==='L'?' izq.':' der.'):'';
+  const b=k.replace(/^[LR]_/,'').replace(/^[LR](?=[a-z])/,m=>DEEP[k.slice(1)]?'':m); if(DK[b]) return DK[b].es+side; if(DEEP[b]) return DEEP[b].es+side; if(k==='Lvent'||k==='Rvent'||k==='vent') return 'Ventrículos laterales'; return b; }
+const LCOL={a:'#e2685a',b:'#5aa9e6'};
+function learnView(o){ studyView({v:o.v||'latL',ghost:o.g==null?1:o.g,tracts:!!o.tr}); if(o.nt||o.circ){ const sys=Object.keys(o.nt||{}); const extra=[]; for(const c of (o.circ||[])) for(let i=0;i<c.path.length-1;i++) extra.push({color:c.color,src:[c.path[i]],dst:[c.path[i+1]],mod:c.mod||'hyper'}); setNT({sys,mod:o.nt||{},extra}); } }
+function learnEnter(){ const L=S.learn; stopTour();
+  if(L.tab==='tour'&&L.tour) learnView(TOURS[L.tour].steps[L.step]);
+  else if(L.tab==='diff'){ const ks=[...entKeys(L.a),...entKeys(L.b)]; const deep=ks.some(k=>!DK[k.replace(/^[LR]_/,'')]&&!k.startsWith('tr:')); learnView({v:'latL',g:deep?0.35:1,tr:ks.some(k=>k.startsWith('tr:'))}); }
+  else { studyView({v:'latL'}); }
+  renderLearn(); }
+function stopTour(){ if(tourTimer){ clearInterval(tourTimer); tourTimer=null; } S.learn.play=false; }
+function tourGo(i){ const L=S.learn, T=TOURS[L.tour]; L.step=Math.max(0,Math.min(T.steps.length-1,i)); learnView(T.steps[L.step]); renderLearn(); }
+function renderLearn(){
+  const L=S.learn; const cap=$('#tourCap');
+  let h=`<p class="kicker">Aprender</p><h2>${L.tab==='tour'?'Recorridos guiados':'Diagnóstico diferencial'}</h2>
+  <div class="seg" style="margin-bottom:16px"><button data-lt="tour" class="${L.tab==='tour'?'on':''}">Recorridos</button><button data-lt="diff" class="${L.tab==='diff'?'on':''}">Diferencial</button></div>`;
+  if(L.tab==='tour'){
+    if(!L.tour){ cap.hidden=true;
+      h+=`<p class="sub2">Explicaciones paso a paso sobre el modelo: la cámara se mueve, las estructuras se encienden y el texto avanza. Sirven para estudiar solo o para proyectar en clase.</p>
+      <div class="tourlist">${Object.entries(TOURS).map(([k,T])=>`<button class="tourcard" data-tour="${k}"><span class="tl">${T.lvl} · ${T.steps.length} pasos · ${T.min} min</span><b>${T.es}</b><span>${T.lede}</span></button>`).join('')}</div>`;
+    } else { const T=TOURS[L.tour], st=T.steps[L.step], n=T.steps.length;
+      cap.hidden=false; cap.innerHTML=`<span>${L.step+1} / ${n}</span><b>${st.t}</b>`;
+      h+=`<div class="crumbs"><button id="tourBack">Recorridos</button><span>/</span><span>${T.es}</span></div>
+      <div class="tourdots">${T.steps.map((s,i)=>`<button data-ts="${i}" class="${i===L.step?'on':i<L.step?'done':''}" title="${s.t}"></button>`).join('')}</div>
+      <p class="kicker" style="margin-top:14px">Paso ${L.step+1} de ${n}</p><h3 style="margin-top:0;border:0;text-transform:none;letter-spacing:0;font-family:var(--display);font-size:22px;color:var(--fg)">${st.t}</h3>
+      <p style="font-size:15px;line-height:1.65">${st.x}</p>
+      ${st.go?`<p><button class="lnk" data-go="${st.go}" id="tourOpen">Abrir la ficha relacionada</button></p>`:''}
+      <div class="tournav"><button id="tPrev" ${L.step===0?'disabled':''}>← Anterior</button><button id="tPlay">${L.play?'Pausa':'Reproducir'}</button><button id="tNext">${L.step===n-1?'Terminar':'Siguiente →'}</button></div>
+      <p class="note">Usa las flechas del teclado para avanzar. Al abrir una ficha sales del recorrido; vuelve con el modo Aprender.</p>`; }
+  } else { cap.hidden=true;
+    const opts=sel=>['psy','org','ndg','rare'].map(t=>{ const src={psy:PSY,org:ORG,ndg:DISEASE,rare:RARE}[t]; return `<optgroup label="${ENTTYPE[t]}">${Object.keys(src).map(k=>`<option value="${t}:${k}" ${sel===t+':'+k?'selected':''}>${src[k].es}</option>`).join('')}</optgroup>`; }).join('');
+    const A=ENT(L.a), B=ENT(L.b), pair=DIFF.find(p=>p.a===L.a&&p.b===L.b||p.a===L.b&&p.b===L.a);
+    const ka=new Set(entKeys(L.a).map(keyName)), kb=new Set(entKeys(L.b).map(keyName));
+    const both=[...ka].filter(x=>kb.has(x)), onlyA=[...ka].filter(x=>!kb.has(x)), onlyB=[...kb].filter(x=>!ka.has(x));
+    const f=(e,which)=>{ const o=e.o; if(which==='what') return e.t==='psy'?o.lede:e.t==='org'?o.cause:e.t==='ndg'?o.lede:o.txt;
+      if(which==='clin') return e.t==='psy'?`<ul>${o.sx.map(s=>`<li>${s[0]}</li>`).join('')}</ul>`:e.t==='org'?o.psy+(o.flags?`<ul>${o.flags.map(x=>`<li>${x}</li>`).join('')}</ul>`:''):e.t==='ndg'?o.stages.map(s=>s.es).join(' → '):(o.gene||'');
+      if(which==='tx') return e.t==='psy'?(o.tx.length?o.tx.map(d=>DRUGS[d].es).join(', ')+'. ':'')+(o.note||'').replace(/<[^>]+>/g,''):e.t==='org'?o.tx:(o.tx||''); };
+    h+=`<p class="sub2">Dos cuadros lado a lado: sus mapas en el modelo y los rasgos que los separan.</p>
+    <label class="lab" for="dPair">Pares clásicos</label><select id="dPair" style="margin-top:6px"><option value="">Elige un par o combina libremente abajo</option>${DIFF.map((p,i)=>`<option value="${i}" ${p===pair?'selected':''}>${ENT(p.a).o.es} · ${ENT(p.b).o.es}</option>`).join('')}</select>
+    <div class="diffsel"><label><span class="sw" style="background:${LCOL.a}"></span><select id="dA">${opts(L.a)}</select></label><label><span class="sw" style="background:${LCOL.b}"></span><select id="dB">${opts(L.b)}</select></label></div>
+    <p style="font-size:12.5px;color:var(--muted)"><span class="sw" style="background:${LCOL.a}"></span> solo el primero &nbsp; <span class="sw" style="background:${LCOL.b}"></span> solo el segundo &nbsp; <span class="sw" style="background:#c79be0"></span> ambos</p>`;
+    if(pair) h+=`<div class="warnbox" style="border-color:var(--accent)"><b>Claves para distinguirlos</b><ul style="margin-top:6px">${pair.k.map(x=>`<li>${x}</li>`).join('')}</ul>${pair.t?`<p style="margin-top:6px"><b>Prueba que suele decidir:</b> ${pair.t}</p>`:''}</div>`;
+    h+=`<table class="difft"><thead><tr><th></th><th style="color:${LCOL.a}">${A.o.es}</th><th style="color:${LCOL.b}">${B.o.es}</th></tr></thead><tbody>
+      <tr><th>Tipo</th><td>${ENTTYPE[A.t]}${A.o.grp?' · '+A.o.grp:''}</td><td>${ENTTYPE[B.t]}${B.o.grp?' · '+B.o.grp:''}</td></tr>
+      <tr><th>Qué es</th><td>${f(A,'what')}</td><td>${f(B,'what')}</td></tr>
+      <tr><th>Clínica</th><td>${f(A,'clin')}</td><td>${f(B,'clin')}</td></tr>
+      ${A.t==='org'||B.t==='org'?`<tr><th>Diagnóstico</th><td>${A.o.dx||''}</td><td>${B.o.dx||''}</td></tr>`:''}
+      <tr><th>Tratamiento</th><td>${f(A,'tx')}</td><td>${f(B,'tx')}</td></tr>
+      <tr><th>Regiones</th><td>${onlyA.join(', ')||'—'}</td><td>${onlyB.join(', ')||'—'}</td></tr></tbody></table>
+    ${both.length?`<p style="font-size:13px"><b>Comparten:</b> ${both.join(', ')}.</p>`:''}
+    <p style="margin-top:10px"><button class="lnk" data-go="${L.a}">Abrir la ficha completa de ${A.o.es}</button><br><button class="lnk" data-go="${L.b}">Abrir la ficha completa de ${B.o.es}</button></p>
+    <p class="note">Las regiones son las que el atlas marca en cada ficha; un mismo lugar puede estar alterado por mecanismos distintos. El diagnóstico diferencial descansa en la clínica y las pruebas, no en la imagen.</p>`;
+  }
+  pin.innerHTML=h;
+  pin.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ S.learn.tab=b.dataset.lt; learnEnter(); });
+  pin.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{ L.tour=b.dataset.tour; L.step=0; learnEnter(); });
+  pin.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{ stopTour(); tourGo(+b.dataset.ts); });
+  const bk=$('#tourBack'); if(bk) bk.onclick=()=>{ stopTour(); L.tour=null; setNT(null); learnEnter(); };
+  const pv=$('#tPrev'); if(pv) pv.onclick=()=>{ stopTour(); tourGo(L.step-1); };
+  const nx=$('#tNext'); if(nx) nx.onclick=()=>{ stopTour(); if(L.step===TOURS[L.tour].steps.length-1){ L.tour=null; setNT(null); learnEnter(); } else tourGo(L.step+1); };
+  const pl=$('#tPlay'); if(pl) pl.onclick=()=>{ if(L.play){ stopTour(); renderLearn(); return; } L.play=true; renderLearn(); tourTimer=setInterval(()=>{ const T=TOURS[L.tour]; if(!T||S.mode!=='learn'){ stopTour(); return; } if(L.step>=T.steps.length-1){ stopTour(); renderLearn(); return; } tourGo(L.step+1); },11000); };
+  const dp=$('#dPair'); if(dp) dp.onchange=()=>{ if(dp.value==='') return; const p=DIFF[+dp.value]; L.a=p.a; L.b=p.b; learnEnter(); };
+  const dA=$('#dA'), dB=$('#dB'); if(dA){ dA.onchange=()=>{ L.a=dA.value; learnEnter(); }; dB.onchange=()=>{ L.b=dB.value; learnEnter(); }; }
+}
+document.addEventListener('keydown',e=>{ if(S.mode!=='learn'||S.learn.tab!=='tour'||!S.learn.tour||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if(e.key==='ArrowRight'){ stopTour(); tourGo(S.learn.step+1); } if(e.key==='ArrowLeft'){ stopTour(); tourGo(S.learn.step-1); } });
+
 function setMode(m){
-  if(S.mode==='study'&&m!=='study'){ S.ghost=1; $('#ghost').value=100; S.layers.tracts=false; const c=document.querySelector('[data-l="tracts"]'); if(c) c.checked=false; S.hemi='both'; document.querySelectorAll('#hemi button').forEach(b=>b.classList.toggle('on',b.dataset.h==='both')); }
+  if((S.mode==='study'||S.mode==='learn')&&m!==S.mode&&m!=='study'&&m!=='learn'){ S.ghost=1; $('#ghost').value=100; S.layers.tracts=false; const c=document.querySelector('[data-l="tracts"]'); if(c) c.checked=false; S.hemi='both'; document.querySelectorAll('#hemi button').forEach(b=>b.classList.toggle('on',b.dataset.h==='both')); }
   S.mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   $('#legend').hidden = !(m==='path'&&S.pathTab==='enigma' || m==='drug');
   if(m==='drug'){ $('#legendTitle').textContent='Densidad relativa de la diana (PET)'; $('#legendBar').style.background='linear-gradient(90deg,#0d1b2a,#1f4e79,#2a9d8f,#e9c46a,#f7f3e3)'; $('#legendTicks').innerHTML='<span>baja</span><span></span><span>alta</span>'; }
   else { $('#legendTitle').textContent='d de Cohen (casos − controles)'; $('#legendBar').style.background=''; $('#legendTicks').innerHTML='<span>−0,6</span><span>0</span><span>+0,6</span>'; }
   if(m!=='sim'){ if(S.tumor.R>0||S.ich.vol>0||S.met.n>0){S.tumor.R=0; S.ich.vol=0; S.met.n=0; applyTumor();} S.stroke.on=false; }
   setNT(null);
-  if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0); else if(m==='study') setTimeout(()=>studyEnter(),0);
-  if(m==='study'&&S.sel){ S.sel=null; $('#clearBtn').hidden=true; }
+  if(S.mode!=='learn'){ stopTour(); $('#tourCap').hidden=true; }
+  if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0); else if(m==='study') setTimeout(()=>studyEnter(),0); else if(m==='learn') setTimeout(()=>learnEnter(),0);
+  if((m==='study'||m==='learn')&&S.sel){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m!=='study'){ S.study.reveal=[]; S.study.wrong=null; }
   if(m!=='anat'&&S.sel&&(S.sel.kind==='nt')){ S.sel=null; $('#clearBtn').hidden=true; }
   if(m==='sim'){ S.sel=null; $('#clearBtn').hidden=true; }
@@ -3392,11 +3578,24 @@ function shadeOf(s){ const t=Math.max(0,Math.min(1,(s+12)/36)); return 1.02-0.42
 function regionSelectedV(o,i){ const s=S.sel; if(!s) return false; return selTest(o,s)(i); }
 const SEQ=['#0d1b2a','#1f4e79','#2a9d8f','#e9c46a','#f7f3e3'].map(hexRGB);
 function seqColor(t){ if(t==null) return [0.3,0.32,0.34]; t=Math.max(0,Math.min(1,t))*(SEQ.length-1); const i=Math.min(SEQ.length-2,Math.floor(t)); return mix(SEQ[i],SEQ[i+1],t-i); }
+function learnCond(){
+  const L=S.learn, c={ctx:{},deep:{},tr:{},cb:{},shrink:{},vent:1,color:null};
+  const mk=(keys,v)=>{ for(const k of keys){
+    if(k.startsWith('tr:')){ META.tracts.forEach((n,i)=>{ if(trBase(n)===k.slice(3)) c.tr[i]=(c.tr[i]&&c.tr[i]!==v)?2:v; }); continue; }
+    if(k==='cb'||k.startsWith('cb:')){ const kk=k.slice(3)||'all'; c.cb[kk]=(c.cb[kk]&&c.cb[kk]!==v)?2:v; continue; }
+    if(DK[k.replace(/^[LR]_/,'')]){ for(const nm of (/^[LR]_/.test(k)?[k]:['L_'+k,'R_'+k])) c.ctx[nm]=(c.ctx[nm]&&c.ctx[nm]!==v)?2:v; continue; }
+    const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]);
+    for(const x of set) c.deep[x]=(c.deep[x]&&c.deep[x]!==v)?2:v; } };
+  if(L.tab==='tour'&&L.tour){ const st=TOURS[L.tour].steps[L.step]; c.color=hexRGB(st.col||'#9fd8ff'); mk(st.hl||[],1); return c; }
+  if(L.tab==='diff'){ c.pair=true; mk(entKeys(L.a),1); mk(entKeys(L.b),-1); return c; }
+  return null;
+}
 function condition(){
   if(S.mode==='study'){ const c={ctx:{},deep:{},tr:{},cb:{},study:true,base:[0.8,0.78,0.74],shrink:{},vent:1};
     const put=(sp,v)=>{ const [t,...r]=sp.split(':'); const x=r.join(':');
       if(t==='c') c.ctx[x]=v; else if(t==='d') c.deep[x]=v; else if(t==='s') c.deep['stem'+x]=v; else if(t==='cb') c.cb.all=v; else if(t==='t'){ const i=META.tracts.indexOf(x); if(i>=0) c.tr[i]=v; } };
     (S.study.reveal||[]).forEach(sp=>put(sp,1)); if(S.study.wrong) put(S.study.wrong,-1); return c; }
+  if(S.mode==='learn') return learnCond();
   if(S.mode!=='path'||S.pathTab==='enigma') return null;
   const c={ctx:{},deep:{},tr:{},color:null,shrink:{},vent:1};
   const addDeep=(k,v)=>{ const set=k==='vent'?['Lvent','Rvent']:/^stem[012]$/.test(k)?[k]:/^[LR]/.test(k)&&DEEPO[k]?[k]:/^dent/.test(k)?[k]:(DEEPO[k]?[k]:['L'+k,'R'+k]); for(const x of set) c.deep[x]=Math.max(c.deep[x]||0,v); };
@@ -3419,7 +3618,7 @@ function condition(){
   return c;
 }
 let COND=null;
-function condCol(v,GREY){ if(v==null||v===0) return null; if(COND.study) return v>0?[0.55,0.84,1.0]:[0.92,0.4,0.33]; return COND.signed?divColor(v*0.6):mix(GREY,COND.color,0.45+0.55*v); }
+function condCol(v,GREY){ if(v==null||v===0) return null; if(COND.pair) return v===2?[0.78,0.6,0.88]:v>0?[0.89,0.41,0.35]:[0.35,0.66,0.9]; if(COND.study) return v>0?[0.55,0.84,1.0]:[0.92,0.4,0.33]; return COND.signed?divColor(v*0.6):mix(GREY,COND.color,0.45+0.55*v); }
 function mixWeights(){ const d=DRUGS[S.drug]; const t=drugTargets(d); return t.map(r=>[r,(d.aff[r]||d.aff[r==='M1'?'M':'']||[1])[0]]); }
 function deepRec(k){ if(S.rec==='__mix'){ let a=0,w=0; for(const [r,wt] of mixWeights()){ const v=(META.receptors[r].deep||{})[k]; if(v!=null){a+=wt*v;w+=wt;} } return w?a/w:null; } const R0=META.receptors[S.rec]; return R0?(R0.deep||{})[k]:null; }
 recolor=()=>{
@@ -3732,15 +3931,16 @@ function frame(){
     if(o.cen){ let tsc=1; if(COND&&S.mode==='path'){ const b=o.key.replace(/^[LR]/,''); if(COND.shrink[b]) tsc=COND.shrink[b]; if(o.layer==='vent') tsc=COND.vent||1; } o.sc+=(tsc-o.sc)*k; o.mesh.scale.setScalar(o.sc); }
     const pop=targets.includes(o)&&o.kind==='deep'?6:0;
     tmp.copy(o.dir).multiplyScalar(o.mag*S.explode+pop); o.off.lerp(tmp,k); o.mesh.position.copy(o.off); if(o.cen&&o.sc!==1) o.mesh.position.addScaledVector(o.cen,1-o.sc);
-    let op=o.layer==='ctx'?S.ghost:1;
+    let m0dw=true; let op=o.layer==='ctx'?S.ghost:1;
     if(targets.length&&!targets.includes(o)) op=o.layer==='ctx'?Math.min(op,0.12):0.25;
     if(o.layer==='ctx'&&S.mode==='sim'&&MS.length) op=Math.min(op,0.55);
     if(S.mode==='sim'&&MS.length&&o.layer!=='ctx'&&MS.some(M=>M.c.y<C0.y-8)&&(o.layer==='cb'||o.layer==='stem')) op=Math.min(op,0.3);
     if(o===TRO&&(S.sel&&S.sel.kind==='tr'||COND)) op=0.08;
     if(o===TRO&&S.nt) op=0.15;
-    if(S.nt&&o.layer!=='ctx'&&o!==TRO) op=Math.min(op,0.4);
+    if(S.nt&&o.layer!=='ctx'&&o!==TRO&&S.mode!=='learn') op=Math.min(op,0.4);
+    if(o.layer==='ctx'&&S.mode==='learn'&&op<0.5) m0dw=false;
     o.op+=(op-o.op)*k; const m=o.mesh.material;
-    if(o.layer==='ctx'){ const sd=o.op<0.97?THREE.FrontSide:THREE.DoubleSide; if(m.side!==sd){ m.side=sd; m.needsUpdate=true; } } m.opacity=o.op; m.depthWrite=o.layer==='ctx'?true:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
+    if(o.layer==='ctx'){ const sd=o.op<0.97?THREE.FrontSide:THREE.DoubleSide; if(m.side!==sd){ m.side=sd; m.needsUpdate=true; } } m.opacity=o.op; m.depthWrite=o.layer==='ctx'?m0dw:o.op>0.6; o.mesh.renderOrder=o.op>0.6?0:2;
     m.emissive.setRGB(0,0,0); if(targets.includes(o)&&o!==TRO) m.emissive.setRGB(0.12,0.12,0.12);
     if(S.hover&&!S.sel&&((S.hover.kind==='deep'&&o.key===S.hover.key))) m.emissive.setRGB(0.08,0.08,0.08);
   }
@@ -3789,7 +3989,7 @@ const UIK = ["Módulo {0} · Encéfalo","Anatomía","Patología","Simulación","
 "Axial · z = {0} mm (MNI)","Coronal · y = {0} mm (MNI)","Sagital · x = {0} mm (MNI)","Anterior a la derecha","Izquierda del paciente a la izquierda","Fuera del encéfalo",
 "Idioma","Traduciendo con Claude…","Traducción automática con Claude; puede contener errores.",
 "Traducción automática no disponible aquí: el texto sin paquete se muestra en español.","Límite de uso alcanzado; inténtalo más tarde.",
-"Exportar traducciones","Traducción pausada por un error; toca para reintentar.","Tracto:"];
+"Exportar traducciones","Traducción pausada por un error; toca para reintentar.","Tracto:","Aprender"];
 
 const UIPACK = {
 en:["Module {0} · Brain","Anatomy","Pathology","Simulation","Drugs","Study","Loading cortical surfaces and nuclei…","View",
@@ -3803,7 +4003,7 @@ en:["Module {0} · Brain","Anatomy","Pathology","Simulation","Drugs","Study","Lo
 "Axial · z = {0} mm (MNI)","Coronal · y = {0} mm (MNI)","Sagittal · x = {0} mm (MNI)","Anterior to the right","Patient's left on the left","Outside the brain",
 "Language","Translating with Claude…","Machine translation by Claude; may contain errors.",
 "Machine translation is not available here: text without a language pack is shown in Spanish.","Usage limit reached; try again later.",
-"Export translations","Translation paused by an error; tap to retry.","Tract:"],
+"Export translations","Translation paused by an error; tap to retry.","Tract:","Learn"],
 fr:["Module {0} · Encéphale","Anatomie","Pathologie","Simulation","Médicaments","Étude","Chargement des surfaces corticales et des noyaux…","Vue",
 "supérieure","inférieure","antérieure","postérieure","latérale gauche","latérale droite","médiale gauche","médiale droite",
 "antérolatérale gauche","antérolatérale droite","postérolatérale gauche","postérolatérale droite",
@@ -3815,7 +4015,7 @@ fr:["Module {0} · Encéphale","Anatomie","Pathologie","Simulation","Médicament
 "Axiale · z = {0} mm (MNI)","Coronale · y = {0} mm (MNI)","Sagittale · x = {0} mm (MNI)","Antérieur à droite","Gauche du patient à gauche","Hors de l'encéphale",
 "Langue","Traduction avec Claude…","Traduction automatique par Claude ; peut contenir des erreurs.",
 "Traduction automatique indisponible ici : le texte sans pack linguistique s'affiche en espagnol.","Limite d'utilisation atteinte ; réessayez plus tard.",
-"Exporter les traductions","Traduction interrompue par une erreur ; touchez pour réessayer.","Faisceau :"],
+"Exporter les traductions","Traduction interrompue par une erreur ; touchez pour réessayer.","Faisceau :","Apprendre"],
 de:["Modul {0} · Gehirn","Anatomie","Pathologie","Simulation","Medikamente","Lernen","Kortikale Oberflächen und Kerne werden geladen…","Ansicht",
 "superior","inferior","anterior","posterior","lateral links","lateral rechts","medial links","medial rechts",
 "anterolateral links","anterolateral rechts","posterolateral links","posterolateral rechts",
@@ -3827,7 +4027,7 @@ de:["Modul {0} · Gehirn","Anatomie","Pathologie","Simulation","Medikamente","Le
 "Axial · z = {0} mm (MNI)","Koronar · y = {0} mm (MNI)","Sagittal · x = {0} mm (MNI)","Anterior rechts","Linke Patientenseite links","Außerhalb des Gehirns",
 "Sprache","Übersetzung mit Claude…","Maschinelle Übersetzung durch Claude; kann Fehler enthalten.",
 "Maschinelle Übersetzung ist hier nicht verfügbar: Text ohne Sprachpaket wird auf Spanisch angezeigt.","Nutzungslimit erreicht; später erneut versuchen.",
-"Übersetzungen exportieren","Übersetzung wegen eines Fehlers angehalten; zum Wiederholen antippen.","Bahn:"],
+"Übersetzungen exportieren","Übersetzung wegen eines Fehlers angehalten; zum Wiederholen antippen.","Bahn:","Lernpfade"],
 pt:["Módulo {0} · Encéfalo","Anatomia","Patologia","Simulação","Fármacos","Estudo","Carregando superfícies corticais e núcleos…","Vista",
 "superior","inferior","anterior","posterior","lateral esquerda","lateral direita","medial esquerda","medial direita",
 "anterolateral esquerda","anterolateral direita","posterolateral esquerda","posterolateral direita",
@@ -3839,7 +4039,7 @@ pt:["Módulo {0} · Encéfalo","Anatomia","Patologia","Simulação","Fármacos",
 "Axial · z = {0} mm (MNI)","Coronal · y = {0} mm (MNI)","Sagital · x = {0} mm (MNI)","Anterior à direita","Esquerda do paciente à esquerda","Fora do encéfalo",
 "Idioma","Traduzindo com Claude…","Tradução automática pelo Claude; pode conter erros.",
 "Tradução automática indisponível aqui: o texto sem pacote é exibido em espanhol.","Limite de uso atingido; tente mais tarde.",
-"Exportar traduções","Tradução pausada por um erro; toque para tentar de novo.","Trato:"],
+"Exportar traduções","Tradução pausada por um erro; toque para tentar de novo.","Trato:","Aprender"],
 it:["Modulo {0} · Encefalo","Anatomia","Patologia","Simulazione","Farmaci","Studio","Caricamento delle superfici corticali e dei nuclei…","Vista",
 "superiore","inferiore","anteriore","posteriore","laterale sinistra","laterale destra","mediale sinistra","mediale destra",
 "anterolaterale sinistra","anterolaterale destra","posterolaterale sinistra","posterolaterale destra",
@@ -3851,7 +4051,7 @@ it:["Modulo {0} · Encefalo","Anatomia","Patologia","Simulazione","Farmaci","Stu
 "Assiale · z = {0} mm (MNI)","Coronale · y = {0} mm (MNI)","Sagittale · x = {0} mm (MNI)","Anteriore a destra","Sinistra del paziente a sinistra","Fuori dall'encefalo",
 "Lingua","Traduzione con Claude…","Traduzione automatica di Claude; può contenere errori.",
 "Traduzione automatica non disponibile qui: il testo senza pacchetto è mostrato in spagnolo.","Limite di utilizzo raggiunto; riprova più tardi.",
-"Esporta traduzioni","Traduzione sospesa per un errore; tocca per riprovare.","Tratto:"],
+"Esporta traduzioni","Traduzione sospesa per un errore; tocca per riprovare.","Tratto:","Imparare"],
 ru:["Модуль {0} · Головной мозг","Анатомия","Патология","Моделирование","Препараты","Обучение","Загрузка поверхностей коры и ядер…","Вид",
 "верхний","нижний","передний","задний","левый латеральный","правый латеральный","левый медиальный","правый медиальный",
 "левый переднебоковой","правый переднебоковой","левый заднебоковой","правый заднебоковой",
@@ -3863,7 +4063,7 @@ ru:["Модуль {0} · Головной мозг","Анатомия","Пато
 "Аксиальный · z = {0} мм (MNI)","Корональный · y = {0} мм (MNI)","Сагиттальный · x = {0} мм (MNI)","Передняя сторона справа","Левая сторона пациента слева","Вне мозга",
 "Язык","Перевод с помощью Claude…","Машинный перевод Claude; возможны ошибки.",
 "Машинный перевод здесь недоступен: текст без языкового пакета показан на испанском.","Достигнут лимит использования; попробуйте позже.",
-"Экспорт переводов","Перевод приостановлен из-за ошибки; нажмите, чтобы повторить.","Тракт:"],
+"Экспорт переводов","Перевод приостановлен из-за ошибки; нажмите, чтобы повторить.","Тракт:","Маршруты"],
 zh:["模块 {0} · 脑","解剖","病理","模拟","药物","学习","正在加载皮层表面和核团…","视图",
 "上面","下面","前面","后面","左外侧","右外侧","左内侧","右内侧","左前外侧","右前外侧","左后外侧","右后外侧",
 "拖动旋转 · 滚轮或双指缩放 · 点击区域","Cohen d 值（病例 − 对照）","清除选择","将光标移到切片上",
@@ -3872,7 +4072,7 @@ zh:["模块 {0} · 脑","解剖","病理","模拟","药物","学习","正在加�
 "核团","脑室","小脑","脑干","靶点相对密度（PET）","低","高","相对活动或体积（示意）","降低","无变化","升高",
 "轴位 · z = {0} mm (MNI)","冠状位 · y = {0} mm (MNI)","矢状位 · x = {0} mm (MNI)","前方在右侧","患者左侧在左","脑外",
 "语言","正在用 Claude 翻译…","由 Claude 机器翻译，可能有误。","此处无法使用机器翻译：没有语言包的文本以西班牙语显示。","已达使用上限，请稍后再试。",
-"导出翻译","翻译因错误暂停，点击重试。","纤维束："],
+"导出翻译","翻译因错误暂停，点击重试。","纤维束：","导学"],
 ja:["モジュール {0} · 脳","解剖","病理","シミュレーション","薬剤","学習","皮質表面と神経核を読み込み中…","表示",
 "上面","下面","前面","後面","左外側","右外側","左内側","右内側","左前外側","右前外側","左後外側","右後外側",
 "ドラッグで回転 · ホイールまたはピンチで拡大 · 領域をタップ","Cohen の d（患者 − 対照）","選択を解除","断面上にカーソルを置いてください",
@@ -3881,7 +4081,7 @@ ja:["モジュール {0} · 脳","解剖","病理","シミュレーション","�
 "神経核","脳室","小脳","脳幹","標的の相対密度（PET）","低","高","相対的活動または体積（模式）","低下","変化なし","上昇",
 "軸位 · z = {0} mm (MNI)","冠状 · y = {0} mm (MNI)","矢状 · x = {0} mm (MNI)","右が前方","患者の左が左","脳外",
 "言語","Claude で翻訳中…","Claude による機械翻訳です。誤りを含む場合があります。","ここでは機械翻訳を利用できません。言語パックのない文はスペイン語で表示されます。","利用上限に達しました。後でもう一度お試しください。",
-"翻訳をエクスポート","エラーで翻訳を一時停止しました。タップして再試行。","線維束："],
+"翻訳をエクスポート","エラーで翻訳を一時停止しました。タップして再試行。","線維束：","ガイド"],
 ko:["모듈 {0} · 뇌","해부","병리","시뮬레이션","약물","학습","피질 표면과 핵을 불러오는 중…","보기",
 "위쪽","아래쪽","앞쪽","뒤쪽","왼쪽 가쪽","오른쪽 가쪽","왼쪽 안쪽","오른쪽 안쪽","왼쪽 앞가쪽","오른쪽 앞가쪽","왼쪽 뒤가쪽","오른쪽 뒤가쪽",
 "드래그하여 회전 · 휠 또는 핀치로 확대 · 영역을 탭하세요","Cohen의 d (환자 − 대조군)","선택 해제","단면 위에 커서를 올리세요",
@@ -3890,7 +4090,7 @@ ko:["모듈 {0} · 뇌","해부","병리","시뮬레이션","약물","학습","�
 "핵","뇌실","소뇌","뇌간","표적 상대 밀도 (PET)","낮음","높음","상대적 활성 또는 부피 (모식)","감소","변화 없음","증가",
 "축상 · z = {0} mm (MNI)","관상 · y = {0} mm (MNI)","시상 · x = {0} mm (MNI)","오른쪽이 앞쪽","환자의 왼쪽이 왼쪽","뇌 밖",
 "언어","Claude로 번역 중…","Claude 기계 번역이며 오류가 있을 수 있습니다.","여기서는 기계 번역을 사용할 수 없습니다. 언어 팩이 없는 텍스트는 스페인어로 표시됩니다.","사용 한도에 도달했습니다. 나중에 다시 시도하세요.",
-"번역 내보내기","오류로 번역이 일시 중지되었습니다. 탭하여 다시 시도하세요.","신경로:"],
+"번역 내보내기","오류로 번역이 일시 중지되었습니다. 탭하여 다시 시도하세요.","신경로:","가이드"],
 ar:["الوحدة {0} · الدماغ","التشريح","علم الأمراض","المحاكاة","الأدوية","الدراسة","جارٍ تحميل أسطح القشرة والنوى…","المنظر",
 "علوي","سفلي","أمامي","خلفي","وحشي أيسر","وحشي أيمن","إنسي أيسر","إنسي أيمن","أمامي وحشي أيسر","أمامي وحشي أيمن","خلفي وحشي أيسر","خلفي وحشي أيمن",
 "اسحب للتدوير · العجلة أو القرص للتكبير · المس منطقة","d لكوهين (الحالات − الضوابط)","إلغاء التحديد","مرّر المؤشر فوق المقطع",
@@ -3899,7 +4099,7 @@ ar:["الوحدة {0} · الدماغ","التشريح","علم الأمراض",
 "النوى","البطينات","المخيخ","جذع الدماغ","الكثافة النسبية للهدف (PET)","منخفضة","مرتفعة","النشاط أو الحجم النسبي (تخطيطي)","أقل","دون تغيير","أكبر",
 "محوري · z = {0} مم (MNI)","إكليلي · y = {0} مم (MNI)","سهمي · x = {0} مم (MNI)","الأمام إلى اليمين","يسار المريض على اليسار","خارج الدماغ",
 "اللغة","جارٍ الترجمة باستخدام Claude…","ترجمة آلية بواسطة Claude؛ قد تحتوي على أخطاء.","الترجمة الآلية غير متاحة هنا: يُعرض النص الذي لا توجد له حزمة لغوية بالإسبانية.","تم بلوغ حد الاستخدام؛ حاول لاحقًا.",
-"تصدير الترجمات","توقفت الترجمة بسبب خطأ؛ المس لإعادة المحاولة.","المسلك:"],
+"تصدير الترجمات","توقفت الترجمة بسبب خطأ؛ المس لإعادة المحاولة.","المسلك:","تعلّم"],
 he:["מודול {0} · מוח","אנטומיה","פתולוגיה","סימולציה","תרופות","לימוד","טוען משטחי קורטקס וגרעינים…","מבט",
 "עליון","תחתון","קדמי","אחורי","צידי שמאלי","צידי ימני","מדיאלי שמאלי","מדיאלי ימני","קדמי-צידי שמאלי","קדמי-צידי ימני","אחורי-צידי שמאלי","אחורי-צידי ימני",
 "גרור לסיבוב · גלגלת או צביטה להגדלה · הקש על אזור","d של כהן (מקרים − ביקורת)","נקה בחירה","העבר את הסמן מעל החתך",
@@ -3908,7 +4108,7 @@ he:["מודול {0} · מוח","אנטומיה","פתולוגיה","סימולצ
 "גרעינים","חדרים","מוחון","גזע המוח","צפיפות יחסית של המטרה (PET)","נמוכה","גבוהה","פעילות או נפח יחסיים (סכמטי)","פחות","ללא שינוי","יותר",
 "אקסיאלי · z = {0} מ״מ (MNI)","קורונלי · y = {0} מ״מ (MNI)","סגיטלי · x = {0} מ״מ (MNI)","קדמי מימין","שמאל המטופל משמאל","מחוץ למוח",
 "שפה","מתרגם עם Claude…","תרגום מכונה של Claude; עלול להכיל שגיאות.","תרגום מכונה אינו זמין כאן: טקסט ללא חבילת שפה מוצג בספרדית.","הגעת למגבלת השימוש; נסה שוב מאוחר יותר.",
-"ייצוא תרגומים","התרגום הושהה בגלל שגיאה; הקש לניסיון חוזר.","מסילה:"],
+"ייצוא תרגומים","התרגום הושהה בגלל שגיאה; הקש לניסיון חוזר.","מסילה:","הדרכה"],
 hi:["मॉड्यूल {0} · मस्तिष्क","शरीर रचना","विकृति विज्ञान","सिमुलेशन","दवाएँ","अध्ययन","कॉर्टिकल सतहें और नाभिक लोड हो रहे हैं…","दृश्य",
 "ऊपरी","निचला","अग्र","पश्च","बायाँ पार्श्व","दायाँ पार्श्व","बायाँ मध्य","दायाँ मध्य","बायाँ अग्र-पार्श्व","दायाँ अग्र-पार्श्व","बायाँ पश्च-पार्श्व","दायाँ पश्च-पार्श्व",
 "घुमाने के लिए खींचें · ज़ूम के लिए व्हील या पिंच · किसी क्षेत्र पर टैप करें","कोहेन का d (रोगी − नियंत्रण)","चयन हटाएँ","कर्सर को सेक्शन पर ले जाएँ",
@@ -3917,7 +4117,7 @@ hi:["मॉड्यूल {0} · मस्तिष्क","शरीर रच
 "नाभिक","निलय","अनुमस्तिष्क","मस्तिष्क स्तंभ","लक्ष्य का सापेक्ष घनत्व (PET)","कम","अधिक","सापेक्ष गतिविधि या आयतन (योजनाबद्ध)","कम","कोई बदलाव नहीं","अधिक",
 "अक्षीय · z = {0} mm (MNI)","कोरोनल · y = {0} mm (MNI)","सैजिटल · x = {0} mm (MNI)","आगे का भाग दाईं ओर","रोगी का बायाँ बाईं ओर","मस्तिष्क के बाहर",
 "भाषा","Claude से अनुवाद हो रहा है…","Claude द्वारा मशीनी अनुवाद; इसमें त्रुटियाँ हो सकती हैं।","यहाँ मशीनी अनुवाद उपलब्ध नहीं है: बिना भाषा पैक वाला पाठ स्पेनिश में दिखाया जाता है।","उपयोग सीमा पूरी हो गई; बाद में पुनः प्रयास करें।",
-"अनुवाद निर्यात करें","त्रुटि के कारण अनुवाद रुका; पुनः प्रयास के लिए टैप करें।","ट्रैक्ट:"]
+"अनुवाद निर्यात करें","त्रुटि के कारण अनुवाद रुका; पुनः प्रयास के लिए टैप करें।","ट्रैक्ट:","सीखें"]
 };
 
 const I18N = (()=>{
