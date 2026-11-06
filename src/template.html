@@ -910,7 +910,7 @@ function renderECase(){ const L=S.learn, best=store.get('ecbest',{});
     if(last) h+=`<div class="warnbox" style="border-color:${QTXT[last.q][1]}"><b>${QTXT[last.q][0]}.</b> ${last.fb}</div>`;
     h+=`<div class="stat"><div><b>${ok} / ${n}</b><span>decisiones adecuadas</span></div><div><b>${pct}%</b><span>resultado</span></div><div><b>${nd.good?'Favorable':'Desfavorable'}</b><span>evolución</span></div></div>
     <h3>Tu razonamiento, paso a paso</h3><ol class="eclog">${L.ec.log.map(e=>`<li><span style="color:${QTXT[e.q][1]};font-family:var(--mono);font-size:11px">${QTXT[e.q][0].toUpperCase()}</span><br><b>${e.t}:</b> ${e.l}<br><span style="color:var(--muted)">${e.fb}</span></li>`).join('')}</ol>
-    <p><button class="lnk" id="ecAgain">Repetir el caso</button> · <button class="lnk" data-go="${nd.go}">Abrir la ficha relacionada</button></p>`;
+    <p><button class="lnk" id="ecAgain">Repetir el caso</button>${nd.go?` · <button class="lnk" data-go="${nd.go}">Abrir la ficha relacionada</button>`:''}</p>`;
     if(C.refs) h+=refsHtml(C.refs);
     if(!L.ec.saved){ L.ec.saved=true; const b=store.get('ecbest',{}); b[L.ec.id]=Math.max(b[L.ec.id]||0,pct); store.set('ecbest',b); } }
   return h; }
