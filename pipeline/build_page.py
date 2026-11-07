@@ -3,7 +3,7 @@ import base64, pathlib
 root = pathlib.Path(__file__).resolve().parents[1]
 s = (root / 'src/template.html').read_text(encoding='utf-8')
 meta = (root / 'build/meta.json').read_text(encoding='utf-8')
-content = (root / 'src/content.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content2.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content3.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content4.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content5.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content6.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content7.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content8.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content9.js').read_text(encoding='utf-8')
+content = (root / 'src/content.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content2.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content3.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content4.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content5.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content6.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content7.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content8.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content9.js').read_text(encoding='utf-8') + '\n' + (root / 'src/content10.js').read_text(encoding='utf-8')
 b64 = base64.b64encode((root / 'build/atlas.bin.gz').read_bytes()).decode()
 import json
 i18n = (root / 'src/i18n.js').read_text(encoding='utf-8')

@@ -244,7 +244,7 @@ const META = /*META*/null;
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false,thn:false,bsn:false},trColor:'cls',nt:null,
-  learn:{tab:'route',route:null,tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'}};
+  learn:{tab:'route',route:null,tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'},xa:{type:'edh',site:'temporal',side:'L',vol:0,src:'acomm',thick:true,ivh:false,hh:1,day:5}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -544,16 +544,57 @@ function renderEnigma(){
   const nb=$('#ntBtn'); if(nb) nb.onclick=()=>{ if(S.nt&&S.nt.from===S.dis) setNT(null); else setNT({...NTVIEW[S.dis],from:S.dis}); renderPath(); };
 }
 const ichR=v=>v>0?10*Math.cbrt(3*v/(4*Math.PI)):0;
-const SIMTABS=[['isq','Ictus isquémico'],['ich','Hemorragia'],['gbm','Glioblastoma'],['met','Metástasis']];
+const BLOOD=[0.55,0.08,0.12], HERNC=[0.96,0.64,0.12];
+function sahWeights(){ const x=S.xa, Sr=SAHSRC[x.src], ip=x.side, cp=ip==='L'?'R':'L', f=x.thick?1:0.55, out={ctx:{},deep:{}};
+  const put=(k,w)=>{ const m=k.match(/^([ic]):(.*)$/); const sides=m?[m[1]==='i'?ip:cp]:['L','R']; const n=m?m[2]:k;
+    if(DK[n]) for(const sd of sides){ const kk=sd+'_'+n; out.ctx[kk]=Math.max(out.ctx[kk]||0,w); }
+    else if(/^stem|^v[34]$/.test(n)) out.deep[n]=Math.max(out.deep[n]||0,w); };
+  for(const [k,w] of Object.entries(Sr.w)) put(k,w*f);
+  if(x.thick&&x.src!=='perimes') for(const k of ['medialorbitofrontal','parahippocampal','entorhinal','temporalpole','insula']) put(k,0.4);
+  if(x.ivh){ for(const k of ['Lvent','Rvent','v3','v4']) out.deep[k]=0.95; }
+  return out; }
+function hernZones(H){ if(!H) return null; const z={ctx:{},deep:{},cb:{}}, sd=H.side;
+  if(H.sub) for(const n of ['caudalanteriorcingulate','posteriorcingulate','isthmuscingulate']) z.ctx[sd+'_'+n]=1;
+  if(H.uncal){ for(const n of ['parahippocampal','entorhinal']) z.ctx[sd+'_'+n]=1; z.deep.stem0=1; }
+  if(H.central){ z.deep.Lthal=z.deep.Rthal=z.deep.hth=1; z.deep.stem0=1; }
+  if(H.tonsil){ z.cb.ix=1; z.deep.stem2=1; }
+  if(H.up){ z.cb.vermis=1; z.deep.stem0=1; }
+  return z; }
+function icpOf(V,res){ return V<=res?8+7*V/res:Math.min(90,15*Math.exp((V-res)/45)); }
+function mkBlock(H){ if(!H) return '';
+  const icp=icpOf(H.Vt,H.res), cpp=90-icp, W=300,Hh=120, xm=H.res+90, X=v=>18+v/xm*(W-26), Y=p=>Hh-14-p/90*(Hh-24);
+  let path=''; for(let v=0;v<=xm;v+=2) path+=(v?'L':'M')+X(v).toFixed(1)+' '+Y(icpOf(v,H.res)).toFixed(1);
+  return `<h3>Presión intracraneal</h3><svg viewBox="0 0 ${W} ${Hh}" style="width:100%;max-width:420px" role="img" aria-label="Curva presión-volumen">
+   <rect x="${X(0)}" y="8" width="${X(H.res)-X(0)}" height="${Hh-22}" fill="var(--line)" opacity="0.35"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+   <line x1="18" x2="${W-8}" y1="${Y(20)}" y2="${Y(20)}" stroke="#d9a04a" stroke-dasharray="3 3"/><text x="${W-10}" y="${Y(20)-3}" text-anchor="end" font-size="9" fill="#d9a04a">20 mmHg</text>
+   <circle cx="${X(Math.min(H.Vt,xm))}" cy="${Y(icp)}" r="5" fill="#e2685a"/><text x="${X(H.res)/2+9}" y="${Hh-18}" font-size="9" fill="var(--muted)">reserva</text>
+   <text x="18" y="${Hh-2}" font-size="9" fill="var(--muted)">volumen añadido (mL)</text><text x="6" y="14" font-size="9" fill="var(--muted)">PIC</text></svg>
+  <div class="stat"><div><b>${fmt(H.Vt,0)}</b><span>mL añadidos (masa y edema)</span></div><div><b>${icp.toFixed(0)}</b><span>mmHg de PIC aproximada</span></div><div><b>${cpp.toFixed(0)}</b><span>mmHg de presión de perfusión (PAM 90)</span></div></div>
+  <p style="color:var(--muted);font-size:13px">Doctrina de Monro-Kellie: el cráneo es una caja rígida con encéfalo, sangre y líquido cefalorraquídeo. Un volumen nuevo se compensa al principio expulsando líquido y sangre venosa (zona sombreada, mayor si hay atrofia); agotada esa reserva, cada mililitro sube mucho la presión. Curva didáctica, no calibrada para un paciente.</p>
+  ${icp>40?'<div class="warnbox">Presión muy alta: la tríada de Cushing (hipertensión, bradicardia y respiración irregular) indica compresión del tronco y herniación inminente.</div>':''}`; }
+function hernBlock(H){ if(!H) return '';
+  let h=`<h3>Desplazamiento y herniación</h3>`;
+  if(!H.infraOnly) h+=`<div class="stat"><div><b>${fmt(H.mls)}</b><span>mm de desviación del septo</span></div><div><b>${fmt(H.pineal)}</b><span>mm de desviación de la pineal</span></div><div><b>${ropperLevel(H.pineal)}</b><span>nivel de conciencia esperable</span></div></div>
+   <p style="color:var(--muted);font-size:13px">Ropper (1986) relacionó el desplazamiento horizontal de la pineal con la conciencia en masas hemisféricas agudas: 0–3 mm alerta, 3–4 mm somnolencia, 6–8,5 mm estupor y 8–13 mm coma. El deterioro precoz se debe más al desplazamiento lateral que a la compresión del tronco.</p>`;
+  const L=[];
+  if(H.sub) L.push(`<b>Subfalcina.</b> El giro cingulado se desliza bajo el borde libre de la hoz. Suele ser silenciosa; si comprime la cerebral anterior, produce paresia crural contralateral o infarto frontal medial.`);
+  if(H.uncal) L.push(`<b>Transtentorial lateral (uncal).</b> El uncus y el giro parahipocampal se hernian por la incisura de la tienda y comprimen el III par (midriasis ${H.side==='L'?'izquierda':'derecha'}, primero reactiva y luego fija), el pedúnculo cerebral (hemiparesia contralateral) y la cerebral posterior (infarto occipital). Si el pedúnculo opuesto choca contra la tienda, la hemiparesia aparece del mismo lado de la lesión (escotadura de Kernohan), un signo falsamente localizador.`);
+  if(H.central) L.push(`<b>Transtentorial central.</b> El diencéfalo y el mesencéfalo descienden: deterioro rostrocaudal con pupilas pequeñas que pasan a medias y fijas, respiración de Cheyne-Stokes, decorticación y luego descerebración. El estiramiento de las perforantes de la basilar causa hemorragias de Duret en el tronco.`);
+  if(H.up) L.push(`<b>Ascendente.</b> El vermis superior sube por la incisura y comprime el mesencéfalo y el acueducto; puede precipitarla un drenaje ventricular brusco con una masa en la fosa posterior.`);
+  if(H.tonsil) L.push(`<b>Amigdalar.</b> Las amígdalas cerebelosas descienden por el agujero magno y comprimen el bulbo: rigidez de nuca, bradicardia, hipertensión, apnea y muerte súbita. Es la herniación que más rápido mata; por eso las masas de fosa posterior con efecto de masa se operan pronto.`);
+  h+=L.length?`<ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul><p style="color:var(--muted);font-size:13px">En ámbar, las estructuras que se hernian o quedan comprimidas. <button class="lnk" data-hview="${H.side}">Verlas por la cara medial →</button></p>`:`<p style="color:var(--muted)">Sin herniación por ahora.</p>`;
+  return h; }
+const SIMTABS=[['isq','Ictus isquémico'],['ich','Hemorragia'],['xa','Extraaxial y herniación'],['gbm','Glioblastoma'],['met','Metástasis']];
 const fmt=(x,d=1)=>x.toFixed(d).replace('.',',');
 function renderSim(){
   const t=S.simTab;
   let h=`<p class="kicker">Simulación didáctica</p><h2>Lesiones</h2><p class="sub2">Qué ocurre cuando falla una arteria, sangra un vaso o crece una masa</p>
   <div class="seg" id="simTabs" style="margin-bottom:16px">${SIMTABS.map(([k,l])=>`<button data-st="${k}" class="${t===k?'on':''}">${l}</button>`).join('')}</div>`;
-  if(t==='isq') h+=simIsq(); else if(t==='ich') h+=simIch(); else if(t==='gbm') h+=simGbm(); else h+=simMet();
+  if(t==='isq') h+=simIsq(); else if(t==='ich') h+=simIch(); else if(t==='xa') h+=simXa(); else if(t==='gbm') h+=simGbm(); else h+=simMet();
   pin.innerHTML=h;
-  pin.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{ if(S.simTab===b.dataset.st) return; S.simTab=b.dataset.st; S.stroke.on=false; S.tumor.R=0; S.ich.vol=0; S.met.n=0; applyTumor(); recolor(); renderSim(); });
-  if(t==='isq') bindIsq(); else if(t==='ich') bindIch(); else if(t==='gbm') bindGbm(); else bindMet();
+  pin.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{ if(S.simTab===b.dataset.st) return; S.simTab=b.dataset.st; S.stroke.on=false; S.tumor.R=0; S.ich.vol=0; S.met.n=0; S.xa.vol=0; applyTumor(); recolor(); renderSim(); });
+  pin.querySelectorAll('[data-hview]').forEach(b=>b.onclick=()=>hernView(b.dataset.hview));
+  if(t==='isq') bindIsq(); else if(t==='ich') bindIch(); else if(t==='xa') bindXa(); else if(t==='gbm') bindGbm(); else bindMet();
 }
 function simIsq(){
   const st=S.stroke, A=STROKE[st.art];
@@ -589,6 +630,7 @@ function simIch(){
   <dl class="facts" style="margin-top:10px">${parts.map(([v,l])=>`<dt>${l}</dt><dd>${v} ${v===1?'punto':'puntos'}</dd>`).join('')}</dl>
   <p style="margin-top:8px"><b>Puntuación ${sc} de 6.</b> Mortalidad a 30 días en la cohorte original: ${ICHMORT[Math.min(sc,6)]}%${sc>=5?' (ningún paciente con 6 en la serie de derivación)':''}.</p>
   <div class="warnbox">La escala resume el riesgo de un grupo; no debe decidir por sí sola limitar el tratamiento de un paciente. Las órdenes precoces de no reanimar empeoran el pronóstico y convierten la predicción en una profecía autocumplida.</div>
+  ${I.vol>0?hernBlock(hernState())+mkBlock(hernState()):''}
   <h3>Manejo inicial</h3><ul>${HEMTX.map(x=>`<li>${x}</li>`).join('')}</ul>
   <p class="note">Modelo didáctico: el hematoma se representa como una esfera que desplaza el tejido; el edema perihematoma real crece durante días. La hemorragia hipertensiva afecta sobre todo a los territorios de las arterias perforantes (putamen, tálamo, protuberancia, cerebelo); la lobar en personas mayores sugiere angiopatía amiloide.</p>`;
   return h;
@@ -599,13 +641,61 @@ function bindIch(){ const I=S.ich;
   pin.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{ I.gcs=+b.dataset.g; renderSim(); });
   $('#ichIvh').onchange=e=>{ I.ivh=e.target.checked; renderSim(); }; $('#ichOld').onchange=e=>{ I.old=e.target.checked; renderSim(); }; }
 
+/* hemorragias extraaxiales y herniación */
+function xaPlan(x,T,H){ const mls=H?H.mls:0, lvl=H?ropperLevel(H.pineal):'alerta';
+  if(x.type==='edh'){ if(XATYPES.edh.sites[x.site].cb) return `Un hematoma epidural de fosa posterior con efecto de masa (compresión del cuarto ventrículo o de las cisternas) se evacua de forma urgente: el margen antes de la compresión del bulbo es muy pequeño.`;
+    if(x.vol>30) return `Más de 30 mL: evacuación quirúrgica con craneotomía sea cual sea el Glasgow (guía de la Brain Trauma Foundation, Bullock y cols., 2006).`;
+    if(T>=15||mls>=5) return `Aunque no supera los 30 mL, el grosor (${fmt(T)} mm) o la desviación (${fmt(mls)} mm) superan los umbrales de 15 mm y 5 mm: la indicación habitual es quirúrgica.`;
+    return `Menos de 30 mL, menos de 15 mm de grosor y menos de 5 mm de desviación: si el Glasgow es mayor de 8 y no hay déficit focal, puede vigilarse con TC seriadas en un centro con neurocirugía. Cualquier deterioro, y sobre todo coma con anisocoria, obliga a operar de inmediato.`; }
+  if(x.type==='asdh'){ if(T>10||mls>5) return `Grosor de ${fmt(T)} mm o desviación de ${fmt(mls)} mm: por encima de 10 mm o de 5 mm la guía recomienda evacuar sea cual sea el Glasgow (Bullock y cols., 2006), mediante craneotomía y, si el cerebro está muy edematoso, craniectomía descompresiva.`;
+    return `Hematoma fino y con poca desviación: si el Glasgow es menor de 9, se opera cuando cae 2 o más puntos, aparece asimetría o midriasis pupilar o la presión intracraneal supera 20 mmHg; si el paciente está consciente, vigilancia y TC de control. Revertir la anticoagulación en cualquier caso.`; }
+  return `Si da síntomas, evacuación por uno o dos trépanos con lavado y un drenaje subdural durante unos días: el drenaje redujo las recurrencias a menos de la mitad (Santarius y cols., 2009). La dexametasona empeoró los resultados funcionales y no debe usarse (Hutchinson y cols., 2020). La embolización de la arteria meníngea media, que irriga las membranas, redujo la reintervención o la progresión en tres ensayos de 2024 (Davies; Liu; Fiorella). En colecciones pequeñas y asintomáticas, vigilancia y retirada o ajuste de los antitrombóticos.`; }
+function sahFisher(x){ return x.thick?(x.ivh?4:3):(x.ivh?2:1); }
+function sahDay(d){ if(d<3) return `Días 0 a 2: el mayor riesgo es el resangrado, por eso el aneurisma se asegura cuanto antes. También es el momento de la hidrocefalia aguda. Todavía no hay vasoespasmo.`;
+  if(d<=14) return `Día ${d}: ventana del vasoespasmo y de la isquemia cerebral diferida (días 3 a 14, con máximo hacia los días 7 a 10). Un nuevo déficit focal o una caída de conciencia obliga a descartar hidrocefalia, crisis, hiponatremia o fiebre, y si no las hay, a tratarlo como isquemia por vasoespasmo.`;
+  return `Día ${d}: el riesgo de vasoespasmo ha disminuido. Quedan la hidrocefalia crónica, que puede requerir una derivación, y las secuelas cognitivas y emocionales, frecuentes incluso con buena recuperación motora: fatiga, alteración de la memoria, ansiedad y depresión.`; }
+function simXa(){ const x=S.xa, D=XATYPES[x.type];
+  let h=`<div class="chips" id="xaType">${Object.keys(XATYPES).map(k=>`<button class="chip ${x.type===k?'on':''}" data-xt="${k}">${XATYPES[k].es}</button>`).join('')}</div>
+  <div class="rngrow"><span class="lab">Lado</span><div class="seg" id="xaSide"><button data-xs="L" class="${x.side==='L'?'on':''}">Izquierdo</button><button data-xs="R" class="${x.side==='R'?'on':''}">Derecho</button></div></div>`;
+  if(x.type==='sah'){ const Sr=SAHSRC[x.src], fg=sahFisher(x);
+    h+=`<label class="lab" for="sahSrc">Origen</label><select id="sahSrc" style="margin-top:6px">${Object.keys(SAHSRC).map(k=>`<option value="${k}" ${k===x.src?'selected':''}>${SAHSRC[k].es}</option>`).join('')}</select>
+    <div style="margin-top:10px"><label class="chk"><input type="checkbox" id="sahThick" ${x.thick?'checked':''}>Sangre gruesa (1 mm o más)</label> <label class="chk"><input type="checkbox" id="sahIvh" ${x.ivh?'checked':''}>Sangre en los ventrículos</label></div>
+    <p style="margin-top:10px">${Sr.txt}</p>
+    <h3>Escala de Fisher modificada</h3><p><b>${FISHERM[fg]}</b> Cuanta más sangre en las cisternas y los ventrículos, mayor el riesgo de vasoespasmo sintomático: en el estudio original, el grado 4 casi duplicó el riesgo del grado 0 a 1 (Frontera y cols., 2006).</p>
+    <h3>Escala de Hunt y Hess</h3><div class="seg" id="sahHH">${[1,2,3,4,5].map(g=>`<button data-hh="${g}" class="${x.hh===g?'on':''}">${['I','II','III','IV','V'][g-1]}</button>`).join('')}</div>
+    <p style="margin-top:8px">${HUNTHESS[x.hh-1]}. Los grados altos se asocian a peor pronóstico, aunque algunos pacientes en grado IV o V por hidrocefalia mejoran mucho con el drenaje ventricular.</p>
+    <h3>Evolución</h3><div class="rngrow"><span class="lab">Día</span><input id="sahDay" type="range" min="0" max="21" step="1" value="${x.day}"><output>${x.day}</output></div><p id="sahDayTxt">${sahDay(x.day)}</p>
+    <h3>Manejo</h3><ul>${SAHTX.map(t=>`<li>${t}</li>`).join('')}</ul>
+    <div class="warnbox">La cefalea en trueno, la peor de la vida y máxima en segundos o minutos, es una hemorragia subaracnoidea hasta que se demuestre lo contrario, aunque el paciente esté consciente y sin déficit.</div>
+    <p class="note">En rojo, la distribución típica de la sangre según el origen. Modelo didáctico sobre la superficie cortical y el tronco; la sangre real llena las cisternas y surcos entre ellos.</p>`;
+    return h; }
+  const sites=Object.keys(D.sites), site=D.sites[x.site]||D.sites[sites[0]], mx=site.max||D.max, I=xaInfo(), T=I?I.Tmax:0, H=hernState();
+  if(sites.length>1) h+=`<label class="lab" for="xaSite">Localización</label><select id="xaSite" style="margin-top:6px">${sites.map(k=>`<option value="${k}" ${k===x.site?'selected':''}>${D.sites[k].es}</option>`).join('')}</select>`;
+  h+=`<div class="rngrow"><span class="lab">Volumen</span><input id="xaV" type="range" min="0" max="${mx}" step="1" value="${x.vol}"><output>${x.vol} mL</output></div>
+  <div class="stat"><div><b>${x.vol}</b><span>mL de colección</span></div><div><b>${fmt(T)}</b><span>mm de grosor máximo</span></div><div><b>${H&&!H.infraOnly?fmt(H.mls):'—'}</b><span>mm de desviación de línea media</span></div></div>
+  <p><b>Mecanismo.</b> ${D.mech}</p><p><b>Clínica.</b> ${D.clin}</p>`;
+  if(x.vol>0) h+=`<h3>Qué hacer</h3><p>${xaPlan(x,T,H)}</p><p style="color:var(--muted)">${D.prog}</p>`+hernBlock(H)+mkBlock(H);
+  else h+=`<p style="color:var(--muted)">Mueve el volumen para ver cómo la colección comprime el cerebro, desplaza la línea media y produce herniaciones.</p>`;
+  h+=`<p class="note">Modelo didáctico: la colección se extiende sobre la superficie cortical con forma de lente (epidural) o de semiluna (subdural), comprime el cerebro subyacente y, agotada la reserva, desplaza el contenido supratentorial hacia el otro lado frenado por la hoz. No es una simulación biomecánica.</p>`;
+  return h; }
+function bindXa(){ const x=S.xa;
+  pin.querySelectorAll('[data-xt]').forEach(b=>b.onclick=()=>{ x.type=b.dataset.xt; const D=XATYPES[x.type]; if(D.sites&&!D.sites[x.site]) x.site=Object.keys(D.sites)[0];
+    if(x.type!=='sah'&&x.vol===0) x.vol=x.type==='csdh'?90:x.type==='asdh'?60:35; applyTumor(); renderSim(); aimXa(); });
+  pin.querySelectorAll('[data-xs]').forEach(b=>b.onclick=()=>{ x.side=b.dataset.xs; applyTumor(); renderSim(); aimXa(); });
+  const site=$('#xaSite'); if(site) site.onchange=e=>{ x.site=e.target.value; const D=XATYPES[x.type], mx=D.sites[x.site].max||D.max; x.vol=Math.min(x.vol,mx); applyTumor(); renderSim(); aimXa(); };
+  const v=$('#xaV'); if(v){ v.oninput=e=>{ x.vol=+e.target.value; v.nextElementSibling.textContent=x.vol+' mL'; applyTumor(); }; v.onchange=()=>{ renderSim(); aimXa(); }; }
+  const src=$('#sahSrc'); if(src) src.onchange=e=>{ x.src=e.target.value; recolor(); renderSim(); aimXa(); };
+  const th=$('#sahThick'); if(th) th.onchange=e=>{ x.thick=e.target.checked; recolor(); renderSim(); };
+  const iv=$('#sahIvh'); if(iv) iv.onchange=e=>{ x.ivh=e.target.checked; recolor(); renderSim(); };
+  pin.querySelectorAll('[data-hh]').forEach(b=>b.onclick=()=>{ x.hh=+b.dataset.hh; renderSim(); });
+  const dy=$('#sahDay'); if(dy) dy.oninput=e=>{ x.day=+e.target.value; dy.nextElementSibling.textContent=x.day; $('#sahDayTxt').textContent=sahDay(x.day); }; }
 function simGbm(){
   const tm=S.tumor, vol=(4/3)*Math.PI*Math.pow(tm.R/10,3), shift=tumorShift();
   return `<label class="lab" for="tmLoc">Localización</label>
   <select id="tmLoc" style="margin-top:6px">${Object.keys(TUMLOC).map(k=>`<option value="${k}" ${k===tm.loc?'selected':''}>${TUMLOC[k].es}</option>`).join('')}</select>
   <div class="rngrow"><span class="lab">Crecimiento</span><input id="tmR" type="range" min="0" max="32" step="0.5" value="${tm.R}"><output>${tm.R.toFixed(0)} mm</output></div>
   <div class="stat"><div><b>${fmt(vol)}</b><span>cm³ de tumor</span></div><div><b>${(tm.R*1.9).toFixed(0)}</b><span>mm de edema (radio)</span></div><div><b>${fmt(shift)}</b><span>mm de desviación de línea media</span></div></div>
-  ${tumorText(shift)}
+  ${tumorText(shift)}${tm.R>=1?hernBlock(hernState())+mkBlock(hernState()):''}
   <p class="note">Modelo didáctico: la deformación supone un tejido incompresible que se aparta para hacer sitio al volumen del tumor, frenado por la hoz y el cráneo. No es una simulación biomecánica ni predice la evolución de un paciente. El glioblastoma (OMS 2021: IDH-nativo, grado 4) es el tumor maligno primario más frecuente del adulto; con resección, radioterapia y temozolomida (protocolo de Stupp) la supervivencia mediana ronda los 15 meses. La metástasis es, aun así, la masa maligna intracraneal más frecuente.</p>`;
 }
 function bindGbm(){ const tm=S.tumor;
@@ -642,7 +732,7 @@ function bindMet(){ const M=S.met;
   $('#metPrim').onchange=e=>{ M.prim=e.target.value; renderSim(); };
   const n=$('#metN'); n.oninput=e=>{ M.n=+e.target.value; applyTumor(); n.nextElementSibling.textContent=M.n; }; n.onchange=()=>{ renderSim(); aimTumor(); };
   const r=$('#metR'); r.oninput=e=>{ M.R=+e.target.value; applyTumor(); r.nextElementSibling.textContent=(M.R*2).toFixed(0)+' mm'; }; r.onchange=()=>renderSim(); }
-function updSimStats(){const st=pin.querySelectorAll('.stat b'); if(st.length<3) return; const R=S.tumor.R; st[st.length-3].textContent=((4/3)*Math.PI*Math.pow(R/10,3)).toFixed(1).replace('.',','); st[st.length-2].textContent=(R*1.9).toFixed(0); st[st.length-1].textContent=tumorShift().toFixed(1).replace('.',',');}
+function updSimStats(){const s0=pin.querySelector('.stat'); if(!s0) return; const st=s0.querySelectorAll('b'); if(st.length<3) return; const R=S.tumor.R; st[st.length-3].textContent=((4/3)*Math.PI*Math.pow(R/10,3)).toFixed(1).replace('.',','); st[st.length-2].textContent=(R*1.9).toFixed(0); st[st.length-1].textContent=tumorShift().toFixed(1).replace('.',',');}
 let tumorShift=()=>0;
 function tumorText(shift){
   const L=TUMLOC[S.tumor.loc], R=S.tumor.R; if(R<1) return `<p style="color:var(--muted)">Mueve el control de crecimiento para ver cómo el tumor y su edema desplazan las estructuras vecinas.</p>`;
@@ -773,7 +863,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 14. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 15. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -905,7 +995,7 @@ function renderStudy(){
 }
 
 /* stubs hasta que cargue el 3D */
-let setNT=()=>{}; let studyView=()=>{}; let diseaseView=()=>{}; let drugView=()=>{}; let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{};
+let setNT=()=>{}; let studyView=()=>{}; let diseaseView=()=>{}; let drugView=()=>{}; let select=()=>{}, recolor=()=>{}, applyTumor=()=>{}, aimStroke=()=>{}, aimTumor=()=>{}, hernState=()=>null, xaInfo=()=>null, aimXa=()=>{}, hernView=()=>{};
 const TUMLOC={
   lfront:{es:"Frontal izquierdo (prefrontal dorsolateral)",dk:"L_rostralmiddlefrontal",focal:"Cambios de personalidad, apatía y disfunción ejecutiva; si alcanza la región opercular, afasia no fluente.",uncal:false},
   ltemp:{es:"Temporal izquierdo",dk:"L_middletemporal",focal:"Afasia fluente, alteración de la memoria verbal, cuadrantanopsia superior derecha; crisis con aura.",uncal:true},
@@ -1079,7 +1169,7 @@ function setMode(m){
   $('#legend').hidden = !(m==='path'&&S.pathTab==='enigma' || m==='drug');
   if(m==='drug'){ $('#legendTitle').textContent='Densidad relativa de la diana (PET)'; $('#legendBar').style.background='linear-gradient(90deg,#0d1b2a,#1f4e79,#2a9d8f,#e9c46a,#f7f3e3)'; $('#legendTicks').innerHTML='<span>baja</span><span></span><span>alta</span>'; }
   else { $('#legendTitle').textContent='d de Cohen (casos − controles)'; $('#legendBar').style.background=''; $('#legendTicks').innerHTML='<span>−0,6</span><span>0</span><span>+0,6</span>'; }
-  if(m!=='sim'){ if(S.tumor.R>0||S.ich.vol>0||S.met.n>0){S.tumor.R=0; S.ich.vol=0; S.met.n=0; applyTumor();} S.stroke.on=false; }
+  if(m!=='sim'){ if(S.tumor.R>0||S.ich.vol>0||S.met.n>0||S.xa.vol>0){S.tumor.R=0; S.ich.vol=0; S.met.n=0; S.xa.vol=0; applyTumor();} S.stroke.on=false; }
   setNT(null);
   if(S.mode!=='learn'){ stopTour(); $('#tourCap').hidden=true; }
   if(m==='drug') setTimeout(()=>drugView(),0); else if(m==='path') setTimeout(()=>diseaseView(),0); else if(m==='study') setTimeout(()=>studyEnter(),0); else if(m==='learn') setTimeout(()=>learnEnter(),0);
@@ -1215,12 +1305,17 @@ function siteCenter(sp,sink){
   const hc=new THREE.Vector3(sp[0]==='L'?-30:30,C0.y+18,C0.z); return c.add(hc.sub(c).normalize().multiplyScalar(sink));
 }
 function tumorCenter(){ const L=TUMLOC[S.tumor.loc]; return siteCenter(L.deep||L.dk,20); }
+const sphV=R=>4/3*Math.PI*Math.pow(R/10,3);
 function massList(){
-  const t=S.simTab;
-  if(t==='gbm'&&S.tumor.R>0.5) return [{c:tumorCenter(),R:S.tumor.R,E:1.9,k:'gbm'}];
-  if(t==='ich'&&S.ich.vol>0.2){ const L=HEMLOC[S.ich.loc]; return [{c:siteCenter(L.site,L.sink||0),R:ichR(S.ich.vol),E:1.35,k:'ich'}]; }
-  if(t==='met'&&S.met.n>0) return METSITES.slice(0,S.met.n).map(([sp,f])=>({c:siteCenter(sp,9),R:S.met.R*f,E:2.6,k:'met'}));
-  return [];
+  const t=S.simTab; let L=[];
+  if(t==='gbm'&&S.tumor.R>0.5){ const T=TUMLOC[S.tumor.loc]; L=[{c:tumorCenter(),R:S.tumor.R,E:1.9,k:'gbm',temporal:!!T.uncal,vol:sphV(S.tumor.R)*(1+0.1*(Math.pow(1.9,3)-1))}]; }
+  else if(t==='ich'&&S.ich.vol>0.2){ const H=HEMLOC[S.ich.loc]; L=[{c:siteCenter(H.site,H.sink||0),R:ichR(S.ich.vol),E:1.35,k:'ich',infra:!!H.infra,vol:S.ich.vol*1.3}]; }
+  else if(t==='met'&&S.met.n>0) L=METSITES.slice(0,S.met.n).map(([sp,f])=>({c:siteCenter(sp,9),R:S.met.R*f,E:2.6,k:'met',infra:/^cb|^stem/.test(sp),vol:sphV(S.met.R*f)*(1+0.06*(Math.pow(2.6,3)-1))}));
+  else if(t==='xa'&&XA){ const R=10*Math.cbrt(3*S.xa.vol/(4*Math.PI)); L=[{c:XA.c.clone().addScaledVector(XA.n,R*0.55),R:R*0.55,E:1,k:'xa',hidden:true,infra:XA.infra,temporal:XA.temporal,vol:S.xa.vol,reserve:XATYPES[S.xa.type].reserve}]; }
+  // Monro-Kellie: el volumen que supera la reserva desplaza el contenido supratentorial hacia el otro lado
+  const sup=L.filter(m=>!m.infra), Vs=sup.reduce((a,m)=>a+m.vol,0), res=sup.length?Math.max(...sup.map(m=>m.reserve||25)):25;
+  const G=Math.min(18,Math.max(0,Vs-res)*1000/9000); for(const m of sup) m.g=G*m.vol/(Vs||1);
+  return L;
 }
 function displace(x,y,z,out,isCortex){
   out[0]=out[1]=out[2]=0; if(!MS.length) return;
@@ -1228,7 +1323,8 @@ function displace(x,y,z,out,isCortex){
   for(const M of MS){ const c=M.c, dx=x-c.x, dy=y-c.y, dz=z-c.z, r=Math.hypot(dx,dy,dz)||1e-3;
     const Rr=M.R*1.05; const nr=Math.cbrt(r*r*r+Rr*Rr*Rr), k=(nr-r)/r; let ax=dx*k, ay=dy*k, az=dz*k;
     if(Math.sign(x)!==Math.sign(c.x) && Math.abs(c.x)>4){ const fx=Math.max(0.15,1-Math.max(0,y-(C0.y+5))/40); ax*=fx; ay*=fx*0.6; az*=fx*0.6; } // hoz del cerebro
-    ux+=ax; uy+=ay; uz+=az; }
+    ux+=ax; uy+=ay; uz+=az;
+    if(M.g){ const gx=Math.max(0,Math.min(1,1-(Math.abs(x)-15)/55)), yy=y-C0.y; const hy=yy>15?Math.max(0.15,1-(yy-15)/45):yy<-35?0.5:1; ux-=Math.sign(c.x)*M.g*gx*hy; } }
   if(isCortex){ const ox=x-C0.x, oy=y-C0.y, oz=z-C0.z, ol=Math.hypot(ox,oy,oz)||1; const a=(ux*ox+uy*oy+uz*oz)/ol; if(a>0){ux-=ox/ol*a*0.8;uy-=oy/ol*a*0.8;uz-=oz/ol*a*0.8;} } // cráneo
   out[0]=ux;out[1]=uy;out[2]=uz;
 }
@@ -1240,20 +1336,74 @@ function rebuildCtx(){
     for(let i=0;i<p.length;i+=3){
       let x=o.pial[i]+(o.infl[i]-o.pial[i])*t+sgn*spread, y=o.pial[i+1]+(o.infl[i+1]-o.pial[i+1])*t, z=o.pial[i+2]+(o.infl[i+2]-o.pial[i+2])*t;
       if(on){ displace(x,y,z,tmpD,true); x+=tmpD[0];y+=tmpD[1];z+=tmpD[2]; }
+      if(XA&&XA.o===o){ const tk=XA.thick[i/3]; if(tk>0){ x-=XA.N[i]*tk*0.8; y-=XA.N[i+1]*tk*0.8; z-=XA.N[i+2]*tk*0.8; } }
       p[i]=x;p[i+1]=y;p[i+2]=z; }
     o.mesh.geometry.attributes.position.needsUpdate=true; o.mesh.geometry.computeVertexNormals(); o.mesh.geometry.computeBoundingSphere(); }
   for(const o of [...Object.values(DEEPO),CBO,TRO]){ const p=o.mesh.geometry.attributes.position.array;
-    if(on||o.dirty){ for(let i=0;i<p.length;i+=3){ displace(o.base[i],o.base[i+1],o.base[i+2],tmpD,false); p[i]=o.base[i]+tmpD[0];p[i+1]=o.base[i+1]+tmpD[1];p[i+2]=o.base[i+2]+tmpD[2]; }
+    if(on||o.dirty){ const xo=XA&&XA.o===o; for(let i=0;i<p.length;i+=3){ displace(o.base[i],o.base[i+1],o.base[i+2],tmpD,false); p[i]=o.base[i]+tmpD[0];p[i+1]=o.base[i+1]+tmpD[1];p[i+2]=o.base[i+2]+tmpD[2];
+        if(xo){ const tk=XA.thick[i/3]; if(tk>0){ p[i]-=XA.N[i]*tk*0.8; p[i+1]-=XA.N[i+1]*tk*0.8; p[i+2]-=XA.N[i+2]*tk*0.8; } } }
       o.mesh.geometry.attributes.position.needsUpdate=true; o.mesh.geometry.computeVertexNormals(); o.mesh.geometry.computeBoundingSphere(); o.dirty=on; } }
   if(ovState.h) recolor();
 }
 applyTumor=()=>{
-  MS=massList(); TC=MS.length?MS.reduce((a,m)=>a.addScaledVector(m.c,1/MS.length),new THREE.Vector3()):new THREE.Vector3();
-  MASSMESH.forEach(([m,e],i)=>{ const M=MS[i]; m.visible=e.visible=!!M; if(!M) return;
+  xaCompute(); MS=massList(); TC=MS.length?MS.reduce((a,m)=>a.addScaledVector(m.c,1/MS.length),new THREE.Vector3()):new THREE.Vector3();
+  MASSMESH.forEach(([m,e],i)=>{ const M=MS[i]; m.visible=e.visible=!!M&&!M.hidden; if(!M||M.hidden) return;
     const [col,em]=MASSCOL[M.k]; m.material.color.setHex(col); m.material.emissive.setHex(em); m.material.roughness=M.k==='ich'?0.35:0.5;
     m.position.copy(M.c); m.scale.setScalar(Math.max(0.01,M.R)); e.position.copy(M.c); e.scale.setScalar(Math.max(0.01,M.R*M.E)); });
-  rebuildCtx(); recolor();
+  rebuildCtx(); xaShell(); recolor();
 };
+/* ============ colecciones extraaxiales ============ */
+let XA=null; const SURFC={};
+const xaMesh=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshStandardMaterial({color:0x6a0c16,roughness:0.35,emissive:0x1a0204,transparent:true,opacity:0.85,side:THREE.DoubleSide}));
+xaMesh.visible=false; xaMesh.renderOrder=2; root.add(xaMesh);
+function surfCache(key,pos,idx){ if(SURFC[key]) return SURFC[key];
+  const n=pos.length/3, N=new Float32Array(pos.length), Ar=new Float32Array(n), a=new THREE.Vector3(), b=new THREE.Vector3(), c=new THREE.Vector3(), e1=new THREE.Vector3(), e2=new THREE.Vector3();
+  for(let f=0;f<idx.length;f+=3){ const i=idx[f],j=idx[f+1],k=idx[f+2]; a.fromArray(pos,i*3); b.fromArray(pos,j*3); c.fromArray(pos,k*3); e1.subVectors(b,a); e2.subVectors(c,a); e1.cross(e2); const ar=e1.length()/2;
+    for(const v of [i,j,k]){ N[v*3]+=e1.x; N[v*3+1]+=e1.y; N[v*3+2]+=e1.z; Ar[v]+=ar/3; } }
+  // orientar hacia fuera respecto al centro de la superficie
+  const cen=meanOf(pos); let out=0; for(let v=0;v<n;v++){ const l=Math.hypot(N[v*3],N[v*3+1],N[v*3+2])||1; N[v*3]/=l; N[v*3+1]/=l; N[v*3+2]/=l; out+=(pos[v*3]-cen.x)*N[v*3]+(pos[v*3+1]-cen.y)*N[v*3+1]+(pos[v*3+2]-cen.z)*N[v*3+2]; }
+  if(out<0) for(let i=0;i<N.length;i++) N[i]=-N[i];
+  // envoltura lisa: suavizado laplaciano de la superficie plegada y desplazamiento hasta cubrir las crestas de los giros
+  const nb=Array.from({length:n},()=>new Set()); for(let f=0;f<idx.length;f+=3){ const a0=idx[f],b0=idx[f+1],c0=idx[f+2]; nb[a0].add(b0).add(c0); nb[b0].add(a0).add(c0); nb[c0].add(a0).add(b0); }
+  const NB=nb.map(x=>[...x]); let P=new Float32Array(pos), Q=new Float32Array(pos.length);
+  for(let it=0;it<150;it++){ for(let v=0;v<n;v++){ const L=NB[v]; if(!L.length){ Q[v*3]=P[v*3];Q[v*3+1]=P[v*3+1];Q[v*3+2]=P[v*3+2]; continue; } let sx=0,sy=0,sz=0; for(const u of L){ sx+=P[u*3];sy+=P[u*3+1];sz+=P[u*3+2]; } const k=L.length;
+      Q[v*3]=P[v*3]+0.6*(sx/k-P[v*3]); Q[v*3+1]=P[v*3+1]+0.6*(sy/k-P[v*3+1]); Q[v*3+2]=P[v*3+2]+0.6*(sz/k-P[v*3+2]); } [P,Q]=[Q,P]; }
+  const NS=new Float32Array(pos.length); for(let f=0;f<idx.length;f+=3){ const i=idx[f],j=idx[f+1],k=idx[f+2]; a.fromArray(P,i*3); b.fromArray(P,j*3); c.fromArray(P,k*3); e1.subVectors(b,a); e2.subVectors(c,a); e1.cross(e2); for(const v of [i,j,k]){ NS[v*3]+=e1.x; NS[v*3+1]+=e1.y; NS[v*3+2]+=e1.z; } }
+  for(let v=0;v<n;v++){ let l=Math.hypot(NS[v*3],NS[v*3+1],NS[v*3+2])||1; if(out<0) l=-l; NS[v*3]/=l; NS[v*3+1]/=l; NS[v*3+2]/=l; }
+  let d=new Float32Array(n); for(let v=0;v<n;v++) d[v]=Math.max(0,(pos[v*3]-P[v*3])*NS[v*3]+(pos[v*3+1]-P[v*3+1])*NS[v*3+1]+(pos[v*3+2]-P[v*3+2])*NS[v*3+2]);
+  for(let it=0;it<6;it++){ const e=new Float32Array(d); for(let v=0;v<n;v++) for(const u of NB[v]) if(d[u]>e[v]) e[v]=d[u]; d=e; }
+  const ENV=new Float32Array(pos.length); for(let v=0;v<n;v++) for(let q=0;q<3;q++) ENV[v*3+q]=P[v*3+q]+NS[v*3+q]*d[v];
+  return SURFC[key]={N:NS,Ar,idx,ENV}; }
+function xaCompute(){ const x=S.xa; XA=null; if(S.simTab!=='xa'||x.type==='sah'||x.vol<0.5) return;
+  const D=XATYPES[x.type], site=D.sites[x.site]||Object.values(D.sites)[0], sg=x.side==='L'?-1:1; let o,pos,idx,key,v0=-1;
+  if(site.cb){ o=CBO; pos=CBO.base; idx=CBO.mesh.geometry.index.array; key='cb';
+    let best=-1e9; for(let v=0;v<pos.length/3;v++){ if(Math.sign(pos[v*3])!==sg) continue; const sc=-pos[v*3+2]-0.4*pos[v*3+1]+0.6*Math.abs(pos[v*3]); if(sc>best){best=sc;v0=v;} } }
+  else { const h=x.side==='L'?'lh':'rh'; o=CTX[h]; pos=o.pial; idx=o.mesh.geometry.index.array; key=h;
+    const ids=new Set(site.dk.map(n=>DKN.indexOf(x.side+'_'+n))); const c=meanOf(pos,i=>ids.has(o.dk[i])); const cc=new THREE.Vector3(); let bd=1e9;
+    const C=surfCache(key,pos,idx); // empujar el centro hacia fuera para escoger un vértice de la convexidad
+    for(let v=0;v<pos.length/3;v++){ if(o.dk[v]===255||C.N[v*3]*sg<0.2) continue; cc.fromArray(pos,v*3); const d=cc.distanceToSquared(c); if(d<bd){bd=d;v0=v;} } }
+  const C=surfCache(key,pos,idx), n=pos.length/3, prof=new Float32Array(n), p0=new THREE.Vector3().fromArray(pos,v0*3), q=new THREE.Vector3(), Rs=(site.cb?28:D.Rs)*(D.shape==='lens'?Math.max(0.75,Math.min(1.6,Math.cbrt(x.vol/35))):1);
+  // el área se mide sobre la envoltura (la superficie pial está plegada): cada vértice dentro del disco representa πRs²/n
+  let sum=0, nin=0; for(let v=0;v<n;v++){ if(!site.cb&&(o.dk[v]===255||C.N[v*3]*sg<-0.25)) continue; if(site.cb&&Math.sign(pos[v*3])!==sg&&Math.abs(pos[v*3])>3) continue;
+    const r=q.fromArray(pos,v*3).distanceTo(p0)/Rs; if(r>=1) continue; const u=1-r*r; prof[v]=D.shape==='lens'?Math.sqrt(u):u; sum+=prof[v]; nin++; }
+  sum*=Math.PI*Rs*Rs/(nin||1);
+  const Tm=sum?x.vol*1000/sum:0, thick=new Float32Array(n), cw=new THREE.Vector3(), nw=new THREE.Vector3(); let w=0;
+  for(let v=0;v<n;v++) if(prof[v]>0){ thick[v]=Tm*prof[v]; const ww=thick[v]; cw.addScaledVector(q.fromArray(pos,v*3),ww); nw.x+=C.N[v*3]*ww; nw.y+=C.N[v*3+1]*ww; nw.z+=C.N[v*3+2]*ww; w+=ww; }
+  XA={o,pos,env:C.ENV,idx,N:C.N,thick,Tmax:Tm,c:cw.multiplyScalar(1/w),n:nw.normalize(),infra:!!site.cb,temporal:x.type!=='edh'||x.site==='temporal',key}; }
+xaInfo=()=>XA?{Tmax:XA.Tmax,infra:XA.infra}:null;
+function xaShell(){ if(!XA){ xaMesh.visible=false; return; }
+  const {env,N,thick,idx}=XA, P=new Float32Array(env.length); for(let i=0;i<env.length;i++){ const t=thick[(i/3)|0]; P[i]=env[i]+N[i]*(0.8+t*0.2); }
+  const F=[]; for(let f=0;f<idx.length;f+=3){ const a=idx[f],b=idx[f+1],c=idx[f+2]; if(thick[a]>0.2&&thick[b]>0.2&&thick[c]>0.2) F.push(a,b,c); }
+  const g=xaMesh.geometry; g.setAttribute('position',new THREE.BufferAttribute(P,3)); g.setIndex(F); g.computeVertexNormals(); g.computeBoundingSphere();
+  xaMesh.material.color.setHex(XATYPES[S.xa.type].col); xaMesh.visible=true; }
+aimXa=()=>{ const x=S.xa; if(x.type==='sah'){ camT.yaw=x.src==='mca'||x.src==='pcomm'?(x.side==='L'?-0.9:0.9):0.4; camT.pitch=-1.05; camT.dist=470; idle=false; return; }
+  if(!XA) return; const c=XA.c.clone().addScaledVector(XA.n,60).sub(C0); if(XA.infra){ c.z-=40; c.y-=20; } aimAt(c); idle=false; };
+hernView=sd=>{ setHemi(sd==='L'?'lh':'rh'); camT.yaw=(sd==='L'?1:-1)*Math.PI/2; camT.pitch=-0.3; camT.dist=470; idle=false; };
+hernState=()=>{ MS=massList(); if(!MS.length) return null; const sup=MS.filter(m=>!m.infra), inf=MS.filter(m=>m.infra);
+  const sx=sup.reduce((a,m)=>a+m.c.x*m.vol,0); const d=[0,0,0]; let pineal=0, mls=0;
+  if(sup.length){ displace(0.01*Math.sign(sx||1),2,-28,d,false); pineal=Math.abs(d[0]); mls=tumorShift(); }
+  const temporal=sup.some(m=>m.temporal), pfV=inf.reduce((a,m)=>a+m.vol,0), Vt=MS.reduce((a,m)=>a+m.vol,0), res=inf.length?10:Math.max(...MS.map(m=>m.reserve||25));
+  return {mls,pineal,side:sx<0?'L':'R',sub:mls>=5,uncal:sup.length>0&&(mls>=10||temporal&&mls>=5),central:mls>=15,tonsil:pfV>=15,up:pfV>=25,pfV,Vt,res,infraOnly:!sup.length}; };
 
 /* ============ color ============ */
 function shadeOf(s){ const t=Math.max(0,Math.min(1,(s+12)/36)); return 1.02-0.42*t; }
@@ -1308,6 +1458,7 @@ recolor=()=>{
   COND=condition(); const cond=COND, GREY=[0.5,0.5,0.49];
   const mode=S.mode, D=META.disorders[S.dis], st=S.stroke;
   const T=mode==='sim'&&st.on?strokeTester(st):null, artMap=mode==='anat'&&S.parc==='art'&&!cond;
+  const SW=mode==='sim'&&S.simTab==='xa'&&S.xa.type==='sah'?sahWeights():null, HZ=mode==='sim'?hernZones(hernState()):null;
   for(const h in CTX){ const o=CTX[h], c=o.mesh.geometry.attributes.color.array, p=o.mesh.geometry.attributes.position.array;
     for(let i=0;i<o.dk.length;i++){
       const g=o.dk[i], sh=shadeOf(o.sulc[i]); let col;
@@ -1317,7 +1468,9 @@ recolor=()=>{
       else if(mode==='path'){ const v=D.ctx[DKN[g]]; col=divColor(v?v[0]:(Object.keys(D.ctx).length?0:null)); }
       else if(mode==='drug'){ col=o.rec[S.rec]?seqColor(o.rec[S.rec][i]/255):[0.36,0.38,0.4]; }
       else if(mode==='sim'){ col=SIMBASE; if(T&&T.ctx(o,i)) col=INF;
-        for(const M of MS){ const dx=p[i*3]-M.c.x,dy=p[i*3+1]-M.c.y,dz=p[i*3+2]-M.c.z, r=Math.hypot(dx,dy,dz), E=M.R*(M.E+0.3); if(r<E){ col=mix(col,M.k==='ich'?INF:EDEMA,(M.k==='ich'?0.5:0.75)*(1-r/E)); } } }
+        if(SW){ const w=SW.ctx[DKN[g]]; if(w) col=mix(col,BLOOD,Math.min(0.92,w)); }
+        if(HZ&&HZ.ctx[DKN[g]]) col=mix(col,HERNC,0.85);
+        for(const M of MS){ if(M.hidden) continue; const dx=p[i*3]-M.c.x,dy=p[i*3+1]-M.c.y,dz=p[i*3+2]-M.c.z, r=Math.hypot(dx,dy,dz), E=M.R*(M.E+0.3); if(r<E){ col=mix(col,M.k==='ich'?INF:EDEMA,(M.k==='ich'?0.5:0.75)*(1-r/E)); } } }
       else if(S.parc==='art'){ const b=artBase(o.art[i]); col=b>=0&&b<15?ARTCOL[b]:[0.4,0.41,0.42]; }
       else if(S.parc==='lobe') col=hexRGB(LOBES[lobeOfDK(g)].color);
       else if(S.parc==='gl') col=o.gl[i]?glColor(o.gl[i]):[0.32,0.33,0.34];
@@ -1331,14 +1484,14 @@ recolor=()=>{
     if(cond){ col=condCol(cond.deep[k],GREY)||cond.base||(cond.signed?mix(NEU,GREY,0.5):mix(col,GREY,0.75)); }
     else if(mode==='path'){ const sk=SUBKEY[base]; const v=sk?D.sub[k[0]+sk]:null; col=divColor(v?v[0]:(sk&&Object.keys(D.sub).length?0:null)); }
     else if(mode==='drug'){ col=seqColor(deepRec(k)); }
-    else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T){ const f=T.deepFrac(k,o); if(f>0.05) col=mix(col,INF,Math.min(1,0.25+f)); } }
+    else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T){ const f=T.deepFrac(k,o); if(f>0.05) col=mix(col,INF,Math.min(1,0.25+f)); } if(SW&&SW.deep[k]) col=mix(col,BLOOD,Math.min(0.92,SW.deep[k])); if(HZ&&HZ.deep[k]) col=mix(col,HERNC,0.85); }
     else if(artMap&&ARTDEEP[k]&&ARTDEEP[k].dom<15) col=mix(col,ARTCOL[ARTDEEP[k].dom],0.8);
     o.mesh.material.color.setRGB(col[0],col[1],col[2]); }
-  { const o=DEEPO.stem, c=o.mesh.geometry.attributes.color.array; for(let i=0;i<o.lab.length;i++){ let col=hexRGB(DEEP['stem'+o.lab[i]].color); if(cond){ col=condCol(cond.deep['stem'+o.lab[i]],GREY)||cond.base||GREY; } else if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='drug') col=seqColor(deepRec('stem')); else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T&&o.art&&T.vtx(o.art[i])) col=INF; } else if(artMap&&o.art){ const b=artBase(o.art[i]); if(b>=0&&b<15) col=mix(col,ARTCOL[b],0.85); } if(S.sel&&S.sel.kind==='stem'&&S.sel.id!==o.lab[i]) col=mix(col,[0.3,0.32,0.34],0.5); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; } o.mesh.geometry.attributes.color.needsUpdate=true; }
+  { const o=DEEPO.stem, c=o.mesh.geometry.attributes.color.array; for(let i=0;i<o.lab.length;i++){ let col=hexRGB(DEEP['stem'+o.lab[i]].color); if(cond){ col=condCol(cond.deep['stem'+o.lab[i]],GREY)||cond.base||GREY; } else if(mode==='path') col=[0.42,0.44,0.46]; else if(mode==='drug') col=seqColor(deepRec('stem')); else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T&&o.art&&T.vtx(o.art[i])) col=INF; const sk='stem'+o.lab[i]; if(SW&&SW.deep[sk]) col=mix(col,BLOOD,Math.min(0.9,SW.deep[sk])); if(HZ&&HZ.deep[sk]) col=mix(col,HERNC,0.85); } else if(artMap&&o.art){ const b=artBase(o.art[i]); if(b>=0&&b<15) col=mix(col,ARTCOL[b],0.85); } if(S.sel&&S.sel.kind==='stem'&&S.sel.id!==o.lab[i]) col=mix(col,[0.3,0.32,0.34],0.5); c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]; } o.mesh.geometry.attributes.color.needsUpdate=true; }
   { const c=CBO.mesh.geometry.attributes.color.array, cols={ant:'#7fa8de',vi:'#6a95cf',crus:'#5683c2',viib:'#7398cc',viii:'#8bb1e0',ix:'#5d86bd',x:'#a1c2ea',vermis:'#4b6fa6'};
     const p=CBO.base; for(let i=0;i<CBO.grp.length;i++){ let col=hexRGB(cols[CBO.grp[i]]); const ripple=0.86+0.14*Math.sin(p[i*3+1]*1.3+p[i*3+2]*0.9);
       if(cond){ const v=cond.cb[CBO.grp[i]]!=null?cond.cb[CBO.grp[i]]:cond.cb.all; col=condCol(v,GREY)||cond.base||GREY; }
-      else if(mode==='path'||mode==='drug') col=[0.42,0.44,0.46]; else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T&&CBO.art&&T.vtx(CBO.art[i])) col=INF; }
+      else if(mode==='path'||mode==='drug') col=[0.42,0.44,0.46]; else if(mode==='sim'){ col=mix(col,SIMBASE,0.5); if(T&&CBO.art&&T.vtx(CBO.art[i])) col=INF; if(HZ&&HZ.cb[CBO.grp[i]]) col=mix(col,HERNC,0.85); }
       else if(artMap&&CBO.art){ const b=artBase(CBO.art[i]); if(b>=0&&b<15) col=mix(col,ARTCOL[b],0.85); }
       if(S.sel&&S.sel.kind==='cb'&&S.sel.id!==CBO.grp[i]) col=mix(col,[0.3,0.32,0.34],0.55);
       c[i*3]=col[0]*ripple;c[i*3+1]=col[1]*ripple;c[i*3+2]=col[2]*ripple; } CBO.mesh.geometry.attributes.color.needsUpdate=true; }
@@ -1672,6 +1825,7 @@ function frame(){
     m.emissive.setRGB(0,0,0); if(targets.includes(o)&&o!==TRO) m.emissive.setRGB(0.12,0.12,0.12);
     if(S.hover&&!S.sel&&((S.hover.kind==='deep'&&o.key===S.hover.key))) m.emissive.setRGB(0.08,0.08,0.08);
   }
+  if(xaMesh.visible&&XA){ xaMesh.position.copy(XA.o.off); if(!XA.o.mesh.visible||S.mode!=='sim') xaMesh.visible=false; } else if(XA&&S.mode==='sim'&&XA.o.mesh.visible&&xaMesh.geometry.index) xaMesh.visible=true;
   if(ovState.h){ const o=CTX[ovState.h]; ovState.amt+=(ovState.target-ovState.amt)*k; overlay.position.copy(o.off).addScaledVector(ovState.dir,ovState.amt); overlay.visible=o.mesh.visible; }
   trHL.visible=trHL.visible&&TRO.mesh.visible&&!!(S.sel&&S.sel.kind==='tr'||COND);
   if(ntFlows.length) tickNT(clock.elapsedTime);

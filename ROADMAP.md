@@ -64,6 +64,11 @@
 - [x] Modo Aprender con ocho recorridos guiados
 - [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
 
+## Hecho (v15, hipertensión intracraneal)
+- [x] Hematomas epidural, subdural agudo y crónico como colecciones que comprimen el cerebro
+- [x] Hemorragia subaracnoidea por origen, con Fisher modificada, Hunt y Hess y evolución por días
+- [x] Monro-Kellie, presión de perfusión, desviación de la pineal (Ropper) y cinco herniaciones, también en hemorragia y glioblastoma
+
 ## Hecho (v14, mapeo fino)
 - [x] Núcleos del tálamo (THOMAS) como capa seleccionable con fichas
 - [x] Núcleos del sistema activador ascendente del tronco (Harvard AAN v2), con locus coeruleus, rafe y periacueductal desde el atlas
@@ -97,7 +102,7 @@
 
 ## Simulaciones siguientes
 - [ ] Interacciones entre fármacos (síndrome serotoninérgico, carga anticolinérgica, inductores e inhibidores)
-- [ ] Hemorragias extraaxiales (subaracnoidea, subdural, epidural) y herniaciones
+- [x] Hemorragias extraaxiales (subaracnoidea, subdural, epidural) y herniaciones (v15)
 
 ## Pulido final (cuando esté completo)
 - [ ] Revisión de rendimiento en móviles de gama baja (nivel de detalle, carga diferida)
