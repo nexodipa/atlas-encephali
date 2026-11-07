@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: "Puglla"
     given-names: "Josué"
-version: 13.0.0
-date-released: "2026-11-02"
+version: 14.0.0
+date-released: "2026-11-07"
 repository-code: "https://github.com/nexodipa/atlas-encephali"
 license: MIT
 keywords:
@@ -18,4 +18,4 @@ keywords:
   - educación médica
   - medical education
   - three.js
-abstract: "Atlas 3D interactivo y abierto del encéfalo para estudiantes de medicina y salud mental: anatomía de superficie real (fsaverage, HCP-MMP1), núcleos, tractos, sistemas de neurotransmisores, cortes tipo resonancia, mapas de patología ENIGMA, modelos de circuito de trastornos psiquiátricos, causas orgánicas, enfermedades neurodegenerativas y raras, farmacología con mapas PET de receptores, casos clínicos de localización y autoevaluación."
+abstract: "Atlas 3D interactivo y abierto del encéfalo para estudiantes de medicina y salud mental: anatomía de superficie real (fsaverage, HCP-MMP1), núcleos, núcleos del tálamo y del sistema activador del tronco, territorios arteriales, tractos, sistemas de neurotransmisores, cortes tipo resonancia, mapas de patología ENIGMA, modelos de circuito de trastornos psiquiátricos, causas orgánicas, enfermedades neurodegenerativas y raras, farmacología con mapas PET de receptores, casos clínicos de localización y autoevaluación."

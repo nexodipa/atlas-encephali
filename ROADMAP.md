@@ -64,6 +64,13 @@
 - [x] Modo Aprender con ocho recorridos guiados
 - [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
 
+## Hecho (v14, mapeo fino)
+- [x] Núcleos del tálamo (THOMAS) como capa seleccionable con fichas
+- [x] Núcleos del sistema activador ascendente del tronco (Harvard AAN v2), con locus coeruleus, rafe y periacueductal desde el atlas
+- [x] Territorios arteriales a nivel de vértice (atlas JHU): mapa, fichas e irrigación de cada núcleo
+- [x] Simulación de ictus sobre territorios reales, con lacunar, coroidea anterior, talámico, basilar y cerebelosos
+- [x] Recorrido del sistema activador ascendente y la conciencia
+
 ## Siguiente (visión docente)
 - [x] Casos que evolucionan: cinco casos ramificados (v12)
 - [x] Cinco casos que evolucionan más (v13)
@@ -81,10 +88,11 @@
 
 ## Pendiente para completar el mapeo
 - [ ] Tronco segmentado con un atlas específico, en lugar del corte por altura
-- [ ] Núcleos del tálamo (atlas THOMAS)
-- [ ] Locus coeruleus y núcleos del rafe desde un atlas, en vez de posiciones aproximadas
+- [x] Núcleos del tálamo (atlas THOMAS) (v14)
+- [x] Locus coeruleus y núcleos del rafe desde un atlas, en vez de posiciones aproximadas (v14)
 - [ ] Cerebelo con licencia abierta
-- [ ] Vascularización: polígono de Willis y territorios arteriales a nivel de vértice
+- [x] Territorios arteriales a nivel de vértice (v14)
+- [ ] Polígono de Willis como malla vascular (requiere un atlas vascular abierto con licencia compatible)
 - [ ] Descripciones para más áreas HCP-MMP1
 
 ## Simulaciones siguientes
