@@ -1,0 +1,64 @@
+{
+  "name": "atlas-encephali",
+  "productName": "Atlas Encephali",
+  "version": "15.0.0",
+  "description": "Atlas 3D interactivo del encéfalo para estudiantes de medicina y salud mental",
+  "main": "main.js",
+  "author": "Nexo Digital Partners",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "scripts": {
+    "start": "electron .",
+    "pack:win": "electron-packager . \"Atlas Encephali\" --platform=win32 --arch=x64 --out=dist --overwrite --icon=../icons/icon.ico --ignore=\"^/dist\" --ignore=\"node_modules/(three|@fontsource)\" --app-copyright=\"Nexo Digital Partners\" --win32metadata.CompanyName=\"Nexo Digital Partners\" --win32metadata.FileDescription=\"Atlas Encephali\"",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "@electron/packager": "^19.0.0",
+    "@fontsource/ibm-plex-mono": "^5.0.0",
+    "@fontsource/ibm-plex-sans": "^5.0.0",
+    "@fontsource/spectral": "^5.0.0",
+    "electron": "38.8.6",
+    "electron-builder": "^26.18.0",
+    "three": "0.128.0"
+  },
+  "build": {
+    "appId": "org.nexodipa.atlasencephali",
+    "productName": "Atlas Encephali",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "www/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "../icons/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Atlas Encephali",
+      "artifactName": "AtlasEncephali-Setup-${version}.exe",
+      "installerIcon": "../icons/icon.ico",
+      "uninstallerIcon": "../icons/icon.ico",
+      "language": "3082"
+    },
+    "publish": null
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexodipa/atlas-encephali.git"
+  }
+}

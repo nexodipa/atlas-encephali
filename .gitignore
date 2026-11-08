@@ -4,3 +4,10 @@ __pycache__/
 np/
 ca/
 ENIGMA/
+
+# app
+app/electron/node_modules/
+app/electron/dist/
+app/electron/dist-installer/
+app/electron/www/
+app/www/
