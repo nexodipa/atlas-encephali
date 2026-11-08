@@ -114,6 +114,12 @@ python pipeline/build_page.py     # escribe index.html
 
 Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSurfer. Después se pasan de RAS a los ejes de three.js (x derecha, y arriba, z anterior).
 
+## Instalar
+
+- **Navegador, tablet o móvil (Android, iPad, Chromebook):** abre https://nexodipa.github.io/atlas-encephali/ y elige «Instalar app» (Chrome) o «Añadir a pantalla de inicio». Queda como app propia, funciona sin conexión después de la primera carga y se actualiza sola cuando hay conexión.
+- **Windows:** instalador `AtlasEncephali-Setup-<versión>.exe` (Electron, sin conexión). No está firmado: si SmartScreen lo bloquea, «Más información» y «Ejecutar de todas formas».
+- **Construir la app:** `python pipeline/build_page.py && python pipeline/build_app.py` genera `app/www/` (versión autónoma con three.js y fuentes dentro, manifiesto y service worker; se publica en la rama `gh-pages`). Para Windows: `cd app/electron && npm install && cp -r ../www www && npx electron-builder --win nsis --x64 --publish never` (en Linux necesita wine y wine32).
+
 ## Fuentes y licencias de los datos
 
 | Componente | Fuente | Nota de licencia |
