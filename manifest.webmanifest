@@ -8,11 +8,67 @@
  "scope": "./",
  "display": "standalone",
  "orientation": "any",
+ "id": "./",
+ "display_override": [
+  "standalone",
+  "minimal-ui"
+ ],
  "background_color": "#0a0f12",
  "theme_color": "#0a0f12",
  "categories": [
   "education",
   "medical"
+ ],
+ "shortcuts": [
+  {
+   "name": "Aprender",
+   "short_name": "Aprender",
+   "url": "./#m=learn",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "Simulación clínica",
+   "short_name": "Simulación",
+   "url": "./#m=sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "Índice del atlas",
+   "short_name": "Índice",
+   "url": "./#go=index",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
+ ],
+ "screenshots": [
+  {
+   "src": "icons/shot-wide.png",
+   "sizes": "1600x1000",
+   "type": "image/png",
+   "form_factor": "wide",
+   "label": "Atlas Encephali en escritorio"
+  },
+  {
+   "src": "icons/shot-narrow.png",
+   "sizes": "800x1280",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Atlas Encephali en tableta"
+  }
  ],
  "icons": [
   {
