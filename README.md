@@ -116,9 +116,10 @@ Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSu
 
 ## Instalar
 
-- **Navegador, tablet o móvil (Android, iPad, Chromebook):** abre https://nexodipa.github.io/atlas-encephali/ y elige «Instalar app» (Chrome) o «Añadir a pantalla de inicio». Queda como app propia, funciona sin conexión después de la primera carga y se actualiza sola cuando hay conexión.
-- **Windows:** instalador `AtlasEncephali-Setup-<versión>.exe` (Electron, sin conexión). No está firmado: si SmartScreen lo bloquea, «Más información» y «Ejecutar de todas formas».
-- **Construir la app:** `python pipeline/build_page.py && python pipeline/build_app.py` genera `app/www/` (versión autónoma con three.js y fuentes dentro, manifiesto y service worker; se publica en la rama `gh-pages`). Para Windows: `cd app/electron && npm install && cp -r ../www www && npx electron-builder --win nsis --x64 --publish never` (en Linux necesita wine y wine32).
+- **Tablet o móvil (Android, iPad, Chromebook):** abre https://nexodipa.github.io/atlas-encephali/ y elige «Instalar app» (Chrome; también hay un botón «Instalar app» en la cabecera cuando el navegador lo permite) o «Añadir a pantalla de inicio» (Safari). Queda en el cajón de apps con accesos directos a Aprender, Simulación e Índice, arranca al instante desde su caché, funciona sin conexión y avisa cuando hay una versión nueva.
+- **Windows:** `AtlasEncephali-Setup-<versión>.exe`. Un doble clic instala sin pedir permisos de administrador (en `%LOCALAPPDATA%\Programs`), crea accesos en el escritorio y en Inicio, aparece en «Aplicaciones instaladas» para desinstalar y abre la app. La app carga la versión publicada, así que se actualiza sola al abrirla con conexión; sin conexión usa la copia guardada o la incluida. Recuerda el tamaño y la posición de la ventana. No está firmado: si SmartScreen lo frena, «Más información» y «Ejecutar de todas formas».
+- **Ajustes** (botón en la cabecera): modo de rendimiento (automático, alta calidad, ahorro para tabletas), recordar el último modo, buscar actualizaciones, código QR para abrir el atlas en la tablet y enlaces internos (`#m=learn`, `#m=sim`, `#go=index`).
+- **Construir:** `python pipeline/build_page.py && python pipeline/build_app.py` genera `app/www/` (versión autónoma con three.js y fuentes dentro, manifiesto y service worker; se publica en la rama `gh-pages`). `bash pipeline/build_installer.sh` genera el instalador de Windows con electron-packager y makensis (sin wine).
 
 ## Fuentes y licencias de los datos
 

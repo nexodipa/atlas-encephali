@@ -11,3 +11,4 @@ app/electron/dist/
 app/electron/dist-installer/
 app/electron/www/
 app/www/
+app/electron/dist/

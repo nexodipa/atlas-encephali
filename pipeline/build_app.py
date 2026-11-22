@@ -58,7 +58,13 @@ manifest = {
     "name": "Atlas Encephali", "short_name": "Encephali", "lang": "es", "dir": "ltr",
     "description": "Atlas 3D interactivo del encéfalo para estudiantes de medicina y salud mental.",
     "start_url": "./", "scope": "./", "display": "standalone", "orientation": "any",
+    "id": "./", "display_override": ["standalone", "minimal-ui"],
     "background_color": "#0a0f12", "theme_color": "#0a0f12", "categories": ["education", "medical"],
+    "shortcuts": [{"name": "Aprender", "short_name": "Aprender", "url": "./#m=learn", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+                  {"name": "Simulación clínica", "short_name": "Simulación", "url": "./#m=sim", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+                  {"name": "Índice del atlas", "short_name": "Índice", "url": "./#go=index", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}],
+    "screenshots": [{"src": "icons/shot-wide.png", "sizes": "1600x1000", "type": "image/png", "form_factor": "wide", "label": "Atlas Encephali en escritorio"},
+                    {"src": "icons/shot-narrow.png", "sizes": "800x1280", "type": "image/png", "form_factor": "narrow", "label": "Atlas Encephali en tableta"}],
     "icons": [{"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
               {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
               {"src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
@@ -66,15 +72,29 @@ manifest = {
 json.dump(manifest, open(os.path.join(WWW, 'manifest.webmanifest'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 ver = hashlib.sha1(html.encode()).hexdigest()[:10]
-sw = f"""// Service worker de Atlas Encephali: guarda la página para usarla sin conexión.
-// Estrategia: red primero para la página (así llegan las versiones nuevas) y caché si no hay conexión.
-const CACHE='encephali-{ver}';
-const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/icon-32.png','icons/icon-180.png'];
+sw = f"""// Service worker de Atlas Encephali.
+// La página se sirve al instante desde la caché (arranque de app, también sin conexión) y se revisa en segundo plano:
+// si en el servidor hay una versión distinta, se guarda y se avisa a la página para que ofrezca actualizar.
+const CACHE='encephali-v1';
+const CORE=['./','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/icon-32.png','icons/icon-180.png'];
 self.addEventListener('install',e=>{{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); }});
 self.addEventListener('activate',e=>{{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); }});
+const ver=t=>{{ const m=t.match(/const APPVER='([^']+)'/); return (m?m[1]:'')+':'+t.length; }};
+async function revalidate(req,key){{
+  try{{ const res=await fetch(req,{{cache:'no-cache'}}); if(!res.ok) return; const c=await caches.open(CACHE); const old=await c.match(key);
+    const nt=await res.clone().text(); let changed=true; if(old){{ changed=ver(await old.text())!==ver(nt); }}
+    await c.put(key,res); if(old&&changed){{ const cl=await self.clients.matchAll({{type:'window'}}); cl.forEach(x=>x.postMessage({{type:'update'}})); }}
+  }}catch(e){{}}
+}}
 self.addEventListener('fetch',e=>{{ const r=e.request; if(r.method!=='GET') return; const u=new URL(r.url);
-  if(u.origin!==location.origin){{ e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{{ if(res.ok&&/fonts\\.(googleapis|gstatic)\\.com$/.test(u.hostname)){{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(r,cp)); }} return res; }}).catch(()=>m))); return; }}
-  e.respondWith(fetch(r).then(res=>{{ if(res.ok){{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(r,cp)); }} return res; }}).catch(()=>caches.match(r).then(m=>m||caches.match('index.html')))); }});
+  if(u.search&&u.origin===location.origin){{ return; }}
+  if(r.mode==='navigate'||(u.origin===location.origin&&(u.pathname.endsWith('/')||u.pathname.endsWith('/index.html')))){{
+    const key=new URL('./',location).href;
+    e.respondWith(caches.open(CACHE).then(c=>c.match(key)).then(hit=>{{ if(hit){{ e.waitUntil(revalidate(r,key)); return hit; }}
+      return fetch(r).then(res=>{{ if(res.ok){{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(key,cp)); }} return res; }}); }}));
+    return; }}
+  e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{{ if(res.ok&&(u.origin===location.origin||/fonts\\.(googleapis|gstatic)\\.com$/.test(u.hostname))){{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(r,cp)); }} return res; }})));
+}});
 """
 open(os.path.join(WWW, 'sw.js'), 'w', encoding='utf-8').write(sw)
 open(os.path.join(WWW, '.nojekyll'), 'w').write('')

@@ -23,6 +23,9 @@ button,select{font:inherit;color:inherit}
 #stage:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{display:grid;grid-template-rows:auto 1fr;height:100%}
+html,body{overscroll-behavior:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:50;background:var(--bg-3);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:10px 14px;display:flex;gap:14px;align-items:center;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+#toast[hidden]{display:none}
 header.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
   padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .brand{display:flex;align-items:baseline;gap:10px}
@@ -190,7 +193,7 @@ body.present .tourcap .capnav button:disabled{opacity:.3}
     <nav class="modes" id="modes" aria-label="Modo">
       <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button><button data-m="learn">Aprender</button>
     </nav>
-    <div class="langbox"><span id="trStatus" role="status" hidden></span><button id="trExport" class="lnk" hidden>Exportar traducciones</button><select id="langSel" aria-label="Idioma" data-notr><option value="es">Español</option></select></div>
+    <div class="langbox"><button id="installBtn" class="lnk" hidden>Instalar app</button><button class="lnk" data-go="settings" id="setBtn">Ajustes</button><span id="trStatus" role="status" hidden></span><button id="trExport" class="lnk" hidden>Exportar traducciones</button><select id="langSel" aria-label="Idioma" data-notr><option value="es">Español</option></select></div>
   </header>
   <main>
     <section class="left">
@@ -764,6 +767,7 @@ pin.addEventListener('click',e=>{
   if(t==='semio'){ S.study.tab='semio'; if(v) S.study.semio=v; setMode('study'); return; }
   if(t==='gloss'){ renderGloss(''); panel.scrollTop=0; return; }
   if(t==='about'){ renderAbout(); panel.scrollTop=0; return; }
+  if(t==='settings'){ renderSettings(); panel.scrollTop=0; return; }
   if(t==='equiv'){ renderEquiv(); panel.scrollTop=0; return; }
   if(t==='biblio'){ renderBiblio(); panel.scrollTop=0; return; }
   if(t==='dis'){ S.pathTab='enigma'; S.dis=v; setMode('path'); return; }
@@ -861,9 +865,9 @@ function renderGloss(q){
   const i=$('#glossQ'); i.oninput=e=>{ const v=e.target.value; renderGloss(v); const n=$('#glossQ'); n.focus(); n.setSelectionRange(v.length,v.length); };
 }
 function renderAbout(){
-  pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión 6</p>
+  pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión ${APPVER}</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 15. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 16. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -1179,7 +1183,53 @@ function setMode(m){
   if(m==='sim'){ S.sel=null; $('#clearBtn').hidden=true; }
   recolor(); showPanel();
 }
-$('#modes').addEventListener('click',e=>{const b=e.target.closest('button'); if(b) setMode(b.dataset.m);});
+$('#modes').addEventListener('click',e=>{const b=e.target.closest('button'); if(b){ setMode(b.dataset.m); store.set('lastMode',b.dataset.m); }});
+
+/* ============ app: ajustes, instalación, actualizaciones, enlaces internos ============ */
+const APPVER='16';
+const APPURL='https://nexodipa.github.io/atlas-encephali/';
+const IS_STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||/Electron/.test(navigator.userAgent);
+function perfMode(){ const m=store.get('perf','auto'); if(m!=='auto') return m;
+  const touch=matchMedia('(pointer: coarse)').matches, mem=navigator.deviceMemory||8, cores=navigator.hardwareConcurrency||8;
+  return touch&&(mem<=4||cores<=4)?'ahorro':'alto'; }
+let deferredInstall=null;
+addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; $('#installBtn').hidden=false; });
+addEventListener('appinstalled',()=>{ deferredInstall=null; $('#installBtn').hidden=true; toast('Atlas Encephali quedó instalado como app.'); });
+$('#installBtn').onclick=async()=>{ if(!deferredInstall) return renderSettings(); deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; $('#installBtn').hidden=true; };
+function toast(msg,act,fn){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
+  t.innerHTML=`<span>${msg}</span>${act?`<button class="lnk">${act}</button>`:''}`; t.hidden=false; if(act) t.querySelector('button').onclick=()=>{ t.hidden=true; fn&&fn(); }; else setTimeout(()=>t.hidden=true,4000); }
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  navigator.serviceWorker.addEventListener('message',e=>{ if(e.data&&e.data.type==='update') toast('Hay una versión nueva del atlas.','Actualizar',()=>location.reload()); });
+}
+function renderSettings(){ const pm=store.get('perf','auto'), eff=perfMode(), sw=('serviceWorker' in navigator)&&/^https?:$/.test(location.protocol);
+  let h=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Ajustes</span></div><p class="kicker">App</p><h2>Ajustes</h2><p class="sub2">Atlas Encephali · versión ${APPVER}${IS_STANDALONE?' · abierto como app':''}</p>
+  <h3>Rendimiento</h3><div class="seg" id="perfSel">${[['auto','Automático'],['alto','Alta calidad'],['ahorro','Ahorro']].map(([k,l])=>`<button data-perf="${k}" class="${pm===k?'on':''}">${l}</button>`).join('')}</div>
+  <p style="color:var(--muted);font-size:13px;margin-top:8px">Ahora: ${eff==='ahorro'?'ahorro (sin suavizado de bordes, menos resolución, 30 imágenes por segundo y sin giro automático; gasta menos batería en la tablet)':'alta calidad'}. El cambio se aplica al recargar.</p>
+  <h3>Recordar dónde lo dejé</h3><label class="chk"><input type="checkbox" id="keepState" ${store.get('keepState',true)?'checked':''}>Abrir en el último modo usado</label>
+  <h3>Instalar como app</h3>`;
+  if(IS_STANDALONE) h+=`<p>Ya lo estás usando como app.</p>`;
+  else if(deferredInstall) h+=`<p><button class="lnk" id="instNow">Instalar Atlas Encephali en este dispositivo →</button></p>`;
+  h+=`<p><b>Android (tablet o móvil):</b> abre <code>${APPURL}</code> en Chrome, menú de tres puntos, «Instalar app». Queda en el cajón de apps, se abre a pantalla completa y funciona sin conexión.</p>
+  <p><b>iPad o iPhone:</b> abre la dirección en Safari, botón Compartir, «Añadir a pantalla de inicio».</p>
+  <p><b>Windows:</b> instalador <code>AtlasEncephali-Setup</code>: se instala con un doble clic, se abre solo y se actualiza al abrirlo con conexión.</p>
+  <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div style="background:#fff;padding:8px;border-radius:6px;width:132px;height:132px">/*QRSVG*/</div><p style="color:var(--muted);font-size:13px">Escanea con la cámara de la tablet para abrir el atlas allí.</p></div>`;
+  if(sw) h+=`<h3>Actualizaciones</h3><p><button class="lnk" id="chkUpd">Buscar una versión nueva →</button></p>`;
+  h+=`<h3>Atajos</h3><p style="color:var(--muted);font-size:13px">Puedes enlazar una sección añadiendo al final de la dirección <code>#m=learn</code>, <code>#m=sim</code>, <code>#m=study</code> o <code>#go=index</code>. Teclado en el modelo: flechas para girar, + y − para acercar; Esc sale del modo clase.</p>`;
+  pin.innerHTML=h;
+  pin.querySelectorAll('[data-perf]').forEach(b=>b.onclick=()=>{ store.set('perf',b.dataset.perf); renderSettings(); toast('Se aplicará al recargar.','Recargar ahora',()=>location.reload()); });
+  $('#keepState').onchange=e=>store.set('keepState',e.target.checked);
+  const ib=$('#instNow'); if(ib) ib.onclick=()=>$('#installBtn').click();
+  const cu=$('#chkUpd'); if(cu) cu.onclick=async()=>{ cu.textContent='Buscando…'; try{ const r=await navigator.serviceWorker.getRegistration(); if(r) await r.update(); const v=await latestVersion();
+      if(v&&v!==APPVER){ cu.textContent='Hay una versión nueva ('+v+').'; toast('Versión '+v+' disponible.','Actualizar',()=>location.reload()); } else cu.textContent='Tienes la versión más reciente.'; }catch(e){ cu.textContent='Sin conexión: se buscará la próxima vez.'; } };
+}
+function routeHash(){ const h=new URLSearchParams(location.hash.slice(1)); const m=h.get('m'), g=h.get('go');
+  if(m&&['anat','path','sim','drug','study','learn'].includes(m)) setMode(m);
+  if(g){ const b=document.createElement('button'); b.dataset.go=g; b.hidden=true; pin.appendChild(b); b.click(); b.remove(); }
+  return !!(m||g); }
+addEventListener('hashchange',routeHash);
+async function latestVersion(){ const res=await fetch('./?v='+Date.now(),{cache:'no-store'}); const m=(await res.text()).match(/const APPVER='([^']+)'/); return m?m[1]:null; }
+addEventListener('atlas-ready',()=>{ if(/^https?:$/.test(location.protocol)&&navigator.onLine) setTimeout(async()=>{ try{ const v=await latestVersion(); if(v&&v!==APPVER) toast('Hay una versión nueva del atlas ('+v+').','Actualizar',()=>location.reload()); }catch(e){} },4000); });
+addEventListener('atlas-ready',()=>{ if(routeHash()) return; const lm=store.get('lastMode',null); if(store.get('keepState',true)&&lm&&lm!=='anat') setMode(lm); });
 
 if(!window.THREE){ $('#loading').textContent='No se pudo cargar el motor 3D. Revisa la conexión y recarga.'; }
 else init3D().catch(err=>{ console.error(err); $('#loading').textContent='No se pudieron cargar los datos anatómicos ('+err.message+').'; });
@@ -1203,8 +1253,9 @@ function F(name){const a=A(name), f=new Float32Array(a.length); for(let i=0;i<a.
 
 const stage=$('#stage');
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const LOW=perfMode()==='ahorro';
+const renderer=new THREE.WebGLRenderer({antialias:!LOW,alpha:true,powerPreference:LOW?'low-power':'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,LOW?1.25:2));
 stage.insertBefore(renderer.domElement,stage.firstChild);
 const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(30,1,1,4000); scene.add(camera);
 scene.add(new THREE.HemisphereLight(0xdde8ff,0x231a12,0.62));
@@ -1525,7 +1576,7 @@ function buildOverlay(){
 }
 
 /* ============ selección ============ */
-const cam={yaw:-1.35,pitch:0.18,dist:520}, camT={...cam}; let idle=!RM;
+const cam={yaw:-1.35,pitch:0.18,dist:520}, camT={...cam}; let idle=!RM&&!LOW, lastT=0;
 function aimAt(v){ const d=v.clone(); if(d.lengthSq()<1) return; d.normalize(); camT.yaw=Math.atan2(d.x,d.z); camT.pitch=Math.max(-1.2,Math.min(1.2,Math.asin(d.y)*0.85+0.1)); }
 function centroidOf(o,test){ const p=o.mesh.geometry.attributes.position.array, c=new THREE.Vector3(); let n=0; for(let i=0;i<p.length/3;i++) if(test(i)){c.x+=p[i*3];c.y+=p[i*3+1];c.z+=p[i*3+2];n++;} return n?c.multiplyScalar(1/n).sub(C0):null; }
 aimStroke=()=>{ const st=S.stroke, T=strokeTester(st); if(!T) return; const acc=new THREE.Vector3(); let n=0;
@@ -1792,7 +1843,8 @@ function orientName(){ const p=cam.pitch; if(p>0.95) return 'superior'; if(p<-0.
   if(a<0.35) return 'anterior'; if(a>2.8) return 'posterior'; if(a<1.2) return 'anterolateral '+side; if(a<1.95) return 'lateral '+side; return 'posterolateral '+side; }
 const tmp=new THREE.Vector3(), clock=new THREE.Clock(); let lastName='';
 const tag=$('#tag');
-function frame(){
+function frame(t){
+  if(LOW&&t-lastT<31){ requestAnimationFrame(frame); return; } lastT=t;
   const dt=Math.min(clock.getDelta(),0.05), k=1-Math.pow(0.002,dt);
   if(idle) camT.yaw+=dt*0.1;
   let dy=camT.yaw-cam.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); cam.yaw+=dy*k; cam.pitch+=(camT.pitch-cam.pitch)*k; cam.dist+=(camT.dist-cam.dist)*k;
@@ -1843,6 +1895,7 @@ function frame(){
   requestAnimationFrame(frame);
 }
 rebuildCtx(); recolor(); $('#loading').remove(); requestAnimationFrame(frame);
+window.dispatchEvent(new Event('atlas-ready'));
 }
 </script>
 <script>

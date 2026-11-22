@@ -1,7 +1,7 @@
 {
   "name": "atlas-encephali",
   "productName": "Atlas Encephali",
-  "version": "15.0.0",
+  "version": "16.0.0",
   "description": "Atlas 3D interactivo del encéfalo para estudiantes de medicina y salud mental",
   "main": "main.js",
   "author": "Nexo Digital Partners",
@@ -44,16 +44,16 @@
       "signAndEditExecutable": true
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "Atlas Encephali",
       "artifactName": "AtlasEncephali-Setup-${version}.exe",
       "installerIcon": "../icons/icon.ico",
       "uninstallerIcon": "../icons/icon.ico",
-      "language": "3082"
+      "deleteAppDataOnUninstall": false
     },
     "publish": null
   },
