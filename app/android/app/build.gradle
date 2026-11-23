@@ -6,8 +6,8 @@ android {
         applicationId 'org.nexodipa.atlasencephali'
         minSdk 24
         targetSdk 34
-        versionCode (System.getenv('VERSION_CODE') ?: '17') as int
-        versionName (System.getenv('VERSION_NAME') ?: '17')
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '17')
+        versionName(System.getenv('VERSION_NAME') ?: '17')
     }
     buildTypes {
         release {
