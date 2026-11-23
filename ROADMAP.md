@@ -64,6 +64,12 @@
 - [x] Modo Aprender con ocho recorridos guiados
 - [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
 
+## Hecho (v17, polifarmacia)
+- [x] Simulador de combinaciones: cargas serotoninérgica, anticolinérgica y sedante, QT (Tisdale), umbral convulsivo, CYP450 con fenoconversión, interacciones por pares y huella cerebral combinada
+
+## Hecho (v16, app)
+- [x] App de Windows que se actualiza sola, app instalable sin conexión para Android, iPad y escritorio, ajustes y modo de ahorro
+
 ## Hecho (v15, hipertensión intracraneal)
 - [x] Hematomas epidural, subdural agudo y crónico como colecciones que comprimen el cerebro
 - [x] Hemorragia subaracnoidea por origen, con Fisher modificada, Hunt y Hess y evolución por días

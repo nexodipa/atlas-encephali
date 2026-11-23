@@ -3255,6 +3255,67 @@ function ropperLevel(p){ if(p<3) return "alerta"; if(p<6) return "somnolencia"; 
 
 ROUTES.neuro.units.push({t:"Hipertensión intracraneal",it:[["sim","xa","Hemorragias extraaxiales y herniación"],["sim","ich","Hemorragia intraparenquimatosa"],["sim","gbm","Glioblastoma y efecto de masa"]]});
 
+/* ===== v17: simulador de combinaciones de fármacos =====
+   Carga serotoninérgica (criterios de Hunter), carga anticolinérgica (escala ACB), riesgo de QT (puntuación de Tisdale),
+   depresión respiratoria, umbral convulsivo, fenoconversión por CYP450 y todas las interacciones por pares. */
+
+Object.assign(REFS,{
+  tisdale2013:{au:"Tisdale y cols.",y:"2013",t:"Development and validation of a risk score to predict QT interval prolongation in hospitalized patients",j:"Circ Cardiovasc Qual Outcomes",v:"6",p:"479-487",pmid:"23716032",doi:"10.1161/CIRCOUTCOMES.113.000152"},
+  dunkley2003:{au:"Dunkley y cols.",y:"2003",t:"The Hunter Serotonin Toxicity Criteria: simple and accurate diagnostic decision rules for serotonin toxicity",j:"QJM",v:"96",p:"635-642",pmid:"12925718",doi:"10.1093/qjmed/hcg109"},
+  fox2011:{au:"Fox y cols.",y:"2011",t:"Anticholinergic medication use and cognitive impairment in the older population: the Medical Research Council Cognitive Function and Ageing Study",j:"J Am Geriatr Soc",v:"59",p:"1477-1483",pmid:"21707557",doi:"10.1111/j.1532-5415.2011.03491.x"}
+});
+REFMAP['regimen']=["dunkley2003","fox2011","tisdale2013"];
+
+/* fármacos no psicotrópicos que aparecen a menudo junto a los psicofármacos (solo para el simulador) */
+const XDRUGS={
+  ibuprofen:{es:"Ibuprofeno (AINE)",cls:"Otros fármacos frecuentes"},
+  enalapril:{es:"Enalapril (IECA)",cls:"Otros fármacos frecuentes"},
+  hydrochlorothiazide:{es:"Hidroclorotiazida",cls:"Otros fármacos frecuentes"},
+  furosemide:{es:"Furosemida",cls:"Otros fármacos frecuentes"},
+  ondansetron:{es:"Ondansetrón",cls:"Otros fármacos frecuentes"},
+  metoclopramide:{es:"Metoclopramida",cls:"Otros fármacos frecuentes"},
+  azithromycin:{es:"Azitromicina",cls:"Otros fármacos frecuentes"},
+  clarithromycin:{es:"Claritromicina",cls:"Otros fármacos frecuentes"},
+  fluconazole:{es:"Fluconazol",cls:"Otros fármacos frecuentes"},
+  linezolid:{es:"Linezolid",cls:"Otros fármacos frecuentes"},
+  rifampicin:{es:"Rifampicina",cls:"Otros fármacos frecuentes"},
+  omeprazole:{es:"Omeprazol",cls:"Otros fármacos frecuentes"},
+  tramadol:{es:"Tramadol",cls:"Otros fármacos frecuentes"},
+  codeine:{es:"Codeína",cls:"Otros fármacos frecuentes"},
+  dextromethorphan:{es:"Dextrometorfano",cls:"Otros fármacos frecuentes"}
+};
+Object.assign(IX,{
+  ibuprofen:{liup:1},enalapril:{liup:1},hydrochlorothiazide:{liup:1,hypok:1},furosemide:{loop:1,hypok:1},
+  ondansetron:{qt:1,ser:1,cyp:{sub:['3A4']}},metoclopramide:{da:'ant'},azithromycin:{qt:1},
+  clarithromycin:{qt:1,cyp:{inh:{'3A4':'potente'}}},fluconazole:{qt:1,cyp:{inh:{'3A4':'moderado','2C19':'potente','2C9':'moderado'}}},
+  linezolid:{ser:'lzd'},rifampicin:{cyp:{ind:['3A4','2C9','2C19','1A2','2B6']}},omeprazole:{cyp:{inh:{'2C19':'moderado'}}},
+  tramadol:{ser:2,op:1,cns:1,seiz:1,pro2d6:1,cyp:{sub:['2D6','3A4']}},codeine:{op:1,cns:1,pro2d6:1,cyp:{sub:['2D6']}},
+  dextromethorphan:{ser:1,cyp:{sub:['2D6']}}
+});
+// umbral convulsivo
+for(const k of ['clozapine','amitriptyline','clomipramine','chlorpromazine']) if(IX[k]) IX[k].seiz=1;
+
+/* factores del paciente; tisdale: puntos de la escala de Tisdale (2013) */
+const PTF=[
+  ['age','68 años o más',{tisdale:1}],
+  ['female','Mujer',{tisdale:1}],
+  ['k','Potasio por debajo de 3,5 mEq/L',{tisdale:2}],
+  ['qtc','QTc de partida de 450 ms o más',{tisdale:2}],
+  ['mi','Infarto agudo de miocardio',{tisdale:2}],
+  ['sepsis','Sepsis',{tisdale:3}],
+  ['hf','Insuficiencia cardiaca o disfunción del ventrículo izquierdo',{tisdale:3}],
+  ['dementia','Demencia o deterioro cognitivo',{}],
+  ['epilepsy','Epilepsia o crisis previas',{}],
+  ['resp','EPOC, apnea del sueño u otra enfermedad respiratoria',{}],
+  ['pm2d6','Metabolizador lento de CYP2D6 (genotipo)',{}],
+  ['renal','Insuficiencia renal o deshidratación',{}]
+];
+const HUNTER=[['spont','Clonus espontáneo'],['induc','Clonus inducible'],['ocular','Clonus ocular'],['agit','Agitación'],['diaph','Diaforesis'],['tremor','Temblor'],['hyperref','Hiperreflexia'],['hypert','Hipertonía'],['temp','Temperatura por encima de 38 °C']];
+function hunterMet(h){ const a=h.agit||h.diaph;
+  return !!(h.spont||(h.induc&&a)||(h.ocular&&a)||(h.tremor&&h.hyperref)||(h.hypert&&h.temp&&(h.ocular||h.induc))); }
+
+ROUTES.pharm.units.splice(ROUTES.pharm.units.length-1,0,{t:"Combinaciones",it:[["go","regimen","Simulador de combinaciones"],["ec","serotonin"],["ec","lithium"]]});
+
 </script>
 <script>
 "use strict";
@@ -3262,7 +3323,7 @@ ROUTES.neuro.units.push({t:"Hipertensión intracraneal",it:[["sim","xa","Hemorra
 const $=s=>document.querySelector(s);
 const pin=$('#pin'), panel=$('#panel');
 const S={mode:'anat',parc:'dk',hemi:'both',infl:0,explode:0,ghost:1,layers:{deep:true,vent:true,cb:true,stem:true,tracts:false,thn:false,bsn:false},trColor:'cls',nt:null,
-  learn:{tab:'route',route:null,tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'},xa:{type:'edh',site:'temporal',side:'L',vol:0,src:'acomm',thick:true,ivh:false,hh:1,day:5}};
+  reg:[],regOpen:false,pt:{},hunter:{},learn:{tab:'route',route:null,tour:null,step:0,play:false,ec:null,a:'psy:panic',b:'org:pheo'},study:{semio:'neuro',si:null,tab:'cases',ci:0,state:'ask',reveal:[],wrong:null,fq:null,deck:'Todo',qi:0,qa:null,fdeck:'Regiones',fi:0,fshow:false},sel:null,hover:null,dis:'scz',pathTab:'psy',disease:'ad',stage:0,rare:'wilson',psy:'scz',org:'delirium',drug:'haloperidol',rec:'D2',dose:null,stroke:{art:'mca',side:'L',on:false},tumor:{loc:'lfront',R:0},simTab:'isq',ich:{loc:'put',vol:0,gcs:0,ivh:false,old:false},met:{n:0,R:7,prim:'lung'},xa:{type:'edh',site:'temporal',side:'L',vol:0,src:'acomm',thick:true,ivh:false,hh:1,day:5}};
 const DKN = META.dk_names;               // 'L_bankssts'...
 const dkBase = i => DKN[i].slice(2);
 const dkSide = i => DKN[i][0];
@@ -3314,7 +3375,7 @@ function renderIndex(){
     <button class="chip" data-go="org:${S.org}">Organicidad <code>${Object.keys(ORG).length}</code></button>
     <button class="chip" data-go="ndg:${S.disease}">Neurodegenerativas <code>${Object.keys(DISEASE).length}</code></button>
     <button class="chip" data-go="rare:${S.rare}">Enfermedades raras <code>${Object.keys(RARE).length}</code></button>
-    <button class="chip" data-go="drug:${S.drug}">Fármacos <code>${Object.keys(DRUGS).length}</code></button>
+    <button class="chip" data-go="drug:${S.drug}">Fármacos <code>${Object.keys(DRUGS).length}</code></button><button class="chip" data-go="regimen">Simulador de combinaciones</button>
     <button class="chip" data-go="dis:${S.dis}">Neuroimagen ENIGMA <code>${Object.keys(META.disorders).length}</code></button>
     <button class="chip" data-go="study">Estudio: casos, preguntas y tarjetas</button>
     <button class="chip" data-go="semio:neuro">Semiología</button>
@@ -3472,6 +3533,7 @@ function occChart(D){
     <circle cx="${xs(d0)}" cy="${ys(v0)}" r="4" style="fill:var(--bone)"></circle></svg>`;
 }
 function renderDrug(){
+  if(S.regOpen) return renderReg();
   const D=DRUGS[S.drug], tg=drugTargets(D);
   if(S.rec!=='__mix'&&!tg.includes(S.rec)) S.rec=tg[0]||null;
   const lvl=['','baja','moderada','alta'];
@@ -3484,6 +3546,7 @@ function renderDrug(){
     <p id="occTxt" style="font-size:13px">Ocupación estimada: <b>${v0}%</b>${zone?` · ${zone[2].toLowerCase()}`:''}. ${D.occ.note||''}</p>
     <p style="font-size:12px;color:var(--faint)">Curva hiperbólica ajustada a estudios PET de ocupación (${D.occ.ref}). Las animaciones de los sistemas se atenúan o intensifican con la ocupación. No es una guía de dosificación: la ocupación real varía entre personas y a lo largo del día.</p>`; }
   pin.innerHTML=`<p class="kicker">Fármacos · dianas en el cerebro</p><h2>${D.es}</h2><p class="sub2">${D.cls} · ${D.sub||''}</p>
+  <p style="margin:-4px 0 12px"><button class="lnk" data-go="regimen">Combinar varios fármacos en un paciente →</button></p>
   <select id="drSel" style="margin-bottom:14px">${DRUGCLS.map(c=>`<optgroup label="${c}">${Object.keys(DRUGS).filter(k=>DRUGS[k].cls===c).map(k=>`<option value="${k}" ${k===S.drug?'selected':''}>${DRUGS[k].es}</option>`).join('')}</optgroup>`).join('')}</select>
   <p class="lede">${D.mech}</p>
   <h3>Perfil de afinidad</h3><p style="font-size:12.5px;color:var(--muted)">Afinidad relativa por cada diana y tipo de acción. Las marcadas como PET tienen mapa de densidad en este atlas.</p>
@@ -3771,7 +3834,7 @@ renderRare=withRefs(renderRare,()=>['rare:'+S.rare]);
 renderOrg=withRefs(renderOrg,()=>['org:'+S.org]);
 renderSim=withRefs(renderSim,()=>['sim:'+S.simTab]);
 renderPsy=withRefs(renderPsy,()=>['psy:'+S.psy]);
-renderDrug=withRefs(renderDrug,()=>['drug:'+S.drug]);
+renderDrug=withRefs(renderDrug,()=>S.regOpen?[]:['drug:'+S.drug]);
 pin.addEventListener('click',e=>{
   const sa=e.target.closest('[data-simart]'); if(sa){ S.simTab='isq'; S.stroke.art=sa.dataset.simart; S.stroke.side=sa.dataset.simside||'L'; setMode('sim'); S.stroke.on=true; recolor(); renderSim(); aimStroke(); return; }
   const pt=e.target.closest('[data-ptab]'); if(pt){ S.pathTab=pt.dataset.ptab; setNT(null); diseaseView(); renderPath(); return; }
@@ -3783,6 +3846,7 @@ pin.addEventListener('click',e=>{
   if(t==='gloss'){ renderGloss(''); panel.scrollTop=0; return; }
   if(t==='about'){ renderAbout(); panel.scrollTop=0; return; }
   if(t==='settings'){ renderSettings(); panel.scrollTop=0; return; }
+  if(t==='regimen'){ S.regOpen=true; if(!S.reg.length&&S.drug) S.reg=[S.drug]; S.rec='__reg'; if(S.mode!=='drug') setMode('drug'); else { recolor(); renderReg(); } panel.scrollTop=0; return; }
   if(t==='equiv'){ renderEquiv(); panel.scrollTop=0; return; }
   if(t==='biblio'){ renderBiblio(); panel.scrollTop=0; return; }
   if(t==='dis'){ S.pathTab='enigma'; S.dis=v; setMode('path'); return; }
@@ -3790,7 +3854,7 @@ pin.addEventListener('click',e=>{
   if(t==='org'){ S.pathTab='org'; S.org=v; setMode('path'); return; }
   if(t==='ndg'){ S.pathTab='dis'; S.disease=v; S.stage=0; setMode('path'); return; }
   if(t==='rare'){ S.pathTab='rare'; S.rare=v; setMode('path'); return; }
-  if(t==='drug'){ S.drug=v; S.dose=null; S.rec=drugTargets(DRUGS[v])[0]||null; setMode('drug'); return; }
+  if(t==='drug'){ S.regOpen=false; S.drug=v; S.dose=null; S.rec=drugTargets(DRUGS[v])[0]||null; setMode('drug'); return; }
   if((S.mode==='study'||S.mode==='learn'||S.mode==='sim')&&['dk','deep','stem','cb','tr','lobe','gl','nt','art'].includes(t)) setMode('anat');
   if(t==='art') return select({kind:'art',id:+v,h:b.dataset.go.split(':')[2]||'lh'});
   if(t==='lobe') return select({kind:'lobe',id:v,h:b.dataset.go.split(':')[2]||'lh'});
@@ -3828,8 +3892,9 @@ function renderBiblio(){
 
 /* ============ farmacología clínica e interacciones ============ */
 function cypName(e){ return 'CYP'+e; }
+function dname(k){ return DRUGS[k]?DRUGS[k].es:(XDRUGS[k]?XDRUGS[k].es:k); }
 function interact(a,b){
-  const A=IX[a]||{}, B=IX[b]||{}, na=DRUGS[a].es, nb=DRUGS[b].es, out=[];
+  const A=IX[a]||{}, B=IX[b]||{}, na=dname(a), nb=dname(b), out=[];
   const both=(f)=>f(A,B,na,nb)||f(B,A,nb,na);
   if(a===b) return [{s:'baja',t:'Es el mismo fármaco.'}];
   both((X,Y,nx,ny)=>{ if(X.ser==='mao'&&(Y.ser||Y.symp||Y.da==='ago'||b==='bupropion'||a==='bupropion')){ out.push({s:'alta',t:`${nx} es un IMAO irreversible: con serotoninérgicos puede causar síndrome serotoninérgico y con simpaticomiméticos o dopaminérgicos, crisis hipertensiva. Combinación contraindicada; respetar un lavado de 2 semanas (5 semanas tras la fluoxetina).`}); return true; } });
@@ -3843,8 +3908,12 @@ function interact(a,b){
   else if((A.cns||0)>=1&&(B.cns||0)>=1) out.push({s:(A.cns||0)+(B.cns||0)>=4?'moderada':'baja',t:'Sedación aditiva: somnolencia, caídas, alteración psicomotora (conducción).'});
   both((X,Y,nx,ny)=>{ if(X.opant&&(Y.op||Y.opp)){ out.push({s:'alta',t:`${nx} bloquea el receptor μ: en una persona que toma ${ny} precipita abstinencia y anula la analgesia.`}); return true; } });
   both((X,Y,nx,ny)=>{ if(X.opp&&Y.op){ out.push({s:'moderada',t:`${nx} es un agonista parcial de altísima afinidad: desplaza a ${ny} y puede precipitar abstinencia si se introduce con el agonista aún activo.`}); return true; } });
-  both((X,Y,nx,ny)=>{ const inh=(X.cyp||{}).inh||{}; for(const e in inh) if(((Y.cyp||{}).sub||[]).includes(e)) out.push({s:inh[e]==='potente'?'moderada':'baja',t:`${nx} inhibe ${cypName(e)} (${inh[e]}): aumenta los niveles de ${ny}.`}); });
+  both((X,Y,nx,ny)=>{ const inh=(X.cyp||{}).inh||{}; for(const e in inh) if(((Y.cyp||{}).sub||[]).includes(e)&&!(Y.pro2d6&&e==='2D6')) out.push({s:inh[e]==='potente'?'moderada':'baja',t:`${nx} inhibe ${cypName(e)} (${inh[e]}): aumenta los niveles de ${ny}.`}); });
   both((X,Y,nx,ny)=>{ const ind=(X.cyp||{}).ind||[]; for(const e of ind) if(((Y.cyp||{}).sub||[]).includes(e)) out.push({s:'moderada',t:`${nx} induce ${cypName(e)}: reduce los niveles de ${ny}, con riesgo de pérdida de eficacia (y de toxicidad al retirar el inductor).`}); });
+  both((X,Y,nx,ny)=>{ if(X.ser==='lzd'&&(typeof Y.ser==='number'||Y.ser==='mao')){ out.push({s:'alta',t:`${nx} es un inhibidor débil y reversible de la MAO: con ${ny} se han descrito síndromes serotoninérgicos graves. Si el antibiótico es imprescindible, suspender el serotoninérgico y vigilar de cerca.`}); return true; } });
+  both((X,Y,nx,ny)=>{ if(X.li&&Y.liup){ out.push({s:'alta',t:`${ny} reduce la eliminación renal del litio y eleva sus niveles: riesgo de intoxicación (temblor grueso, ataxia, confusión). Litemia a los 5–7 días de empezar o cambiar la dosis, o evitar la combinación.`}); return true; } });
+  both((X,Y,nx,ny)=>{ const st=((Y.cyp||{}).inh||{})['2D6']; if(X.pro2d6&&st){ out.push({s:st==='potente'?'moderada':'baja',t:`${nx} necesita CYP2D6 para transformarse en su metabolito activo, y ${ny} lo inhibe (${st}): menos analgesia, y el paciente puede subir la dosis por su cuenta.${X.ser?' Además queda más fármaco original, que es el que tiene el efecto serotoninérgico.':''}`}); return true; } });
+  both((X,Y,nx,ny)=>{ if(X.hypok&&Y.qt){ out.push({s:'moderada',t:`${nx} puede bajar el potasio y el magnesio, lo que suma riesgo de arritmia a la prolongación del QT de ${ny}.`}); return true; } });
   both((X,Y,nx,ny)=>{ if((X.cyp||{}).inhLam&&Y.lam){ out.push({s:'alta',t:`${nx} inhibe la glucuronidación de ${ny} y duplica sus niveles: mayor riesgo de exantema grave (Stevens-Johnson). Usar la mitad de la dosis y una titulación más lenta.`}); return true; } });
   if(A.agr&&B.agr) out.push({s:'alta',t:'Ambos pueden causar agranulocitosis: combinación desaconsejada.'});
   both((X,Y,nx,ny)=>{ if(X.da==='ant'&&Y.da==='ago'){ out.push({s:'moderada',t:`Efectos opuestos sobre la dopamina: ${nx} bloquea lo que ${ny} estimula. Empeora el parkinsonismo o la psicosis según el caso.`}); return true; } });
@@ -3865,6 +3934,63 @@ function ixRender(k){ const o=$('#ixOut'); if(!o) return; if(!S.ix||!DRUGS[S.ix]
   const r=interact(k,S.ix); const col={alta:'var(--pos)',moderada:'var(--warn)',baja:'var(--accent)'};
   o.innerHTML=r.length?r.map(x=>`<div class="warnbox" style="border-color:${col[x.s]}"><span class="lvl" style="border-color:${col[x.s]};color:${col[x.s]}">${x.s}</span> ${x.t}</div>`).join(''):`<p style="font-size:13px;color:var(--muted)">No se identificaron interacciones con las reglas de este atlas.</p>`;
   o.insertAdjacentHTML('beforeend','<p style="font-size:11.5px;color:var(--faint)">Reglas didácticas basadas en mecanismos (serotoninérgicos, anticolinérgicos, QT, depresores, opioides, CYP450, dopamina). No sustituye a un comprobador clínico de interacciones ni a la ficha técnica.</p>'); }
+/* ============ simulador de combinaciones ============ */
+function regScores(){ const R=S.reg, P=S.pt, ix=k=>IX[k]||{};
+  let ser=0, mao=false, lzd=false, acb=0, cns=0, op=false, qtN=0, seiz=0, loop=false, hypok=false;
+  for(const k of R){ const X=ix(k); if(X.ser==='mao') mao=true; else if(X.ser==='lzd') lzd=true; else if(typeof X.ser==='number') ser+=X.ser;
+    acb+=X.acb||0; cns+=X.cns||0; if(X.op) op=true; if(X.qt) qtN++; if(X.seiz) seiz++; if(X.loop) loop=true; if(X.hypok) hypok=true; }
+  let tis=0; for(const [k,,f] of PTF) if(P[k]&&f.tisdale) tis+=f.tisdale; if(loop) tis+=1; if(qtN>=1) tis+=3; if(qtN>=2) tis+=3;
+  const serLvl=mao&&ser>0||lzd&&ser>0?'alta':ser>=4?'alta':ser>=3?'moderada':ser>=1?'baja':'nula';
+  const acbLvl=acb>=3?(P.age||P.dementia?'alta':'moderada'):acb>=1?'baja':'nula';
+  const qtLvl=tis>=11?'alta':tis>=7?'moderada':qtN?'baja':'nula';
+  const resLvl=op&&cns>=3?'alta':op&&(cns>=2||P.resp)?'alta':cns>=4?'moderada':cns>=2?'baja':'nula';
+  const szLvl=seiz>=2||seiz>=1&&P.epilepsy?'alta':seiz?'baja':'nula';
+  return {ser,mao,lzd,acb,cns,op,qtN,seiz,loop,hypok,tis,serLvl,acbLvl,qtLvl,resLvl,szLvl}; }
+function regCyp(){ const R=S.reg, out=[];
+  for(const k of R){ const sub=((IX[k]||{}).cyp||{}).sub||[]; for(const e of sub){
+    const inh=R.filter(j=>j!==k&&(((IX[j]||{}).cyp||{}).inh||{})[e]).map(j=>dname(j)+' ('+IX[j].cyp.inh[e]+')'); const ind=R.filter(j=>j!==k&&(((IX[j]||{}).cyp||{}).ind||[]).includes(e)).map(dname);
+    const pm=e==='2D6'&&S.pt.pm2d6;
+    if(inh.length||ind.length||pm) out.push({k,e,inh,ind,pm,pro:(IX[k]||{}).pro2d6&&e==='2D6'}); } }
+  return out; }
+function regGauge(lbl,lvl,val,max,txt){ const col={alta:'var(--pos)',moderada:'var(--warn)',baja:'var(--accent)',nula:'var(--faint)'}[lvl]; const w=Math.min(100,Math.round(100*val/max));
+  return `<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>${lbl}</b><span class="lvl" style="border-color:${col};color:${col}">${lvl==='nula'?'sin carga':lvl}</span></div>
+  <div style="height:6px;background:var(--line);border-radius:3px;margin:6px 0"><div style="height:100%;width:${w}%;background:${col};border-radius:3px"></div></div><p style="font-size:13px;margin:0">${txt}</p></div>`; }
+function renderReg(){ const R=S.reg, P=S.pt, sc=regScores(), cyp=regCyp();
+  const opts=[...DRUGCLS.map(c=>[c,Object.keys(DRUGS).filter(x=>DRUGS[x].cls===c)]),['Otros fármacos frecuentes',Object.keys(XDRUGS)]];
+  let h=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Fármacos</span><span>/</span><span>Combinaciones</span></div>
+  <p class="kicker">Farmacología clínica · simulador</p><h2>Combinar fármacos en un paciente</h2><p class="sub2">Cargas acumuladas, riesgo de QT, CYP450 y todas las interacciones</p>
+  <h3>Tratamiento</h3><div class="chips">${R.map(k=>`<button class="chip" data-rm="${k}" title="Quitar">${dname(k)} ×</button>`).join('')||'<span style="color:var(--muted);font-size:13px">Añade al menos dos fármacos.</span>'}</div>
+  <select id="regAdd" style="margin-top:8px"><option value="">Añadir un fármaco…</option>${opts.map(([c,ks])=>`<optgroup label="${c}">${ks.filter(x=>!R.includes(x)).map(x=>`<option value="${x}">${dname(x)}</option>`).join('')}</optgroup>`).join('')}</select>
+  <p style="margin-top:8px"><button class="lnk" id="regEx">Probar un ejemplo</button>${R.length?' · <button class="lnk" id="regClr">Vaciar</button>':''}</p>
+  <h3>Paciente</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 12px">${PTF.map(([k,l])=>`<label class="chk"><input type="checkbox" data-pt="${k}" ${P[k]?'checked':''}>${l}</label>`).join('')}</div>`;
+  if(R.length){
+    h+=`<h3>Cargas del tratamiento</h3>`;
+    h+=regGauge('Serotoninérgica',sc.serLvl,sc.mao||sc.lzd?6:sc.ser,6,sc.mao&&sc.ser?'Un IMAO con otro serotoninérgico: combinación contraindicada.':sc.lzd&&sc.ser?'Linezolid con serotoninérgicos: riesgo de síndrome serotoninérgico grave.':sc.ser?`${sc.ser} puntos (1 por serotoninérgico débil, 2 por uno potente). Vigila los síntomas al empezar o subir dosis.`:'Ningún fármaco serotoninérgico.');
+    h+=regGauge('Anticolinérgica (escala ACB)',sc.acbLvl,sc.acb,6,sc.acb?`${sc.acb} punto${sc.acb===1?'':'s'}. A partir de 3 se asocia a deterioro cognitivo y mayor mortalidad en mayores de 65 años (Fox y cols., 2011)${P.dementia?'; con demencia el riesgo de delirium es mucho mayor':''}.`:'Sin carga anticolinérgica.');
+    h+=regGauge('Prolongación del QT (Tisdale)',sc.qtLvl,sc.tis,21,`${sc.tis} de 21 puntos: ${sc.qtN} fármaco${sc.qtN===1?'':'s'} que prolonga${sc.qtN===1?'':'n'} el QT${sc.loop?', diurético de asa':''} y los factores del paciente marcados. Riesgo bajo de 0 a 6, moderado de 7 a 10 y alto desde 11; la escala se validó en pacientes hospitalizados (Tisdale y cols., 2013).${sc.hypok?' Un diurético del tratamiento puede bajar el potasio: compruébalo.':''}`);
+    h+=regGauge('Depresión del sistema nervioso y respiratoria',sc.resLvl,sc.cns+(sc.op?3:0),9,sc.op&&sc.cns>=2?'Opioide con otros depresores: riesgo de depresión respiratoria mortal.':sc.cns?`Sedación acumulada de ${sc.cns} puntos: somnolencia, caídas y riesgo al conducir${P.resp?'; con enfermedad respiratoria, mayor riesgo de hipoventilación':''}.`:'Sin depresores del sistema nervioso.');
+    h+=regGauge('Umbral convulsivo',sc.szLvl,sc.seiz+(P.epilepsy?1:0),3,sc.seiz?`${sc.seiz===1?'Un fármaco que baja':sc.seiz+' fármacos que bajan'} el umbral convulsivo${P.epilepsy?' en un paciente con epilepsia':''}.`:'Ningún fármaco del tratamiento baja de forma relevante el umbral convulsivo.');
+    if(sc.ser){ const hm=hunterMet(S.hunter);
+      h+=`<details style="margin-top:10px"><summary><b>¿Tiene síndrome serotoninérgico? Criterios de Hunter</b></summary><p style="font-size:13px">Con un serotoninérgico en el tratamiento, marca lo que encuentras en la exploración:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px 12px">${HUNTER.map(([k,l])=>`<label class="chk"><input type="checkbox" data-hu="${k}" ${S.hunter[k]?'checked':''}>${l}</label>`).join('')}</div>
+      <div class="warnbox" style="margin-top:8px;border-color:${hm?'var(--pos)':'var(--line)'}">${hm?'Cumple los criterios de Hunter: toxicidad serotoninérgica. Suspender los serotoninérgicos, medidas de soporte, benzodiacepinas para la agitación y considerar ciproheptadina; la hipertermia por encima de 41 °C requiere cuidados intensivos.':'No cumple los criterios de Hunter con los signos marcados. Basta uno de estos: clonus espontáneo; clonus inducible u ocular con agitación o diaforesis; temblor con hiperreflexia; o hipertonía con temperatura por encima de 38 °C y clonus ocular o inducible (Dunkley y cols., 2003).'}</div></details>`; }
+    if(cyp.length) h+=`<h3>Metabolismo (CYP450)</h3><ul>${cyp.map(c=>`<li><b>${dname(c.k)}</b> (${cypName(c.e)}): ${[c.inh.length?(c.pro?'su activación la frenan ':'sube por ')+c.inh.join(', '):'',c.ind.length?'baja por '+c.ind.join(', '):'',c.pm?(c.pro?'el paciente es metabolizador lento: apenas se activa':'el paciente es metabolizador lento: niveles más altos'):''].filter(Boolean).join('; ')}.</li>`).join('')}</ul>`;
+    const pairs=[]; for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){ const r=interact(R[i],R[j]); if(r.length) pairs.push([R[i],R[j],r]); }
+    const col={alta:'var(--pos)',moderada:'var(--warn)',baja:'var(--accent)'};
+    h+=`<h3>Interacciones por pares</h3>`+(pairs.length?pairs.map(([a,b,r])=>`<p style="margin:10px 0 4px"><b>${dname(a)} + ${dname(b)}</b></p>${r.map(x=>`<div class="warnbox" style="border-color:${col[x.s]}"><span class="lvl" style="border-color:${col[x.s]};color:${col[x.s]}">${x.s}</span> ${x.t}</div>`).join('')}`).join(''):`<p style="color:var(--muted);font-size:13px">Ninguna interacción entre pares con las reglas del atlas.</p>`);
+    const brainDrugs=R.filter(k=>DRUGS[k]);
+    h+=`<h3>En el cerebro</h3><p style="font-size:13px">${brainDrugs.length?'El modelo muestra la huella combinada de los psicofármacos del tratamiento: el promedio de los mapas PET de todas sus dianas, ponderado por la afinidad. Las zonas más cálidas son donde se suman más acciones.':'Ninguno de estos fármacos tiene dianas con mapa PET en el atlas.'}</p>`; }
+  h+=`<p class="note">Simulador didáctico basado en mecanismos y en escalas publicadas, para aprender a razonar sobre polifarmacia. No sustituye a la ficha técnica, a un comprobador de interacciones clínico ni al juicio de quien prescribe; las cargas son aproximadas y no tienen en cuenta dosis.</p>
+  <p><button class="lnk" data-go="drug:${S.drug}">← Volver a la ficha de ${DRUGS[S.drug].es}</button></p>`;
+  pin.innerHTML=h;
+  $('#regAdd').onchange=e=>{ if(e.target.value){ S.reg.push(e.target.value); S.rec='__reg'; recolor(); renderReg(); } };
+  pin.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ S.reg=S.reg.filter(k=>k!==b.dataset.rm); recolor(); renderReg(); });
+  pin.querySelectorAll('[data-pt]').forEach(b=>b.onchange=()=>{ S.pt[b.dataset.pt]=b.checked; renderReg(); });
+  pin.querySelectorAll('[data-hu]').forEach(b=>b.onchange=()=>{ S.hunter[b.dataset.hu]=b.checked; const d=b.closest('details'); renderReg(); const nd=pin.querySelector('details'); if(nd&&d) nd.open=true; });
+  $('#regEx').onclick=()=>{ S.reg=['sertraline','tramadol','ondansetron','quetiapine','alprazolam']; S.pt={age:true,female:true}; S.rec='__reg'; recolor(); renderReg(); };
+  const cl=$('#regClr'); if(cl) cl.onclick=()=>{ S.reg=[]; S.hunter={}; recolor(); renderReg(); };
+}
+renderReg=withRefs(renderReg,()=>['regimen']);
 function renderEquiv(){ pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Equivalencias</span></div><p class="kicker">Farmacología clínica</p><h2>${EQUIV.title}</h2><p class="sub2">&nbsp;</p>
   ${EQUIV.groups.map(g=>`<h3>${g.es}</h3><dl class="facts">${g.rows.map(([k,v])=>`<dt style="font-family:var(--body);font-size:13px;color:var(--fg)"><button class="lnk" data-go="drug:${k}">${DRUGS[k].es}</button></dt><dd>${v}</dd>`).join('')}</dl><p style="font-size:12.5px;color:var(--muted);margin-top:8px">${g.note}</p>`).join('')}`; }
 function termLine(key){ const t=TERM[key]; return t?`<p style="font-size:12.5px;color:var(--muted);margin:-8px 0 14px"><span class="lab">Lat.</span> <i>${t[0]}</i> · <span class="lab">Ing.</span> ${t[1]}</p>`:''; }
@@ -3882,7 +4008,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión ${APPVER}</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 16. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 17. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -4201,7 +4327,7 @@ function setMode(m){
 $('#modes').addEventListener('click',e=>{const b=e.target.closest('button'); if(b){ setMode(b.dataset.m); store.set('lastMode',b.dataset.m); }});
 
 /* ============ app: ajustes, instalación, actualizaciones, enlaces internos ============ */
-const APPVER='16';
+const APPVER='17';
 const APPURL='https://nexodipa.github.io/atlas-encephali/';
 const IS_STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||/Electron/.test(navigator.userAgent);
 function perfMode(){ const m=store.get('perf','auto'); if(m!=='auto') return m;
@@ -4518,8 +4644,9 @@ function condition(){
 }
 let COND=null;
 function condCol(v,GREY){ if(v==null||v===0) return null; if(COND.pair) return v===2?[0.78,0.6,0.88]:v>0?[0.89,0.41,0.35]:[0.35,0.66,0.9]; if(COND.study) return v>0?[0.55,0.84,1.0]:[0.92,0.4,0.33]; return COND.signed?divColor(v*0.6):mix(GREY,COND.color,0.45+0.55*v); }
-function mixWeights(){ const d=DRUGS[S.drug]; const t=drugTargets(d); return t.map(r=>[r,(d.aff[r]||d.aff[r==='M1'?'M':'']||[1])[0]]); }
-function deepRec(k){ if(S.rec==='__mix'){ let a=0,w=0; for(const [r,wt] of mixWeights()){ const v=(META.receptors[r].deep||{})[k]; if(v!=null){a+=wt*v;w+=wt;} } return w?a/w:null; } const R0=META.receptors[S.rec]; return R0?(R0.deep||{})[k]:null; }
+function mixWeights(){ if(S.rec==='__reg'){ const w={}; for(const k of S.reg||[]){ const d=DRUGS[k]; if(!d) continue; for(const r of drugTargets(d)){ w[r]=(w[r]||0)+(d.aff[r]||d.aff[r==='M1'?'M':'']||[1])[0]; } } return Object.entries(w); }
+  const d=DRUGS[S.drug]; const t=drugTargets(d); return t.map(r=>[r,(d.aff[r]||d.aff[r==='M1'?'M':'']||[1])[0]]); }
+function deepRec(k){ if(S.rec==='__mix'||S.rec==='__reg'){ let a=0,w=0; for(const [r,wt] of mixWeights()){ const v=(META.receptors[r].deep||{})[k]; if(v!=null){a+=wt*v;w+=wt;} } return w?a/w:null; } const R0=META.receptors[S.rec]; return R0?(R0.deep||{})[k]:null; }
 recolor=()=>{
   COND=condition(); const cond=COND, GREY=[0.5,0.5,0.49];
   const mode=S.mode, D=META.disorders[S.dis], st=S.stroke;
@@ -4530,7 +4657,7 @@ recolor=()=>{
       const g=o.dk[i], sh=shadeOf(o.sulc[i]); let col;
       if(g===255){ col=[0.32,0.33,0.34]; }
       else if(cond){ col=condCol(cond.ctx[DKN[g]],GREY)||cond.base||(cond.signed?NEU:GREY); }
-      else if(mode==='drug'&&S.rec==='__mix'){ let a=0,w=0; for(const [r,wt] of mixWeights()){ a+=wt*o.rec[r][i]/255; w+=wt; } col=w?seqColor(a/w):[0.3,0.32,0.34]; }
+      else if(mode==='drug'&&(S.rec==='__mix'||S.rec==='__reg')){ let a=0,w=0; for(const [r,wt] of mixWeights()){ a+=wt*o.rec[r][i]/255; w+=wt; } col=w?seqColor(a/w):[0.3,0.32,0.34]; }
       else if(mode==='path'){ const v=D.ctx[DKN[g]]; col=divColor(v?v[0]:(Object.keys(D.ctx).length?0:null)); }
       else if(mode==='drug'){ col=o.rec[S.rec]?seqColor(o.rec[S.rec][i]/255):[0.36,0.38,0.4]; }
       else if(mode==='sim'){ col=SIMBASE; if(T&&T.ctx(o,i)) col=INF;
