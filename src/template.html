@@ -1251,16 +1251,18 @@ function setMode(m){
 $('#modes').addEventListener('click',e=>{const b=e.target.closest('button'); if(b){ setMode(b.dataset.m); store.set('lastMode',b.dataset.m); }});
 
 /* ============ app: ajustes, instalación, actualizaciones, enlaces internos ============ */
-const APPVER='17';
+const APPVER='17.1';
 const APPURL='https://nexodipa.github.io/atlas-encephali/';
-const IS_STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||/Electron/.test(navigator.userAgent);
+const IS_STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||/Electron|AtlasEncephaliAndroid/.test(navigator.userAgent);
+const APKURL=APPURL+'AtlasEncephali.apk', IS_ANDROID_WEB=/Android/.test(navigator.userAgent)&&!IS_STANDALONE;
+if(IS_ANDROID_WEB){ const ib=document.getElementById('installBtn'); ib.hidden=false; ib.textContent='Descargar app (APK)'; }
 function perfMode(){ const m=store.get('perf','auto'); if(m!=='auto') return m;
   const touch=matchMedia('(pointer: coarse)').matches, mem=navigator.deviceMemory||8, cores=navigator.hardwareConcurrency||8;
   return touch&&(mem<=4||cores<=4)?'ahorro':'alto'; }
 let deferredInstall=null;
-addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; $('#installBtn').hidden=false; });
+addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; if(!IS_ANDROID_WEB) $('#installBtn').hidden=false; });
 addEventListener('appinstalled',()=>{ deferredInstall=null; $('#installBtn').hidden=true; toast('Atlas Encephali quedó instalado como app.'); });
-$('#installBtn').onclick=async()=>{ if(!deferredInstall) return renderSettings(); deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; $('#installBtn').hidden=true; };
+$('#installBtn').onclick=async()=>{ if(IS_ANDROID_WEB){ location.href=APKURL; return; } if(!deferredInstall) return renderSettings(); deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; $('#installBtn').hidden=true; };
 function toast(msg,act,fn){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
   t.innerHTML=`<span>${msg}</span>${act?`<button class="lnk">${act}</button>`:''}`; t.hidden=false; if(act) t.querySelector('button').onclick=()=>{ t.hidden=true; fn&&fn(); }; else setTimeout(()=>t.hidden=true,4000); }
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
@@ -1274,10 +1276,11 @@ function renderSettings(){ const pm=store.get('perf','auto'), eff=perfMode(), sw
   <h3>Instalar como app</h3>`;
   if(IS_STANDALONE) h+=`<p>Ya lo estás usando como app.</p>`;
   else if(deferredInstall) h+=`<p><button class="lnk" id="instNow">Instalar Atlas Encephali en este dispositivo →</button></p>`;
-  h+=`<p><b>Android (tablet o móvil):</b> abre <code>${APPURL}</code> en Chrome, menú de tres puntos, «Instalar app». Queda en el cajón de apps, se abre a pantalla completa y funciona sin conexión.</p>
+  h+=`<p><b>Android (tablet o móvil), app APK:</b> <a href="${APKURL}">descarga AtlasEncephali.apk</a> desde la tablet (o escanea el código) y ábrelo. La primera vez Android pide permitir instalar apps de esa fuente: «Ajustes» y activar «Permitir desde esta fuente». Queda como app normal, funciona sin conexión y su contenido se actualiza solo.</p>
+  <p><b>Android sin APK:</b> abre <code>${APPURL}</code> en Chrome, menú de tres puntos, «Instalar app».</p>
   <p><b>iPad o iPhone:</b> abre la dirección en Safari, botón Compartir, «Añadir a pantalla de inicio».</p>
   <p><b>Windows:</b> instalador <code>AtlasEncephali-Setup</code>: se instala con un doble clic, se abre solo y se actualiza al abrirlo con conexión.</p>
-  <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div style="background:#fff;padding:8px;border-radius:6px;width:132px;height:132px">/*QRSVG*/</div><p style="color:var(--muted);font-size:13px">Escanea con la cámara de la tablet para abrir el atlas allí.</p></div>`;
+  <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div style="background:#fff;padding:8px;border-radius:6px;width:132px;height:132px">/*QRSVG*/</div><p style="color:var(--muted);font-size:13px">Escanea con la cámara de la tablet para descargar el APK.</p></div>`;
   if(sw) h+=`<h3>Actualizaciones</h3><p><button class="lnk" id="chkUpd">Buscar una versión nueva →</button></p>`;
   h+=`<h3>Atajos</h3><p style="color:var(--muted);font-size:13px">Puedes enlazar una sección añadiendo al final de la dirección <code>#m=learn</code>, <code>#m=sim</code>, <code>#m=study</code> o <code>#go=index</code>. Teclado en el modelo: flechas para girar, + y − para acercar; Esc sale del modo clase.</p>`;
   pin.innerHTML=h;

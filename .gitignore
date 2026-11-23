@@ -12,3 +12,6 @@ app/electron/dist-installer/
 app/electron/www/
 app/www/
 app/electron/dist/
+app/android/app/build/
+app/android/.gradle/
+app/android/app/src/main/assets/

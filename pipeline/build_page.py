@@ -11,8 +11,8 @@ packs = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in sorted((root
 i18n = i18n.replace('/*LANGPACKS*/{}', json.dumps(packs, ensure_ascii=False))
 import io, qrcode, qrcode.image.svg
 _q = qrcode.QRCode(border=1, error_correction=qrcode.constants.ERROR_CORRECT_M, image_factory=qrcode.image.svg.SvgPathImage)
-_q.add_data('https://nexodipa.github.io/atlas-encephali/'); _q.make(fit=True); _b = io.BytesIO(); _q.make_image().save(_b)
-qrsvg = _b.getvalue().decode().split('?>', 1)[-1].strip().replace('<svg ', '<svg style="width:100%;height:100%" aria-label="Código QR de la app" ', 1)
+_q.add_data('https://nexodipa.github.io/atlas-encephali/AtlasEncephali.apk'); _q.make(fit=True); _b = io.BytesIO(); _q.make_image().save(_b)
+qrsvg = _b.getvalue().decode().split('?>', 1)[-1].strip().replace('<svg ', '<svg style="width:100%;height:100%" aria-label="Código QR del APK" ', 1)
 s = s.replace('/*QRSVG*/', qrsvg)
 out = s.replace('/*META*/null', meta).replace('/*CONTENT*/', content).replace('/*I18N*/', i18n)
 out = out.replace('<script src="https://cdnjs', '<script type="text/plain" id="atlasdata">' + b64 + '</script>\n<script src="https://cdnjs', 1)
