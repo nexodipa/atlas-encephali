@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['app/android/**', '.github/workflows/android.yml', 'src/**']
+    paths: ['app/android/**', '.github/workflows/android.yml', 'src/**', 'endo/**']
 permissions:
   contents: write
 concurrency: { group: apk, cancel-in-progress: true }
@@ -21,7 +21,7 @@ jobs:
       - name: Copia sin conexión dentro del APK
         run: |
           mkdir -p app/android/app/src/main/assets/www
-          cp -r site/index.html site/manifest.webmanifest site/icons app/android/app/src/main/assets/www/
+          cp -r site/index.html site/endocrino site/manifest.webmanifest site/icons app/android/app/src/main/assets/www/
           rm -f app/android/app/src/main/assets/www/icons/shot-*.png
           V=$(grep -o "const APPVER='[^']*'" site/index.html | head -1 | cut -d"'" -f2)
           echo "VERSION_NAME=$V" >> $GITHUB_ENV

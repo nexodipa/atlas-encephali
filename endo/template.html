@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atlas Encephali · Endocrino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/*CSS*/
+/* ---- propio del módulo endocrino ---- */
+#stage{background:radial-gradient(ellipse 60% 70% at 50% 45%,#16232b 0%,#0d1418 55%,var(--bg) 100%)}
+.flab{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:2px;background:rgba(10,15,18,.78);border:1px solid var(--line-2);will-change:transform}
+.flab.neg{color:#f29a8e;border-color:#6b3a35}.flab.pos{color:#9fe0bf;border-color:#2f5b48}
+.flab.hi{font-weight:500;box-shadow:0 0 0 1px currentColor}.flab.off{opacity:.45;text-decoration:line-through}
+.htab{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
+.htab th,.htab td{border-top:1px solid var(--line);padding:7px 6px;vertical-align:top;text-align:left}
+.htab th{font-weight:500;white-space:nowrap}.htab td.c{color:var(--muted);font-size:12px}
+.labs{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;margin:8px 0 14px;font-size:13.5px}
+.labs b{font-weight:400}.labs span{font-family:var(--mono);font-size:13px;color:var(--bone);text-align:right}
+.labs span.up{color:#f29a8e}.labs span.dn{color:#8fb8f0}
+.axlist{display:grid;gap:6px}.axlist button{display:flex;justify-content:space-between;gap:10px;text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:9px 12px;cursor:pointer;font-size:13.5px}
+.axlist button:hover{border-color:var(--accent)}.axlist button.on{border-color:var(--bone)}.axlist small{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.qopts{display:grid;gap:7px;margin:10px 0}.qopts button{text-align:left;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;padding:10px 12px;cursor:pointer;font-size:13.5px;line-height:1.4}
+.qopts button:hover:not(:disabled){border-color:var(--accent)}.qopts button.ok{border-color:#5fae97;background:#173328}.qopts button.ko{border-color:var(--pos);background:#3a1d1a}.qopts button:disabled{cursor:default}
+.score{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.pointq{border:1px dashed var(--accent);border-radius:4px;padding:10px 12px;margin:10px 0;font-size:14px}
+.modsw{display:flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+.modsw a{padding:4px 10px;font-size:12px;color:var(--muted);text-decoration:none;border-right:1px solid var(--line)}
+.modsw a:last-child{border-right:0}.modsw a:hover{color:var(--fg);background:var(--bg-3)}.modsw a.on{background:var(--accent);color:var(--bg)}
+.pulse{animation:pl 1.2s ease-in-out infinite}@keyframes pl{50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><b data-notr>Atlas Encephali</b><span>Módulo 02 · Sistema endocrino</span></div>
+    <nav class="modsw" id="modsw" aria-label="Módulos"></nav>
+    <nav class="modes" id="modes" aria-label="Modo">
+      <button data-m="anat" class="on">Anatomía</button><button data-m="axes">Ejes</button><button data-m="lab">Laboratorio</button><button data-m="psy">Psiquiatría</button><button data-m="learn">Aprender</button>
+    </nav>
+    <div class="langbox"><button id="installBtn" class="lnk" hidden>Instalar app</button><button class="lnk" data-go="about">Acerca</button></div>
+  </header>
+  <main>
+    <section class="left">
+      <div id="stage" tabindex="0" aria-label="Modelo 3D del cuerpo con las glándulas endocrinas. Con el foco aquí, las flechas giran el modelo y + y − acercan o alejan.">
+        <div class="loading" id="loading">Cargando el modelo anatómico…</div>
+        <div class="hud"><div class="view">Vista <em id="viewName">cuerpo</em></div><div>Arrastra para rotar · rueda o pellizco para acercar · toca una glándula</div></div>
+        <button class="clear" id="clearBtn" hidden>Quitar selección</button>
+        <div class="tip" id="tip" hidden></div>
+        <div class="tag" id="tag" hidden></div>
+        <div id="flabs"></div>
+      </div>
+      <div class="toolbar">
+        <div class="ctl"><span class="lab">Vista</span>
+          <div class="seg" id="views"><button data-v="body" class="on">Cuerpo</button><button data-v="head">Cabeza</button><button data-v="neck">Cuello</button><button data-v="chest">Tórax</button><button data-v="abdomen">Abdomen</button><button data-v="pelvis">Pelvis</button></div></div>
+        <div class="ctl"><span class="lab">Girar</span>
+          <div class="seg" id="turn"><button data-t="ant" class="on">Frente</button><button data-t="lat">Lado</button><button data-t="post">Espalda</button></div></div>
+        <div class="ctl" id="layers">
+          <label class="chk"><input type="checkbox" data-l="skin" checked>Piel</label>
+          <label class="chk"><input type="checkbox" data-l="bone" checked>Huesos</label>
+          <label class="chk"><input type="checkbox" data-l="organ" checked>Órganos</label>
+          <label class="chk"><input type="checkbox" data-l="gland" checked>Glándulas</label>
+        </div>
+        <div class="ctl"><label class="lab" for="gsize">Resaltar</label><input id="gsize" type="range" min="0" max="100" value="35" aria-label="Aumentar las glándulas pequeñas"></div>
+      </div>
+    </section>
+    <aside class="panel" id="panel"><div class="pin" id="pin"></div></aside>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="text/plain" id="endodata">/*DATA*/</script>
+<script>
+const APPVER='/*APPVER*/';
+const EMETA=/*EMETA*/null;
+/*SHELL*/
+/*CONTENT*/
+const S={mode:'anat',sel:null,ax:null,sc:null,psy:null,view:'body',turn:'ant',layers:{skin:true,bone:true,organ:true,gland:true},learn:{q:null,kind:'mix'},point:null};
+const pin=$('#pin');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const refLinks=t=>t; // las citas van en texto; la bibliografía completa está en «Acerca»
+function m1(go,label){ const base=OFFSITE?APPURL:location.protocol==='file:'?'../index.html':'../'; return `<a class="chip" href="${base}#go=${encodeURIComponent(go)}">${label} <code>módulo 01</code></a>`; }
+const GL_ORDER=['hypothalamus','pituitary','pineal','thyroid','parathyroid','thymus','adrenal','pancreas','testis'];
+const glOfMesh=k=>MESH2GL[k]||null;
+const nameOf=k=>GL[MESH2GL[k]]?GL[MESH2GL[k]].es+(/R$/.test(k)?' (derecha)':/L$/.test(k)&&k!=='skeleton'?' (izquierda)':''):(ORGANS[k]||k);
+
+/* ======================= escena 3D ======================= */
+const stage=$('#stage'); let renderer,scene,camera,root; const MESH={}; const MAT={};
+const cam={target:new THREE.Vector3(0,-350,0),d:2000,yaw:0,pitch:0.05,tt:null,td:null,tyaw:null,tpitch:null};
+function initScene(){
+  renderer=new THREE.WebGLRenderer({antialias:PERF!=='ahorro',alpha:true,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,PERF==='ahorro'?1:2)); stage.appendChild(renderer.domElement);
+  scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(30,1,1,20000);
+  scene.add(new THREE.HemisphereLight(0xdfe9ef,0x1a2329,0.75));
+  const dl=new THREE.DirectionalLight(0xffffff,0.75); dl.position.set(0.4,0.6,1); camera.add(dl); scene.add(camera);
+  root=new THREE.Group(); scene.add(root);
+  addEventListener('resize',resize); resize(); bindOrbit(); }
+function resize(){ const w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/Math.max(1,h); camera.updateProjectionMatrix(); }
+function buildMeshes(buf){
+  const C=EMETA.meshes; const ix=EMETA.index;
+  const arr=(o)=>{ const [off,dt,sh]=o; const n=sh[0]*sh[1]; return dt==='int16'?new Int16Array(buf,off,n):dt==='uint16'?new Uint16Array(buf,off,n):new Uint32Array(buf,off,n); };
+  const glandMat=c=>new THREE.MeshStandardMaterial({color:new THREE.Color(c),roughness:.45,metalness:0,emissive:new THREE.Color(c),emissiveIntensity:.18});
+  MAT.skin=new THREE.MeshStandardMaterial({color:0xc9b7a3,roughness:.9,transparent:true,opacity:.11,depthWrite:false,side:THREE.DoubleSide});
+  MAT.bone=new THREE.MeshStandardMaterial({color:0xeee5d0,roughness:.8,transparent:true,opacity:.28,depthWrite:false});
+  const OC={brain:0xd9b8b0,heart:0xb35a55,lungR:0x8aa3b0,lungL:0x8aa3b0,liver:0x8a5a46,stomach:0xc9a07a,duodenum:0xc9a07a,kidneyR:0x9b5b55,kidneyL:0x9b5b55,aorta:0xc0504a,ivc:0x5a6fa8,trachea:0xc8d3d8,esophagus:0xc49a8a,larynx:0xc8d3d8};
+  for(const m of C){ const p=arr(ix[m.key+'_pos']), id=arr(ix[m.key+'_idx']);
+    const pos=new Float32Array(p.length); for(let i=0;i<p.length;i+=3){ pos[i]=-p[i]*0.1; pos[i+1]=p[i+1]*0.1; pos[i+2]=p[i+2]*0.1; }
+    const idx=new (id instanceof Uint16Array?Uint16Array:Uint32Array)(id.length); for(let i=0;i<id.length;i+=3){ idx[i]=id[i]; idx[i+1]=id[i+2]; idx[i+2]=id[i+1]; }
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setIndex(new THREE.BufferAttribute(idx,1)); g.computeVertexNormals(); g.computeBoundingSphere();
+    let mat; if(m.layer==='gland'){ const gk=MESH2GL[m.key]; mat=glandMat(GL[gk].color); }
+    else if(m.layer==='organ') mat=new THREE.MeshStandardMaterial({color:OC[m.key]||0xaaaaaa,roughness:.75,transparent:true,opacity:.34,depthWrite:false});
+    else mat=MAT[m.layer];
+    const mesh=new THREE.Mesh(g,mat); mesh.userData={key:m.key,layer:m.layer,cen:new THREE.Vector3(-m.cen[0],m.cen[1],m.cen[2])};
+    mesh.renderOrder=m.layer==='gland'?3:m.layer==='organ'?2:m.layer==='bone'?1:0;
+    if(m.layer==='gland'){ mesh.userData.base=mat.color.clone(); mesh.userData.r=g.boundingSphere.radius; }
+    MESH[m.key]=mesh; root.add(mesh); }
+  applyGlandSize(); }
+const cenOf=k=>MESH[k]?MESH[k].userData.cen.clone():new THREE.Vector3();
+/* las glándulas pequeñas (pineal, paratiroides, hipófisis) se pueden agrandar alrededor de su centro para verlas desde lejos */
+function applyGlandSize(){ const f=+$('#gsize').value/100; for(const k in MESH){ const m=MESH[k]; if(m.userData.layer!=='gland') continue;
+  const r=m.userData.r, target=Math.max(r,4+26*f); const s=1+(target/r-1)*f; const c=m.userData.cen;
+  m.scale.setScalar(s); m.position.set(c.x*(1-s),c.y*(1-s),c.z*(1-s)); } }
+function camPos(){ const t=cam.target; return new THREE.Vector3(t.x+cam.d*Math.sin(cam.yaw)*Math.cos(cam.pitch),t.y+cam.d*Math.sin(cam.pitch),t.z+cam.d*Math.cos(cam.yaw)*Math.cos(cam.pitch)); }
+function flyTo(target,d,yaw,pitch){ cam.tt=target.clone(); cam.td=d; if(yaw!=null) cam.tyaw=yaw; if(pitch!=null) cam.tpitch=pitch; }
+function setView(v){ S.view=v; const V=VIEWS[v]; $('#views').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='body'){ frameKeys(['skin'],1.04); cam.tyaw=S.turn==='lat'?Math.PI/2:S.turn==='post'?Math.PI:0; cam.tpitch=V.pitch; $('#viewName').textContent=V.es.toLowerCase(); return; }
+  const t=V.gl?cenOf(V.gl):new THREE.Vector3(...V.t); if(V.gl==='testisR') t.copy(cenOf('testisR').add(cenOf('testisL')).multiplyScalar(.5)).add(new THREE.Vector3(0,40,0));
+  flyTo(t,V.d,S.turn==='lat'?Math.PI/2:S.turn==='post'?Math.PI:0+(v==='body'?0:.0),V.pitch); $('#viewName').textContent=V.es.toLowerCase(); }
+function frameKeys(keys,pad=1.35){ const b=new THREE.Box3(); keys.forEach(k=>{ if(MESH[k]){ if(!MESH[k].geometry.boundingBox) MESH[k].geometry.computeBoundingBox(); b.union(MESH[k].geometry.boundingBox); } });
+  const c=b.getCenter(new THREE.Vector3()), sz=b.getSize(new THREE.Vector3()); const asp=Math.max(.5,camera.aspect);
+  const d=Math.max(160,Math.max(sz.y,sz.x/asp,sz.z/asp)*pad/(2*Math.tan(15*Math.PI/180))+Math.max(sz.x,sz.z)/2);
+  flyTo(c,d,null,null); }
+function bindOrbit(){ const cv=renderer.domElement; let drag=null, pinch=null, moved=0; const pts=new Map();
+  cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); pts.set(e.pointerId,[e.clientX,e.clientY]); moved=0;
+    if(pts.size===1) drag=[e.clientX,e.clientY]; else if(pts.size===2){ const [a,b]=[...pts.values()]; pinch=Math.hypot(a[0]-b[0],a[1]-b[1]); drag=null; } cv.classList.add('drag'); cam.tt=null; cam.tyaw=null; cam.tpitch=null; cam.td=null; });
+  cv.addEventListener('pointermove',e=>{ if(pts.has(e.pointerId)) pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pinch&&pts.size===2){ const [a,b]=[...pts.values()]; const d=Math.hypot(a[0]-b[0],a[1]-b[1]); cam.d=Math.min(4500,Math.max(80,cam.d*pinch/d)); pinch=d; moved+=5; return; }
+    if(drag){ const dx=e.clientX-drag[0], dy=e.clientY-drag[1]; moved+=Math.abs(dx)+Math.abs(dy); cam.yaw-=dx*0.008; cam.pitch=Math.max(-1.4,Math.min(1.4,cam.pitch+dy*0.006)); drag=[e.clientX,e.clientY]; }
+    else hover(e); });
+  const up=e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null; if(pts.size===0){ cv.classList.remove('drag'); if(drag&&moved<6) pick(e); drag=null; } };
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up); cv.addEventListener('pointerleave',()=>{ $('#tip').hidden=true; });
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); cam.td=null; cam.d=Math.min(4500,Math.max(80,cam.d*Math.exp(e.deltaY*0.0012))); },{passive:false});
+  stage.addEventListener('keydown',e=>{ const k=e.key; if(k==='ArrowLeft') cam.yaw+=.15; else if(k==='ArrowRight') cam.yaw-=.15; else if(k==='ArrowUp') cam.pitch=Math.min(1.4,cam.pitch+.12); else if(k==='ArrowDown') cam.pitch=Math.max(-1.4,cam.pitch-.12);
+    else if(k==='+'||k==='=') cam.d*=.85; else if(k==='-') cam.d/=.85; else return; cam.tt=cam.tyaw=cam.tpitch=cam.td=null; e.preventDefault(); }); }
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+function hit(e,glandOnly){ const r=renderer.domElement.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1); ray.setFromCamera(ndc,camera);
+  const objs=Object.values(MESH).filter(m=>m.visible&&(m.userData.layer==='gland'||(!glandOnly&&m.userData.layer==='organ')));
+  const hs=ray.intersectObjects(objs,false); const g=hs.find(h=>h.object.userData.layer==='gland'); return g||hs[0]||null; }
+function hover(e){ const h=hit(e,false); const t=$('#tip'); if(!h){ t.hidden=true; renderer.domElement.style.cursor=''; return; }
+  const k=h.object.userData.key; t.textContent=nameOf(k); t.hidden=false; const r=stage.getBoundingClientRect(); t.style.transform=`translate(${e.clientX-r.left+12}px,${e.clientY-r.top+10}px)`;
+  renderer.domElement.style.cursor=h.object.userData.layer==='gland'?'pointer':''; }
+function pick(e){ const h=hit(e,true); if(S.point){ return answerPoint(h&&h.object.userData.layer==='gland'?h.object.userData.key:null); }
+  if(h&&h.object.userData.layer==='gland'){ const g=glOfMesh(h.object.userData.key); if(S.mode!=='anat') setMode('anat'); selectGland(g,h.object.userData.key); } }
+
+/* ---- resaltado ---- */
+let hiSet=new Set(), lesSet=new Set(), dimOthers=false;
+function recolor(){ for(const k in MESH){ const m=MESH[k], L=m.userData.layer; m.visible=S.layers[L]!==false;
+  if(L==='gland'){ const on=hiSet.has(k), les=lesSet.has(k); m.material.color.copy(les?new THREE.Color(0xff5a4a):m.userData.base);
+    m.material.emissive.copy(les?new THREE.Color(0xff3020):m.userData.base); m.material.emissiveIntensity=on||les?.55:.18;
+    m.material.transparent=dimOthers&&!on&&!les; m.material.opacity=dimOthers&&!on&&!les?.25:1; m.material.depthWrite=!(dimOthers&&!on&&!les); }
+  else if(L==='organ'){ const inv=hiSet.has(k)||lesSet.has(k); m.material.opacity=inv?.62:dimOthers?.14:.34; if(lesSet.has(k)) m.material.emissive=new THREE.Color(0x802010); else m.material.emissive=new THREE.Color(0); } } }
+
+/* ---- flujos hormonales: curvas, partículas y rótulos ---- */
+let FLOWS=[]; const flabs=$('#flabs');
+const dotTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.4,'rgba(255,255,255,.8)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+function clearFlows(){ FLOWS.forEach(f=>{ root.remove(f.line); root.remove(f.pts); f.line.geometry.dispose(); f.pts.geometry.dispose(); }); FLOWS=[]; flabs.innerHTML=''; }
+function setFlows(arrows,mods){ clearFlows(); mods=mods||{};
+  arrows.forEach((a,i)=>{ const [from,to,lab,sg]=a; const st=mods[i]||'n'; const A=cenOf(from), B=cenOf(to);
+    const dist=A.distanceTo(B); let curve;
+    if(dist<1){ const o=new THREE.Vector3(90,60,0); curve=new THREE.CubicBezierCurve3(A,A.clone().add(o),A.clone().add(new THREE.Vector3(90,-60,0)),A.clone()); }
+    else { const mid=A.clone().add(B).multiplyScalar(.5); const dir=B.clone().sub(A).normalize(); let side=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(0,0,1)); if(side.lengthSq()<1e-3) side.set(1,0,0); side.normalize();
+      const bulge=Math.max(18,dist*.16); curve=new THREE.QuadraticBezierCurve3(A,mid.add(side.multiplyScalar(bulge)).add(new THREE.Vector3(0,0,Math.min(60,dist*.08))),B); }
+    const neg=sg==='−'; const col=new THREE.Color(st==='off'?0x56646c:neg?0xf08a7e:0x8fe0b8);
+    const lg=new THREE.BufferGeometry().setFromPoints(curve.getPoints(64)); const line=new THREE.Line(lg,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:st==='off'?.35:.55,depthTest:false}));
+    line.renderOrder=5; root.add(line);
+    const n=st==='off'?0:st==='hi'?26:st==='lo'?4:12; const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(Math.max(1,n)*3),3));
+    const sizeMM=Math.max(5,Math.min(22,dist*.03))*(st==='hi'?1.5:1);
+    const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:col,size:sizeMM,map:dotTex,transparent:true,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));
+    pts.renderOrder=6; root.add(pts);
+    const el=document.createElement('div'); el.className='flab '+(neg?'neg':'pos')+(st==='hi'?' hi':'')+(st==='off'?' off':''); el.textContent=(st==='hi'?'↑ ':st==='lo'?'↓ ':'')+lab+(neg?' (−)':''); flabs.appendChild(el);
+    FLOWS.push({curve,line,pts,n,speed:(st==='hi'?1.6:st==='lo'?.5:1)*(dist<1?.25:Math.min(.35,60/dist+.08)),phase:Math.random(),el,mid:curve.getPoint(.5)}); }); }
+function tickFlows(dt){ const r=stage.getBoundingClientRect(); const v=new THREE.Vector3();
+  for(const f of FLOWS){ f.phase=(f.phase+dt*f.speed*.35)%1; const p=f.pts.geometry.attributes.position;
+    for(let i=0;i<f.n;i++){ const t=(f.phase+i/f.n)%1; const q=f.curve.getPoint(t); p.setXYZ(i,q.x,q.y,q.z); } p.needsUpdate=true;
+    v.copy(f.mid).applyMatrix4(root.matrixWorld).project(camera); f.vis=v.z<=1; f.x=(v.x*.5+.5)*r.width-f.el.offsetWidth/2; f.y=(-v.y*.5+.5)*r.height-9; f.w=f.el.offsetWidth; }
+  /* separa los rótulos que se pisan */
+  const L=FLOWS.filter(f=>f.vis).sort((a,b)=>a.y-b.y);
+  for(let i=0;i<L.length;i++) for(let j=0;j<i;j++){ const a=L[j], b=L[i]; if(Math.abs(a.x-b.x)<(a.w+b.w)/2+4&&Math.abs(a.y-b.y)<20) b.y=a.y+20; }
+  for(const f of FLOWS){ f.el.style.display=f.vis?'':'none'; f.el.style.transform=`translate(${f.x}px,${f.y}px)`; } }
+
+/* ---- rótulo de la selección ---- */
+function placeTag(){ const t=$('#tag'); if(!S.sel){ t.hidden=true; return; } const k=S.selMesh||Object.keys(MESH2GL).find(x=>MESH2GL[x]===S.sel); const v=cenOf(k).project(camera);
+  const r=stage.getBoundingClientRect(); if(v.z>1){ t.hidden=true; return; } t.hidden=false; t.style.transform=`translate(${(v.x*.5+.5)*r.width+14}px,${(-v.y*.5+.5)*r.height-10}px)`; }
+
+let last=performance.now(); let lesPhase=0;
+function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now; const k=1-Math.pow(.002,dt);
+  if(cam.tt) cam.target.lerp(cam.tt,k); if(cam.td!=null) cam.d+= (cam.td-cam.d)*k; if(cam.tyaw!=null){ let d=cam.tyaw-cam.yaw; d=Math.atan2(Math.sin(d),Math.cos(d)); cam.yaw+=d*k; } if(cam.tpitch!=null) cam.pitch+=(cam.tpitch-cam.pitch)*k;
+  camera.position.copy(camPos()); camera.lookAt(cam.target);
+  if(lesSet.size){ lesPhase+=dt*3; const s=.35+.3*Math.sin(lesPhase); lesSet.forEach(x=>{ if(MESH[x]&&MESH[x].userData.layer==='gland') MESH[x].material.emissiveIntensity=s; }); }
+  tickFlows(dt); renderer.render(scene,camera); placeTag(); requestAnimationFrame(loop); }
+
+/* ======================= paneles ======================= */
+function setMode(m){ S.mode=m; S.point=null; $('#modes').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===m)); store.set('endoMode',m);
+  if(m!=='lab'){ lesSet=new Set(); } if(m==='anat'||m==='psy'||m==='learn'){ clearFlows(); }
+  render(); }
+function render(){ ({anat:renderAnat,axes:renderAxes,lab:renderLab,psy:renderPsy,learn:renderLearn,about:renderAbout})[S.mode](); pin.scrollTop=0; $('#panel').scrollTop=0; }
+const crumbs=(...a)=>`<div class="crumbs">${a.map((x,i)=>i<a.length-1?`<button data-go="${x[1]}">${x[0]}</button><span>›</span>`:`<span>${x[0]}</span>`).join('')}</div>`;
+
+function renderAnat(){ if(S.sel) return renderGland();
+  hiSet=new Set(); dimOthers=false; recolor(); $('#clearBtn').hidden=true;
+  pin.innerHTML=`<p class="kicker">Módulo 02 · Índice</p><h2>Sistema endocrino</h2><p class="sub2">Glándulas, ejes de retroalimentación y su psiquiatría</p>
+  <p class="lede">Las glándulas endocrinas se comunican por la sangre: cada hormona tiene un emisor, un receptor y casi siempre un freno que vuelve al origen. Toca una glándula en el modelo o elige una de la lista. Las flechas animadas de <button class="lnk" data-m2="axes">Ejes</button> muestran esos circuitos; <button class="lnk" data-m2="lab">Laboratorio</button> los rompe a propósito para entender los patrones de los análisis.</p>
+  <div class="grp"><h3>Glándulas</h3><div class="list">${GL_ORDER.map(k=>`<button data-go="gl:${k}"><span class="sw" style="background:${GL[k].color};margin-right:6px"></span>${GL[k].es}${GL[k].schem?'<small>esquema</small>':''}</button>`).join('')}</div></div>
+  <div class="grp"><h3>Ejes</h3><div class="list">${Object.keys(AXES).map(k=>`<button data-go="ax:${k}">${AXES[k].es}</button>`).join('')}</div></div>
+  <div class="grp"><h3>Órganos de referencia</h3><p style="font-size:12.5px;color:var(--muted)">${Object.values(ORGANS).join(' · ')}</p></div>
+  <p class="note">Modelo anatómico: BodyParts3D (DBCLS), licencia CC BY 4.0, modelo masculino adulto. Tiroides y paratiroides son esquemáticas, colocadas sobre la tráquea y el cartílago cricoides reales, porque el modelo no las incluye. <button class="lnk" data-go="about">Fuentes</button></p>`; }
+function selectGland(g,meshKey){ S.sel=g; S.selMesh=meshKey||Object.keys(MESH2GL).find(x=>MESH2GL[x]===g); const keys=Object.keys(MESH2GL).filter(x=>MESH2GL[x]===g);
+  hiSet=new Set(keys); dimOthers=true; recolor(); const V=VIEWS[GL[g].view]; frameKeys(keys,g==='hypothalamus'||g==='pituitary'||g==='pineal'?7:g==='parathyroid'||g==='thyroid'?2.4:1.8);
+  $('#tag').innerHTML=`${GL[g].es}`; $('#clearBtn').hidden=false; render(); }
+function renderGland(){ const G=GL[S.sel], g=S.sel; const axes=Object.keys(AXES).filter(a=>AXES[a].ar.some(r=>MESH2GL[r[0]]===g||MESH2GL[r[1]]===g));
+  const scs=[]; for(const a in SCEN) SCEN[a].forEach(s=>{ if(s.les.some(l=>MESH2GL[l]===g)) scs.push([a,s]); });
+  pin.innerHTML=crumbs(['Índice','index'],[G.es])+`<p class="kicker"><span class="sw" style="background:${G.color}"></span>Glándula${G.schem?' · <span class="lvl">modelo esquemático</span>':''}</p><h2>${G.es}</h2>
+  <p class="lede" style="margin-top:12px">${G.lede}</p>
+  <h3>Hormonas</h3><table class="htab"><tbody>${G.horm.map(h=>`<tr><th>${h[0]}</th><td>${h[2]}<div class="c">${h[1]}</div></td></tr>`).join('')}</tbody></table>
+  <h3>Regulación</h3><p>${G.reg}</p>
+  <h3>Patología</h3><dl class="facts">${G.path.map(p=>`<dt>${p[0]}</dt><dd>${p[1]}</dd>`).join('')}</dl>
+  <h3>Relevancia psiquiátrica</h3><p>${G.psy}</p>
+  ${axes.length?`<h3>Ejes en los que participa</h3><div class="chips">${axes.map(a=>`<button class="chip" data-go="ax:${a}">${AXES[a].es}</button>`).join('')}</div>`:''}
+  ${scs.length?`<h3>Escenarios de laboratorio</h3><div class="chips">${scs.map(([a,s])=>`<button class="chip" data-go="sc:${a}:${s.k}">${s.es}</button>`).join('')}</div>`:''}
+  ${G.link.length?`<h3>En el módulo del encéfalo</h3><div class="chips">${G.link.map(l=>m1(l[1],l[0])).join('')}</div>`:''}`; }
+
+function renderAxes(){ const a=S.ax||'hpa'; S.ax=a; const A=AXES[a]; lesSet=new Set(); showAxis(a,{});
+  pin.innerHTML=`<p class="kicker">Ejes hormonales</p><h2>${A.es}</h2>
+  <div class="axlist" style="margin:14px 0">${Object.keys(AXES).map(k=>`<button data-go="ax:${k}" class="${k===a?'on':''}">${AXES[k].es}<small>${AXES[k].short}</small></button>`).join('')}</div>
+  <h3>Circuito</h3><ul>${A.ar.map(r=>`<li><b>${nameOf(r[0])}</b> → <b>${nameOf(r[1])}</b>: ${r[2]} <span class="lvl ${r[3]==='−'?'negativa':''}">${r[3]==='−'?'frena':'estimula'}</span></li>`).join('')}</ul>
+  <p style="margin-top:12px">${A.txt}</p><h3>Cómo se estudia</h3><p>${A.test}</p>
+  ${SCEN[a]?`<h3>Rómpelo en el laboratorio</h3><div class="chips">${SCEN[a].map(s=>`<button class="chip" data-go="sc:${a}:${s.k}">${s.es}</button>`).join('')}</div>`:''}
+  <p class="note">Verde: estimulación. Rojo: retroalimentación negativa. La velocidad y la densidad de las partículas indican cuánto se secreta.</p>`; }
+function showAxis(a,mods){ const A=AXES[a]; const keys=[...new Set(A.ar.flatMap(r=>[r[0],r[1]]))]; hiSet=new Set(keys); dimOthers=true; recolor(); setFlows(A.ar,mods); frameKeys(keys,1.25); S.sel=null; $('#tag').hidden=true; $('#clearBtn').hidden=true; }
+
+function renderLab(){ const a=S.sc?S.sc[0]:(S.ax&&SCEN[S.ax]?S.ax:'hpt'); const list=SCEN[a]; const sc=S.sc?list.find(s=>s.k===S.sc[1]):null;
+  if(sc){ lesSet=new Set(sc.les); showAxis(a,sc.f); } else { lesSet=new Set(); showAxis(a,{}); }
+  const ups=v=>/↑/.test(v)?'up':/↓/.test(v)?'dn':'';
+  pin.innerHTML=`<p class="kicker">Laboratorio · patrones hormonales</p><h2>${sc?sc.es:'Elige un escenario'}</h2>
+  <select id="labAx" style="margin:14px 0 10px" aria-label="Eje">${Object.keys(SCEN).map(k=>`<option value="${k}" ${k===a?'selected':''}>${AXES[k].es}</option>`).join('')}</select>
+  <div class="chips">${list.map(s=>`<button class="chip ${sc&&s.k===sc.k?'on':''}" data-go="sc:${a}:${s.k}">${s.es}</button>`).join('')}</div>
+  ${sc?`<h3>Resultados</h3><div class="labs">${sc.labs.map(l=>`<b>${l[0]}</b><span class="${ups(l[1])}">${l[1]}</span>`).join('')}</div>
+   <h3>Por qué</h3><p>${sc.x}</p>${sc.psy?`<h3>En psiquiatría</h3><p>${sc.psy}</p>`:''}
+   <p class="note">En rojo, el sitio de la lesión. Las flechas reflejan el nuevo equilibrio del eje: ↑ más secreción, ↓ menos, tachado sin señal.${sc.les.length?'':' Aquí no hay una glándula lesionada: el cambio viene de fuera del eje.'}</p>`:
+   `<p style="margin-top:14px">Cada escenario coloca una lesión en el eje y muestra cómo cambian las demás hormonas. La regla general: si la lesión está en la glándula final, la hormona trófica sube; si está arriba, ambas bajan; si la hormona viene de fuera, todo el eje se apaga.</p>`}
+  <h3>Ponte a prueba</h3><button class="tournav1" data-go="labquiz">Adivina el diagnóstico a partir de los análisis</button>`;
+  $('#labAx').onchange=e=>{ S.sc=null; S.ax=e.target.value; renderLab(); }; }
+function labQuiz(){ const all=[]; for(const a in SCEN) SCEN[a].forEach(s=>all.push([a,s])); const [a,s]=all[Math.floor(Math.random()*all.length)];
+  const pool=SCEN[a].filter(x=>x.k!==s.k); const others=shuffle(pool).slice(0,3); while(others.length<3){ const o=all[Math.floor(Math.random()*all.length)][1]; if(o.k!==s.k&&!others.includes(o)) others.push(o); }
+  const opts=shuffle([s,...others]); lesSet=new Set(); showAxis(a,{}); clearFlows();
+  const ups=v=>/↑/.test(v)?'up':/↓/.test(v)?'dn':'';
+  pin.innerHTML=`<p class="kicker">Laboratorio · adivina</p><h2>¿Qué patrón es?</h2><p class="sub2">${AXES[a].es}</p><div class="labs">${s.labs.map(l=>`<b>${l[0]}</b><span class="${ups(l[1])}">${l[1]}</span>`).join('')}</div>
+  <div class="qopts">${opts.map(o=>`<button data-k="${o.k}">${o.es}</button>`).join('')}</div><div id="qfb"></div>`;
+  pin.querySelectorAll('.qopts button').forEach(b=>b.onclick=()=>{ const ok=b.dataset.k===s.k; pin.querySelectorAll('.qopts button').forEach(x=>{ x.disabled=true; if(x.dataset.k===s.k) x.classList.add('ok'); }); if(!ok) b.classList.add('ko');
+    score('lab',ok); lesSet=new Set(s.les); showAxis(a,s.f);
+    $('#qfb').innerHTML=`<p><b>${ok?'Correcto.':'No es ese.'}</b> ${s.x}</p><div class="tournav"><button data-go="labquiz">Otro caso</button><button data-go="sc:${a}:${s.k}">Ver el escenario</button></div>`; }); }
+
+function renderPsy(){ const i=S.psy; const P=i!=null?PSYENDO[i]:null;
+  if(P){ const keys=Object.keys(MESH2GL).filter(x=>MESH2GL[x]===P.gl); hiSet=new Set(keys); dimOthers=true; lesSet=new Set(keys); recolor(); frameKeys(keys,P.gl==='pituitary'||P.gl==='hypothalamus'?7:2.4); }
+  else { hiSet=new Set(); lesSet=new Set(); dimOthers=false; recolor(); setView('body'); }
+  pin.innerHTML=`<p class="kicker">Psiquiatría y endocrinología</p><h2>${P?P.es:'Cuando la clínica psiquiátrica es hormonal'}</h2>
+  ${P?`<p class="lede" style="margin-top:12px">${P.t}</p><div class="chips" style="margin-bottom:8px"><button class="chip" data-go="gl:${P.gl}">Ficha: ${GL[P.gl].es}</button>${P.ax?`<button class="chip" data-go="ax:${P.ax}">Eje: ${AXES[P.ax].short}</button>`:''}${P.sc?`<button class="chip" data-go="sc:${P.ax}:${P.sc}">Patrón de laboratorio</button>`:''}${P.m1?m1(P.m1,'Ver en el encéfalo'):''}</div>`:
+  `<p class="lede" style="margin-top:12px">Muchas endocrinopatías debutan con síntomas psiquiátricos, y muchos psicofármacos alteran las glándulas. Esta lista reúne las que conviene descartar o vigilar en la práctica.</p>`}
+  <h3>Lista</h3><div class="axlist">${PSYENDO.map((p,j)=>`<button data-go="psy:${j}" class="${j===i?'on':''}">${p.es}<small>${GL[p.gl].es}</small></button>`).join('')}</div>`; }
+
+/* ---- aprender: preguntas generadas desde el contenido, incluida la de señalar en el modelo ---- */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function score(cat,ok){ const s=store.get('endoScore',{}); const c=s[cat]||[0,0]; c[0]+=ok?1:0; c[1]++; s[cat]=c; store.set('endoScore',s); }
+function bank(){ const q=[]; const gks=GL_ORDER;
+  for(const g of gks) for(const h of GL[g].horm){ const wrong=shuffle(gks.filter(x=>x!==g&&!GL[x].horm.some(y=>y[0]===h[0]))).slice(0,3);
+    q.push({cat:'horm',q:`¿Qué glándula produce o libera: ${h[0]}?`,o:[GL[g].es,...wrong.map(x=>GL[x].es)],why:`${h[0]}: ${h[1]}. ${h[2]}.`,go:'gl:'+g}); }
+  for(const a in SCEN) for(const s of SCEN[a]){ const wrong=shuffle(SCEN[a].filter(x=>x.k!==s.k)).slice(0,3); if(wrong.length<2) continue;
+    q.push({cat:'lab',q:`Análisis: ${s.labs.map(l=>l[0]+' '+l[1]).join('; ')}. ¿Qué patrón es?`,o:[s.es,...wrong.map(x=>x.es)],why:s.x,go:`sc:${a}:${s.k}`}); }
+  for(const [i,p] of PSYENDO.entries()){ const wrong=shuffle(PSYENDO.filter(x=>x!==p&&x.gl!==p.gl)).slice(0,3);
+    q.push({cat:'psy',q:`¿Qué cuadro encaja? «${p.t.split('. ')[0]}.»`,o:[p.es,...wrong.map(x=>x.es)],why:p.t,go:'psy:'+i}); }
+  for(const g of gks) q.push({cat:'point',point:g,q:`Señala en el modelo: ${GL[g].es}`,why:GL[g].lede,go:'gl:'+g});
+  return q; }
+function renderLearn(){ const sc=store.get('endoScore',{}); const pct=c=>c&&c[1]?Math.round(100*c[0]/c[1])+' % de '+c[1]:'sin intentos';
+  hiSet=new Set(); lesSet=new Set(); dimOthers=false; recolor(); clearFlows();
+  pin.innerHTML=`<p class="kicker">Aprender</p><h2>Preguntas del módulo endocrino</h2><p class="sub2">Generadas a partir de las fichas, los ejes y los escenarios</p>
+  <div class="axlist" style="margin-top:14px">
+   <button data-quiz="mix">Mezcla de todo<small>${pct(Object.values(sc).reduce((a,c)=>[a[0]+c[0],a[1]+c[1]],[0,0]))}</small></button>
+   <button data-quiz="horm">Hormonas y glándulas<small>${pct(sc.horm)}</small></button>
+   <button data-quiz="lab">Patrones de laboratorio<small>${pct(sc.lab)}</small></button>
+   <button data-quiz="psy">Presentaciones psiquiátricas<small>${pct(sc.psy)}</small></button>
+   <button data-quiz="point">Señalar en el modelo 3D<small>${pct(sc.point)}</small></button></div>
+  <p class="note">El progreso se guarda en este dispositivo.</p>`;
+  pin.querySelectorAll('[data-quiz]').forEach(b=>b.onclick=()=>{ S.learn.kind=b.dataset.quiz; nextQ(); }); }
+function nextQ(){ const k=S.learn.kind; const B=bank().filter(q=>k==='mix'||q.cat===k); const q=B[Math.floor(Math.random()*B.length)]; S.learn.q=q; hiSet=new Set(); lesSet=new Set(); dimOthers=false; recolor(); clearFlows();
+  const head=`<div class="crumbs"><button data-go="learnhome">Aprender</button><span>›</span><span>Pregunta</span></div>`;
+  if(q.point){ S.point=q; setView('body'); pin.innerHTML=head+`<p class="kicker">Señala en el modelo</p><h2>${GL[q.point].es}</h2><div class="pointq pulse">Toca la glándula en el modelo 3D. Puedes girar y acercar; el control «Resaltar» agranda las glándulas pequeñas.</div><div id="qfb"></div><div class="tournav"><button data-go="skipq">Saltar</button></div>`; return; }
+  const right=q.o[0]; const opts=shuffle(q.o);
+  pin.innerHTML=head+`<p class="kicker">${({horm:'Hormonas',lab:'Laboratorio',psy:'Psiquiatría'})[q.cat]}</p><h2 style="font-size:22px">${q.q}</h2><div class="qopts">${opts.map(o=>`<button>${o}</button>`).join('')}</div><div id="qfb"></div>`;
+  pin.querySelectorAll('.qopts button').forEach(b=>b.onclick=()=>{ const ok=b.textContent===right; pin.querySelectorAll('.qopts button').forEach(x=>{ x.disabled=true; if(x.textContent===right) x.classList.add('ok'); }); if(!ok) b.classList.add('ko');
+    score(q.cat,ok); $('#qfb').innerHTML=`<p><b>${ok?'Correcto.':'No.'}</b> ${q.why}</p><div class="tournav"><button data-go="nextq">Siguiente</button><button data-go="${q.go}">Ver la ficha</button></div>`; }); }
+function answerPoint(meshKey){ const q=S.point; if(!q) return; const g=meshKey?MESH2GL[meshKey]:null; if(!g){ toast('Eso no es una glándula: prueba otra vez.'); return; }
+  const ok=g===q.point; S.point=null; score('point',ok); const keys=Object.keys(MESH2GL).filter(x=>MESH2GL[x]===q.point); hiSet=new Set(keys); dimOthers=true; if(!ok) lesSet=new Set(Object.keys(MESH2GL).filter(x=>MESH2GL[x]===g)); recolor();
+  frameKeys(keys,q.point==='pituitary'||q.point==='hypothalamus'||q.point==='pineal'?7:2.4);
+  pin.querySelector('.pointq').classList.remove('pulse'); pin.querySelector('.pointq').textContent=ok?'Correcto.':`Tocaste: ${GL[g].es}. La correcta queda resaltada.`;
+  $('#qfb').innerHTML=`<p>${q.why}</p><div class="tournav"><button data-go="nextq">Siguiente</button><button data-go="${q.go}">Ver la ficha</button></div>`; }
+
+function renderAbout(){ pin.innerHTML=`<p class="kicker">Acerca</p><h2>Módulo 02 · Sistema endocrino</h2>
+  <p class="lede" style="margin-top:12px">Parte de Atlas Encephali, un atlas abierto y gratuito para estudiantes de medicina y salud mental. Los contenidos son de carácter educativo y no sustituyen el juicio clínico ni las guías locales.</p>
+  <h3>Modelo anatómico</h3><p>Mallas de BodyParts3D, © The Database Center for Life Science (DBCLS), licencia CC BY 4.0: hipotálamo, hipófisis, pineal, timo, suprarrenales, páncreas, testículos, piel, esqueleto y órganos de referencia. Se simplificaron para la web. El modelo de origen es masculino, por eso aún no hay ovarios. Tiroides y paratiroides no existen en BodyParts3D: aquí son modelos esquemáticos con proporciones anatómicas habituales, colocados sobre la tráquea y el cartílago cricoides del propio modelo.</p>
+  <h3>Bibliografía</h3><ol class="refs">${Object.values(EREFS).map(r=>`<li>${r.au} (${r.y}). <i>${r.t}</i>. ${r.j} ${r.v}:${r.p}. <a href="https://doi.org/${r.doi}" target="_blank" rel="noopener">doi:${r.doi}</a><a href="https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/" target="_blank" rel="noopener">PubMed ${r.pmid}</a></li>`).join('')}</ol>
+  <p class="note">Versión ${APPVER}. Código y datos: <a href="https://github.com/nexodipa/atlas-encephali" target="_blank" rel="noopener">github.com/nexodipa/atlas-encephali</a>.</p>`; }
+
+/* ---- navegación ---- */
+function go(g){ const [t,a,b]=g.split(':');
+  if(t==='index'){ S.sel=null; setMode('anat'); setView('body'); }
+  else if(t==='gl'){ if(S.mode!=='anat'){ S.mode='anat'; $('#modes').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.m==='anat')); } clearFlows(); lesSet=new Set(); selectGland(a); }
+  else if(t==='ax'){ S.ax=a; S.sc=null; setMode('axes'); }
+  else if(t==='sc'){ S.sc=[a,b]; S.ax=a; setMode('lab'); }
+  else if(t==='psy'){ S.psy=+a; setMode('psy'); }
+  else if(t==='labquiz'){ if(S.mode!=='lab'){ S.mode='lab'; $('#modes').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.m==='lab')); } labQuiz(); }
+  else if(t==='nextq'||t==='skipq'){ S.point=null; nextQ(); }
+  else if(t==='learnhome'){ S.point=null; renderLearn(); }
+  else if(t==='about'){ S.mode='about'; $('#modes').querySelectorAll('button').forEach(x=>x.classList.remove('on')); renderAbout(); } }
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(b&&!b.closest('a')){ e.preventDefault(); go(b.dataset.go); return; } const m=e.target.closest('[data-m2]'); if(m) setMode(m.dataset.m2); });
+$('#modes').onclick=e=>{ const b=e.target.closest('[data-m]'); if(!b) return; if(b.dataset.m==='anat'){ S.sel=null; setView(S.view); } if(b.dataset.m==='psy') S.psy=null; if(b.dataset.m==='lab') S.sc=null; setMode(b.dataset.m); };
+$('#views').onclick=e=>{ const b=e.target.closest('[data-v]'); if(b) setView(b.dataset.v); };
+$('#turn').onclick=e=>{ const b=e.target.closest('[data-t]'); if(!b) return; S.turn=b.dataset.t; $('#turn').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cam.tyaw=S.turn==='lat'?Math.PI/2:S.turn==='post'?Math.PI:0; };
+$('#layers').onchange=e=>{ const l=e.target.dataset.l; if(l){ S.layers[l]=e.target.checked; recolor(); } };
+$('#gsize').oninput=applyGlandSize;
+$('#clearBtn').onclick=()=>{ S.sel=null; $('#tag').hidden=true; setView(S.view); render(); };
+function routeHash(){ const h=new URLSearchParams(location.hash.slice(1)); const m=h.get('m'), g=h.get('go'); if(m&&['anat','axes','lab','psy','learn'].includes(m)) setMode(m); if(g) go(g); return !!(m||g); }
+addEventListener('hashchange',routeHash);
+
+(async()=>{ mountModSwitch('endo','endo'); bindInstall(); bindUpdates();
+  try{ initScene(); const buf=await loadBlob('endodata'); buildMeshes(buf); $('#loading').hidden=true; setView('body'); camera.position.copy(camPos()); requestAnimationFrame(loop); }
+  catch(e){ $('#loading').textContent='No se pudo cargar el modelo 3D en este dispositivo ('+e.message+'). Las fichas siguen disponibles.'; console.error(e); }
+  if(!routeHash()){ const lm=store.get('endoMode','anat'); if(['axes','lab','psy','learn'].includes(lm)) setMode(lm); else render(); }
+  dispatchEvent(new Event('atlas-ready')); })();
+</script>
+</body>
+</html>

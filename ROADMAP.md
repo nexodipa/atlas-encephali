@@ -64,6 +64,13 @@
 - [x] Modo Aprender con ocho recorridos guiados
 - [x] Diagnóstico diferencial lado a lado con 17 pares clásicos
 
+## Hecho (v18, módulo 02: sistema endocrino)
+- [x] Base común (CSS, almacenamiento, instalación, actualizaciones, selector de módulos) y módulo en `/endocrino/` cubierto por la app, el service worker y el APK
+- [x] Nueve glándulas en un cuerpo completo (BodyParts3D) con fichas, diez ejes animados, 33 escenarios de laboratorio, 13 endocrinopatías con presentación psiquiátrica y 80 preguntas
+- [x] Enlaces cruzados con el módulo 01 (organicidad y fármacos)
+- [ ] Ovarios y ciclo menstrual (falta un modelo femenino abierto); hormonas gastrointestinales; crecimiento y pubertad
+- [ ] Nombre y logotipo nuevos del programa
+
 ## Hecho (v17, polifarmacia)
 - [x] Simulador de combinaciones: cargas serotoninérgica, anticolinérgica y sedante, QT (Tisdale), umbral convulsivo, CYP450 con fenoconversión, interacciones por pares y huella cerebral combinada
 

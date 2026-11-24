@@ -1,7 +1,7 @@
 {
   "name": "atlas-encephali",
   "productName": "Atlas Encephali",
-  "version": "16.0.0",
+  "version": "18.0.0",
   "description": "Atlas 3D interactivo del encéfalo para estudiantes de medicina y salud mental",
   "main": "main.js",
   "author": "Nexo Digital Partners",

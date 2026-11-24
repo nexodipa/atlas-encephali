@@ -1,8 +1,11 @@
 # Atlas Encephali
 
-Atlas 3D interactivo del encéfalo con fines de enseñanza. Es el módulo 01 de un proyecto más amplio de anatomía interactiva (futuros módulos: corazón, pulmones, hígado).
+Atlas 3D interactivo con fines de enseñanza para medicina y salud mental. Tiene dos módulos, enlazados entre sí desde la cabecera:
 
-Toda la aplicación es un solo archivo, `index.html`, que funciona sin servidor. Los datos anatómicos van incrustados.
+- **Módulo 01 · Encéfalo** (`index.html`): anatomía, patología, simulación clínica, fármacos, estudio y aprendizaje.
+- **Módulo 02 · Sistema endocrino** (`endocrino/index.html`): glándulas en un cuerpo completo, ejes hormonales animados con retroalimentación, laboratorio de patrones (primario, secundario, exógeno, autónomo), endocrinopatías con presentación psiquiátrica y preguntas, incluida «señala la glándula en el modelo».
+
+Cada módulo es un solo archivo HTML que funciona sin servidor, con los datos anatómicos incrustados.
 
 ## Qué hace
 
@@ -92,6 +95,11 @@ lang/*.json             paquetes de traducción revisados (opcional)
 pipeline/process.py     genera build/ a partir de los atlas originales
 pipeline/process_ext.py añade a build/ los núcleos talámicos, los del tronco y los territorios arteriales
 pipeline/build_page.py  ensambla index.html desde src/ y build/
+src/core/shell.js       base común de los módulos: almacenamiento, avisos, instalación, actualizaciones, selector de módulos
+endo/content.js         módulo 02: glándulas, ejes, escenarios de laboratorio, psiquiatría
+endo/template.html      módulo 02: interfaz y motor 3D (comparte el CSS del módulo 01)
+pipeline/process_endo.py mallas de BodyParts3D para el módulo 02 (endo/build/)
+pipeline/build_endo.py  ensambla endocrino/index.html
 build/atlas.bin.gz      mallas y etiquetas cuantizadas (int16, 0,01 mm)
 build/meta.json         índice del binario, nombres y estadísticas ENIGMA
 ```
@@ -111,6 +119,9 @@ python pipeline/process.py        # escribe out/atlas.bin.gz y out/meta.json -> 
 #   y el atlas arterial JHU (Atlas_MNI152.zip) en $ATLAS_DATA
 python pipeline/process_ext.py    # añade núcleos finos y territorios arteriales a build/
 python pipeline/build_page.py     # escribe index.html
+# módulo 02: BodyParts3D 4.0 (partof/isa y element_parts) de dbarchive.biosciencedbc.jp en $BP3D
+python pipeline/process_endo.py   # escribe endo/build/
+python pipeline/build_endo.py     # escribe endocrino/index.html
 ```
 
 Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSurfer. Después se pasan de RAS a los ejes de three.js (x derecha, y arriba, z anterior).
@@ -136,6 +147,7 @@ Las coordenadas de fsaverage (MNI305) se llevan a MNI152 con la matriz de FreeSu
 | Receptores (PET) | Hansen y cols. (2022), netneurolab/hansen_receptors | **CC BY-NC-SA 4.0: no comercial, compartir igual** |
 | Núcleos del tálamo | THOMAS (Saranathan y cols., 2021), vía frankyeh/data-atlas | CC0 |
 | Núcleos del sistema activador del tronco | Harvard AAN v2 (Edlow y cols., 2024), vía canlab/Neuroimaging_Pattern_Masks | CC0 |
+| Cuerpo y glándulas (módulo 02) | BodyParts3D 4.0, © The Database Center for Life Science (DBCLS) | CC BY 4.0; tiroides y paratiroides son modelos esquemáticos propios porque BodyParts3D no las incluye; el modelo es masculino (aún sin ovarios) |
 | Territorios arteriales | Digital 3D Brain MRI Arterial Territories Atlas (Liu y cols., 2023), Johns Hopkins | **CC BY-SA 4.0: compartir igual**; las etiquetas derivadas en `build/` (`art_*`, `*_art`) se distribuyen con la misma licencia |
 
 El proyecto es de acceso libre y sin fines comerciales. Dos piezas tienen licencia no comercial (el atlas de lóbulos del cerebelo y los mapas de receptores); los mapas de receptores además obligan a compartir sus derivados con la misma licencia.

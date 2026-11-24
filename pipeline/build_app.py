@@ -13,16 +13,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NM = os.environ.get('NODE_MODULES', os.path.join(ROOT, 'app', 'electron', 'node_modules'))
 WWW = os.path.join(ROOT, 'app', 'www')
 
-html = open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read()
-
-# three.js dentro de la página
 three = open(os.path.join(NM, 'three', 'build', 'three.min.js'), encoding='utf-8').read()
 assert 'REVISION="128"' in three or "REVISION = '128'" in three or '"128"' in three
-tag = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
-assert html.count(tag) == 1
-html = html.replace(tag, '<script>' + three.replace('</script', '<\\/script') + '</script>')
-
-# fuentes dentro de la página
 FONTS = [('Spectral', 'spectral', 'spectral', [(500, 'normal'), (600, 'normal'), (400, 'italic')]),
          ('IBM Plex Sans', 'ibm-plex-sans', 'ibm-plex-sans', [(400, 'normal'), (500, 'normal'), (600, 'normal')]),
          ('IBM Plex Mono', 'ibm-plex-mono', 'ibm-plex-mono', [(400, 'normal'), (500, 'normal')])]
@@ -35,22 +27,32 @@ for fam, pkg, pre, variants in FONTS:
             f = os.path.join(NM, '@fontsource', pkg, 'files', f'{pre}-{sub}-{w}-{st}.woff2')
             b64 = base64.b64encode(open(f, 'rb').read()).decode()
             css.append(f"@font-face{{font-family:'{fam}';font-style:{st};font-weight:{w};font-display:swap;src:url(data:font/woff2;base64,{b64}) format('woff2');unicode-range:{RANGES[sub]}}}")
-gf = re.compile(r'<link rel="preconnect" href="https://fonts.googleapis.com">\s*<link rel="stylesheet" href="https://fonts.googleapis.com/css2\?[^"]*">')
-assert len(gf.findall(html)) == 1
-html = gf.sub('<style>' + ''.join(css) + '</style>', html)
+FONTCSS = '<style>' + ''.join(css) + '</style>'
 
-# manifiesto, iconos y service worker (solo se registra en http/https; en la app de escritorio no hace falta)
-head = ('<link rel="manifest" href="manifest.webmanifest">\n<meta name="theme-color" content="#0a0f12">\n'
-        '<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">\n<link rel="apple-touch-icon" href="icons/icon-180.png">\n'
-        '<meta name="mobile-web-app-capable" content="yes">\n')
-html = html.replace('<title>Atlas Encephali</title>', '<title>Atlas Encephali</title>\n' + head, 1)
-reg = ("<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))"
-       "addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>")
-html = html.replace('</body>', reg + '\n</body>', 1) if '</body>' in html else html + reg
+def standalone(html, pre):
+    """three.js y fuentes dentro de la página; manifiesto, iconos y service worker relativos a la raíz (pre = '' o '../')."""
+    tag = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
+    assert html.count(tag) == 1
+    html = html.replace(tag, '<script>' + three.replace('</script', '<\\/script') + '</script>')
+    gf = re.compile(r'<link rel="preconnect" href="https://fonts.googleapis.com">\s*<link rel="stylesheet" href="https://fonts.googleapis.com/css2\?[^"]*">')
+    assert len(gf.findall(html)) == 1
+    html = gf.sub(lambda m: FONTCSS, html)
+    head = (f'<link rel="manifest" href="{pre}manifest.webmanifest">\n<meta name="theme-color" content="#0a0f12">\n'
+            f'<link rel="icon" type="image/png" sizes="32x32" href="{pre}icons/icon-32.png">\n<link rel="apple-touch-icon" href="{pre}icons/icon-180.png">\n'
+            '<meta name="mobile-web-app-capable" content="yes">\n')
+    html = html.replace('</title>', '</title>\n' + head, 1)
+    reg = ("<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))"
+           f"addEventListener('load',()=>navigator.serviceWorker.register('{pre}sw.js',{{scope:'{pre or './'}'}}).catch(()=>{{}}));</script>")
+    return html.replace('</body>', reg + '\n</body>', 1) if '</body>' in html else html + reg
+
+html = standalone(open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read(), '')
+endo = standalone(open(os.path.join(ROOT, 'endocrino', 'index.html'), encoding='utf-8').read(), '../')
 
 if os.path.exists(WWW): shutil.rmtree(WWW)
 os.makedirs(os.path.join(WWW, 'icons'))
 open(os.path.join(WWW, 'index.html'), 'w', encoding='utf-8').write(html)
+os.makedirs(os.path.join(WWW, 'endocrino'))
+open(os.path.join(WWW, 'endocrino', 'index.html'), 'w', encoding='utf-8').write(endo)
 for f in os.listdir(os.path.join(ROOT, 'app', 'icons')):
     if f.endswith('.png'): shutil.copy(os.path.join(ROOT, 'app', 'icons', f), os.path.join(WWW, 'icons', f))
 
@@ -62,7 +64,8 @@ manifest = {
     "background_color": "#0a0f12", "theme_color": "#0a0f12", "categories": ["education", "medical"],
     "shortcuts": [{"name": "Aprender", "short_name": "Aprender", "url": "./#m=learn", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
                   {"name": "Simulación clínica", "short_name": "Simulación", "url": "./#m=sim", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
-                  {"name": "Índice del atlas", "short_name": "Índice", "url": "./#go=index", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}],
+                  {"name": "Índice del atlas", "short_name": "Índice", "url": "./#go=index", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+                  {"name": "Sistema endocrino", "short_name": "Endocrino", "url": "./endocrino/", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}],
     "screenshots": [{"src": "icons/shot-wide.png", "sizes": "1600x1000", "type": "image/png", "form_factor": "wide", "label": "Atlas Encephali en escritorio"},
                     {"src": "icons/shot-narrow.png", "sizes": "800x1280", "type": "image/png", "form_factor": "narrow", "label": "Atlas Encephali en tableta"}],
     "icons": [{"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
@@ -71,12 +74,12 @@ manifest = {
               {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
 json.dump(manifest, open(os.path.join(WWW, 'manifest.webmanifest'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
-ver = hashlib.sha1(html.encode()).hexdigest()[:10]
+ver = hashlib.sha1((html + endo).encode()).hexdigest()[:10]
 sw = f"""// Service worker de Atlas Encephali.
 // La página se sirve al instante desde la caché (arranque de app, también sin conexión) y se revisa en segundo plano:
 // si en el servidor hay una versión distinta, se guarda y se avisa a la página para que ofrezca actualizar.
-const CACHE='encephali-v1';
-const CORE=['./','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/icon-32.png','icons/icon-180.png'];
+const CACHE='encephali-v2';
+const CORE=['./','endocrino/','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/icon-32.png','icons/icon-180.png'];
 self.addEventListener('install',e=>{{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); }});
 self.addEventListener('activate',e=>{{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); }});
 const ver=t=>{{ const m=t.match(/const APPVER='([^']+)'/); return (m?m[1]:'')+':'+t.length; }};
@@ -89,7 +92,7 @@ async function revalidate(req,key){{
 self.addEventListener('fetch',e=>{{ const r=e.request; if(r.method!=='GET') return; const u=new URL(r.url);
   if(u.search&&u.origin===location.origin){{ return; }}
   if(r.mode==='navigate'||(u.origin===location.origin&&(u.pathname.endsWith('/')||u.pathname.endsWith('/index.html')))){{
-    const key=new URL('./',location).href;
+    const key=new URL(u.pathname.replace(/index\\.html$/,''),location.origin).href;
     e.respondWith(caches.open(CACHE).then(c=>c.match(key)).then(hit=>{{ if(hit){{ e.waitUntil(revalidate(r,key)); return hit; }}
       return fetch(r).then(res=>{{ if(res.ok){{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(key,cp)); }} return res; }}); }}));
     return; }}

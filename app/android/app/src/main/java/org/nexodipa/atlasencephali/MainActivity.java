@@ -39,7 +39,10 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
-                return loader.shouldInterceptRequest(r.getUrl());
+                Uri u = r.getUrl();  // las carpetas de los módulos (p. ej. endocrino/) se sirven con su index.html
+                if ("appassets.androidplatform.net".equals(u.getHost()) && u.getPath() != null && u.getPath().endsWith("/"))
+                    u = u.buildUpon().path(u.getPath() + "index.html").build();
+                return loader.shouldInterceptRequest(u);
             }
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
