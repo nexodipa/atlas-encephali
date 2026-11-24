@@ -31,6 +31,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 html,body{overscroll-behavior:none}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:50;background:var(--bg-3);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:10px 14px;display:flex;gap:14px;align-items:center;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 #toast[hidden]{display:none}
+.modsw{display:flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+.modsw a{padding:4px 10px;font-size:12px;color:var(--muted);text-decoration:none;border-right:1px solid var(--line)}
+.modsw a:last-child{border-right:0}.modsw a:hover{color:var(--fg);background:var(--bg-3)}.modsw a.on{background:var(--accent);color:var(--bg)}
 header.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
   padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .brand{display:flex;align-items:baseline;gap:10px}
@@ -195,6 +198,7 @@ body.present .tourcap .capnav button:disabled{opacity:.3}
 <div class="app">
   <header class="top">
     <div class="brand"><b data-notr>Atlas Encephali</b><span>Módulo 01 · Encéfalo</span></div>
+    <nav class="modsw" id="modsw" aria-label="Módulos"></nav>
     <nav class="modes" id="modes" aria-label="Modo">
       <button data-m="anat" class="on">Anatomía</button><button data-m="path">Patología</button><button data-m="sim">Simulación</button><button data-m="drug">Fármacos</button><button data-m="study">Estudio</button><button data-m="learn">Aprender</button>
     </nav>
@@ -3571,6 +3575,7 @@ function renderDrug(){
   <h3>Efecto buscado</h3><p>${D.good}</p><h3>Efectos adversos</h3><p>${D.bad}</p>
   ${pkHtml(S.drug)}
   ${(()=>{ const used=Object.keys(PSY).filter(p=>PSY[p].tx.includes(S.drug)); return used.length?`<h3>Se usa en</h3><div class="chips">${used.map(p=>`<button class="chip" data-go="psy:${p}">${PSY[p].es}</button>`).join('')}</div>`:''; })()}
+  ${endoChip(S.drug)}
   <p class="note">Mapas de receptores: atlas PET de Hansen y cols. (2022, Nature Neuroscience), más de 1200 personas sanas, CC BY-NC-SA 4.0. Afinidades simplificadas a tres niveles a partir de la literatura farmacológica. Que una región tenga muchos receptores no significa que el fármaco actúe solo allí ni predice la respuesta de una persona. Información educativa, no indicación médica.</p>`;
   const ixs=$('#ixSel'); if(ixs){ ixs.onchange=e=>{ S.ix=e.target.value; ixRender(S.drug); }; ixRender(S.drug); }
   $('#drSel').onchange=e=>{S.drug=e.target.value; S.dose=null; S.rec=drugTargets(DRUGS[S.drug])[0]||null; drugView(); renderDrug();};
@@ -3607,7 +3612,7 @@ function renderOrg(){
   <h3>Causa</h3><p>${O.cause}</p>
   <h3>Cómo se presenta</h3><p>${O.psy}</p>
   <div class="warnbox" style="border-color:${O.color}"><b>Signos de alarma de causa orgánica</b><ul style="margin-top:6px">${O.flags.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-  <h3>Diagnóstico</h3><p>${O.dx}</p><h3>Tratamiento</h3><p>${O.tx}</p>
+  <h3>Diagnóstico</h3><p>${O.dx}</p><h3>Tratamiento</h3><p>${O.tx}</p>${endoChip(S.org)}
   <p class="note">En todo primer episodio psicótico, cuadro afectivo atípico o cambio de personalidad de inicio tardío conviene descartar una causa orgánica: inicio brusco, edad atípica, alteración de la conciencia o de la atención, signos neurológicos, alucinaciones visuales o síntomas físicos acompañantes son las pistas clásicas.</p>`;
   $('#orgSel').onchange=e=>{S.org=e.target.value; diseaseView(); renderPath();};
 }
@@ -4019,7 +4024,7 @@ function renderGloss(q){
 function renderAbout(){
   pin.innerHTML=`<div class="crumbs"><button data-go="index">Índice</button><span>/</span><span>Acerca de</span></div><p class="kicker">Proyecto abierto</p><h2>Acerca del atlas</h2><p class="sub2">Atlas Encephali · versión ${APPVER}</p>
   <p>Recurso educativo abierto para estudiantes de medicina, psicología y salud mental. Combina atlas de neuroimagen de libre uso con contenido redactado para la docencia y referencias comprobadas en PubMed.</p>
-  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 17. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
+  <h3>Cómo citarlo</h3><p style="font-family:var(--mono);font-size:12px;background:var(--bg-3);padding:10px;border-radius:3px">Puglla J. Atlas Encephali: atlas 3D interactivo del encéfalo [software]. Versión 18. 2026. Disponible en: https://github.com/nexodipa/atlas-encephali</p>
   <h3>Estado de revisión</h3><p>Contenido redactado con asistencia de inteligencia artificial y referencias verificadas automáticamente contra PubMed. Pendiente de revisión por docentes de neuroanatomía, neurología, psiquiatría y farmacología. Cada revisión se registrará en el repositorio con nombre y fecha.</p>
   <h3>Licencias</h3><p>Código: MIT. Contenido textual: CC BY-NC-SA 4.0. Datos de terceros con sus propias licencias (ver Bibliografía y el README del repositorio); dos de ellos son de uso no comercial.</p>
   <h3>Limitaciones</h3><ul><li>Cerebro promedio, no de un paciente concreto.</li><li>Los mapas de psicopatología y de enfermedades son esquemas de grupo.</li><li>Las afinidades, ocupaciones, equivalencias e interacciones son aproximaciones didácticas.</li><li>No es una herramienta diagnóstica ni de prescripción.</li></ul>
@@ -4338,7 +4343,14 @@ function setMode(m){
 $('#modes').addEventListener('click',e=>{const b=e.target.closest('button'); if(b){ setMode(b.dataset.m); store.set('lastMode',b.dataset.m); }});
 
 /* ============ app: ajustes, instalación, actualizaciones, enlaces internos ============ */
-const APPVER='17.1';
+const APPVER='18.0';
+/* módulos: enlaces cruzados con el módulo 02 (endocrino) */
+const ENDO_OFF=!/^(https?:|file:)$/.test(location.protocol)||/claude/.test(location.hostname);
+const ENDOBASE=ENDO_OFF?'https://nexodipa.github.io/atlas-encephali/endocrino/':location.protocol==='file:'?'endocrino/index.html':'endocrino/';
+(()=>{ const el=document.getElementById('modsw'); if(el) el.innerHTML=`<a href="${ENDO_OFF?'https://nexodipa.github.io/atlas-encephali/':'./'}" class="on" aria-current="page">Encéfalo</a><a href="${ENDOBASE}">Endocrino</a>`; })();
+const ENDOLINK={thyroid:['gl:thyroid','Tiroides y eje tiroideo en 3D'],cushing:['sc:hpa:cushhip','Eje del cortisol: Cushing'],addison:['sc:hpa:addison','Eje del cortisol: Addison'],pheo:['gl:adrenal','Glándulas suprarrenales'],hypercalc:['sc:calcium:phpt','Calcio y paratiroides'],hypogly:['sc:glucose:insulinoma','Glucosa: insulina y glucagón'],hypona:['sc:post:siadh','ADH y SIADH'],steroids:['sc:hpa:exocort','Corticoides y eje del estrés'],
+  lithium:['sc:post:dinefro','Litio: riñón, tiroides y paratiroides'],risperidone:['sc:prl:apsprl','Prolactina y antipsicóticos'],paliperidone:['sc:prl:apsprl','Prolactina y antipsicóticos'],haloperidol:['sc:prl:apsprl','Prolactina y antipsicóticos'],amisulpride:['sc:prl:apsprl','Prolactina y antipsicóticos'],olanzapine:['gl:pancreas','Páncreas y síndrome metabólico'],clozapine:['gl:pancreas','Páncreas y síndrome metabólico']};
+const endoChip=k=>ENDOLINK[k]?`<h3>Módulo endocrino</h3><div class="chips"><a class="chip" href="${ENDOBASE}#go=${encodeURIComponent(ENDOLINK[k][0])}">${ENDOLINK[k][1]} <code>módulo 02</code></a></div>`:'';
 const APPURL='https://nexodipa.github.io/atlas-encephali/';
 const IS_STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||/Electron|AtlasEncephaliAndroid/.test(navigator.userAgent);
 const APKURL=APPURL+'AtlasEncephali.apk', IS_ANDROID_WEB=/Android/.test(navigator.userAgent)&&!IS_STANDALONE;
@@ -5417,4 +5429,4 @@ ${JSON.stringify(items)}`;
 I18N.init();
 
 </script>
-<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{}));</script>

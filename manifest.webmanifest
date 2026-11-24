@@ -52,6 +52,17 @@
      "sizes": "192x192"
     }
    ]
+  },
+  {
+   "name": "Sistema endocrino",
+   "short_name": "Endocrino",
+   "url": "./endocrino/",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
   }
  ],
  "screenshots": [
